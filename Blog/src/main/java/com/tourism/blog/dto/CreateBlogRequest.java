@@ -1,0 +1,19 @@
+package com.tourism.blog.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+import java.util.List;
+
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+public class CreateBlogRequest {        //sta klijent salje kad hoce da napravi blog
+    private Long authorId;
+    private String title;
+    private String description;
+    private List<String> imageUrls;
+}
