@@ -26,4 +26,9 @@ public class BlogController {
     public List<BlogResponse> getAllBlogs(){
         return blogService.getAllBlogs();
     }
+
+    @GetMapping("/{id}")
+    public BlogResponse getBlogById(@PathVariable Long id){
+        return blogService.getBlogById(id);
+    }
 }

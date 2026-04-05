@@ -4,6 +4,7 @@ import com.tourism.blog.BlogApplication;
 import com.tourism.blog.dto.BlogResponse;
 import com.tourism.blog.dto.CreateBlogRequest;
 import com.tourism.blog.entity.Blog;
+import com.tourism.blog.repository.BlogRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -12,21 +13,40 @@ import java.util.List;
 
 @Service
 public class BlogService {
-    private final List<Blog> blogs = new ArrayList<>();
-    private Long nextId = 1L;
+    private final BlogRepository blogRepository;
+
+    public BlogService(BlogRepository blogRepository){
+        this.blogRepository = blogRepository;
+    }
 
     public BlogResponse createBlog(CreateBlogRequest request){
         Blog blog = new Blog();
 
-        blog.setId(nextId++);       //kreira id, prosledjujemo next
         blog.setAuthorId(request.getAuthorId());        //kreira ko je autor iz requesta koji je autor napravio
         blog.setTitle(request.getTitle());
         blog.setDescription(request.getDescription());
         blog.setCreatedAt(LocalDateTime.now());
         blog.setImageUrls(request.getImageUrls());
 
-        blogs.add(blog);
+        Blog savedBlog = blogRepository.save(blog);
 
+        return mapToResponse(savedBlog);
+    }
+
+    public List<BlogResponse> getAllBlogs(){
+        return blogRepository.findAll()
+                .stream()
+                .map(this::mapToResponse)
+                .toList();
+    }
+
+    public BlogResponse getBlogById(Long id){
+        Blog blog = blogRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Blog not found with id: " + id));
+        return mapToResponse(blog);
+    }
+
+    public BlogResponse mapToResponse(Blog blog){
         return new BlogResponse(
                 blog.getId(),
                 blog.getAuthorId(),
@@ -36,24 +56,6 @@ public class BlogService {
                 blog.getImageUrls(),
                 0
         );
-    }
-
-    public List<BlogResponse> getAllBlogs(){
-        List<BlogResponse> result = new ArrayList<>();
-
-        for(Blog blog : blogs){
-            BlogResponse response = new BlogResponse(
-                    blog.getId(),
-                    blog.getAuthorId(),
-                    blog.getTitle(),
-                    blog.getDescription(),
-                    blog.getCreatedAt(),
-                    blog.getImageUrls(),
-                    0
-            );
-            result.add(response);
-        }
-        return result;
     }
 
 }
