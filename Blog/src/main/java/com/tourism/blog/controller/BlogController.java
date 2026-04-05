@@ -3,6 +3,7 @@ package com.tourism.blog.controller;
 import com.tourism.blog.dto.BlogResponse;
 import com.tourism.blog.dto.CreateBlogRequest;
 import com.tourism.blog.service.BlogService;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,7 +19,7 @@ public class BlogController {
     }
 
     @PostMapping
-    public BlogResponse createBlog(@RequestBody CreateBlogRequest request){
+    public BlogResponse createBlog(@Valid @RequestBody CreateBlogRequest request){
         return blogService.createBlog(request);
     }
 
