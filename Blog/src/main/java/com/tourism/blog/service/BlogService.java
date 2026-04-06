@@ -5,6 +5,7 @@ import com.tourism.blog.dto.BlogResponse;
 import com.tourism.blog.dto.CreateBlogRequest;
 import com.tourism.blog.entity.Blog;
 import com.tourism.blog.repository.BlogRepository;
+import com.tourism.blog.repository.LikeRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -14,9 +15,11 @@ import java.util.List;
 @Service
 public class BlogService {
     private final BlogRepository blogRepository;
+    private final LikeRepository likeRepository;
 
-    public BlogService(BlogRepository blogRepository){
+    public BlogService(BlogRepository blogRepository, LikeRepository likeRepository){
         this.blogRepository = blogRepository;
+        this.likeRepository = likeRepository;
     }
 
     public BlogResponse createBlog(CreateBlogRequest request){
@@ -54,7 +57,7 @@ public class BlogService {
                 blog.getDescription(),
                 blog.getCreatedAt(),
                 blog.getImageUrls(),
-                0
+                likeRepository.countByBlogId(blog.getId())
         );
     }
 
