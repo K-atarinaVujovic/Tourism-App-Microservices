@@ -1,7 +1,22 @@
 services:
+  gateway:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    ports:
+      - 8080:8080
+    depends_on:
+      - service
+    networks:
+      - backend
+
   service:
     build:
       context: .
       dockerfile: ./Test/Dockerfile
-    ports:
-      - 8081:8081
+    networks:
+      - backend
+
+networks:
+  backend:
+    driver: bridge
