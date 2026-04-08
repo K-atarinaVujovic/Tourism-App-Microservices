@@ -1,0 +1,7 @@
+services:
+  service:
+    build:
+      context: .
+      dockerfile: ./Test/Dockerfile
+    ports:
+      - 8081:8081
