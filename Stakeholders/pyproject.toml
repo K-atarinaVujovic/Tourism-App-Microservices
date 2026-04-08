@@ -1,0 +1,2 @@
+[tool.fastapi]
+entrypoint = "api.routes.profile:app"
