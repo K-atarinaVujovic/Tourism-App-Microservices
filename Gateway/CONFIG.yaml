@@ -1,0 +1,11 @@
+port: "8080"
+
+services:
+  - name: "blog"
+    url: "http://blog:8081/"
+
+  - name: "auth"
+    url: "http://auth:8082/"
+
+  - name: "service"
+    url: "http://service:8081/"
