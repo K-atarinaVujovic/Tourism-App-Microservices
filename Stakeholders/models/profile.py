@@ -2,12 +2,11 @@ from typing import Self
 
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
-from database import Base
+from core.database import Base
 
 class Profile(Base):
   __tablename__ = "profiles"
 
-  id: Mapped[int] = mapped_column(primary_key=True)
   name: Mapped[str | None]
   lastname: Mapped[str | None]
   imageUrl: Mapped[str | None]
@@ -27,11 +26,11 @@ class Profile(Base):
   def __repr__(self) -> str:
     return f"Profile:\nname={self.name}\nlastname={self.lastname}\nimageUrl={self.imageUrl}\nbiography={self.biography}\nquote={self.quote}"
 
-  def update(self, updated_profile: Self) -> Self:
-    self.name = updated_profile.name if updated_profile.name is not None else self.name
-    self.lastname = updated_profile.lastname if updated_profile.lastname is not None else self.lastname
-    self.imageUrl = updated_profile.imageUrl if updated_profile.imageUrl is not None else self.imageUrl
-    self.biography = updated_profile.biography if updated_profile.biography is not None else self.biography
-    self.quote = updated_profile.quote if updated_profile.quote is not None else self.quote
-    
+  def update(self, name: str | None = None, lastname: str | None = None, imageUrl: str | None = None, biography: str | None = None, quote: str | None = None) -> Self:
+    self.name = name if name is not None else self.name
+    self.lastname = lastname if lastname is not None else self.lastname
+    self.imageUrl = imageUrl if imageUrl is not None else self.imageUrl
+    self.biography = biography if biography is not None else self.biography
+    self.quote = quote if quote is not None else self.quote
+
     return self
