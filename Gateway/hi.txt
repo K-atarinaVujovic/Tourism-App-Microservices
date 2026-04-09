@@ -6,3 +6,9 @@ HI!
      --go-grpc_out=./Gateway/proto --go-grpc_opt=paths=source_relative `
      --grpc-gateway_out=./Gateway/proto --grpc-gateway_opt=paths=source_relative `
      Gateway/proto/test.proto
+
+     & "C:\Program Files\Protobuf\bin\protoc.exe" -I ./Gateway/proto `
+          --go_out=./Gateway/proto --go_opt=paths=source_relative `
+          --go-grpc_out=./Gateway/proto --go-grpc_opt=paths=source_relative `
+          --grpc-gateway_out=./Gateway/proto --grpc-gateway_opt=paths=source_relative `
+          Gateway/proto/service/service.proto

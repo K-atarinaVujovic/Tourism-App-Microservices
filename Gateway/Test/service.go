@@ -5,37 +5,37 @@ Ovo je test API servisa za proveru funkcionalnosti Gateway-a
 */
 
 import (
-	// Util
+	"context"
 	"log"
-	"net/http"
+	"net"
 
-	// REST API
-	"github.com/gin-gonic/gin"
+	servicepb "gateway/proto/service"
+	"google.golang.org/grpc"
 )
 
-type album struct {
-	ID     string  `json:"id"`
-	Title  string  `json:"title"`
-	Artist string  `json:"artist"`
-	Price  float64 `json:"price"`
+type server struct {
+	servicepb.UnimplementedAlbumServiceServer
 }
 
-var albums = []album{
-	{ID: "1", Title: "Blue Train", Artist: "John Coltrane", Price: 56.99},
-	{ID: "2", Title: "Jeru", Artist: "Gerry Mulligan", Price: 17.99},
-	{ID: "3", Title: "Sarah Vaughan and Clifford Brown", Artist: "Sarah Vaughan", Price: 39.99},
+var albums = []*servicepb.Album{
+	{Id: "1", Title: "Blue Train", Artist: "John Coltrane", Price: 56.99},
+	{Id: "2", Title: "Jeru", Artist: "Gerry Mulligan", Price: 17.99},
+	{Id: "3", Title: "Sarah Vaughan and Clifford Brown", Artist: "Sarah Vaughan", Price: 39.99},
 }
 
-func getAlbums(c *gin.Context) {
-	c.JSON(http.StatusOK, albums)
+func (s *server) GetAlbums(ctx context.Context, req *servicepb.GetAlbumsRequest) (*servicepb.GetAlbumsResponse, error) {
+	return &servicepb.GetAlbumsResponse{Albums: albums}, nil
 }
 
 func main() {
-	router := gin.Default()
+	lis, err := net.Listen("tcp", ":8081")
+	if err != nil {
+		log.Fatal("Failed to listen: ", err)
+	}
 
-	router.GET("/albums", getAlbums)
-	log.Println("Starting server on :8081")
+	s := grpc.NewServer()
+	servicepb.RegisterAlbumServiceServer(s, &server{})
 
-	// Ovde moramo koristiti :8081 umesto localhost:8081
-	router.Run(":8081")
+	log.Println("Starting gRPC server on :8081")
+	log.Fatal(s.Serve(lis))
 }
