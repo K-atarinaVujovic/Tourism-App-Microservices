@@ -1,14 +1,17 @@
 package main
 
 import (
+	"context"
 	"log"
 	"net/http"
-	"net/http/httputil"
-	"net/url"
 	"os"
-	"strings"
 
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	"gopkg.in/yaml.v3"
+
+	testpb "gateway/proto/test"
 )
 
 type ServiceConfig struct {
@@ -23,8 +26,8 @@ type Config struct {
 
 // ProxyRegistry This is a struct so we can later expand it
 type ProxyRegistry struct {
-	name  string
-	route *httputil.ReverseProxy
+	name    string
+	handler func(*runtime.ServeMux, string, []grpc.DialOption) error
 }
 
 func LoadConfig(path string) (*Config, error) {
@@ -37,62 +40,43 @@ func LoadConfig(path string) (*Config, error) {
 	return &config, err
 }
 
-func NewProxy(targetHost string) (*httputil.ReverseProxy, error) {
-	url, err := url.Parse(targetHost)
-	if err != nil {
-		return nil, err
-	}
-
-	return httputil.NewSingleHostReverseProxy(url), nil
-}
-
-func ProxyRequestHandler(proxies []ProxyRegistry) func(http.ResponseWriter, *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		log.Println("Got request: " + r.Method + " " + r.URL.String())
-		proxy := FindProxy(proxies, r)
-		if proxy.name != "" {
-			r.URL.Path = strings.TrimPrefix(r.URL.Path, "/api/"+proxy.name)
-			proxy.route.ServeHTTP(w, r)
-		} else {
-			http.NotFound(w, r)
-		}
-	}
-}
-
 func InitProxies(services []ServiceConfig) []ProxyRegistry {
 	var listOfProxies []ProxyRegistry
 	for _, svc := range services {
-		proxy, err := NewProxy(svc.URL)
-		if err != nil {
-			panic(err)
+		switch svc.Name {
+		case "test":
+			listOfProxies = append(listOfProxies, ProxyRegistry{
+				name: svc.Name,
+				handler: func(mux *runtime.ServeMux, url string, opts []grpc.DialOption) error {
+					return testpb.RegisterAuthServiceHandlerFromEndpoint(context.Background(), mux, url, opts)
+				},
+			})
 		}
-		listOfProxies = append(listOfProxies, ProxyRegistry{
-			name:  svc.Name,
-			route: proxy,
-		})
 	}
 	return listOfProxies
 }
 
-func FindProxy(proxies []ProxyRegistry, r *http.Request) ProxyRegistry {
-	for _, proxy := range proxies {
-		if strings.HasPrefix(strings.TrimPrefix(r.URL.Path, "/api/"), proxy.name) {
-			return proxy
-		}
-	}
-	return ProxyRegistry{} // empty
-}
-
 func main() {
-	// Load config
 	config, err := LoadConfig("CONFIG.yaml")
 	if err != nil {
 		log.Fatal("Failed to load config: ", err)
 	}
-	// Initialize a reverse proxy for each microservice defined in Microservices
-	listOfProxies := InitProxies(config.Services)
 
-	// Handle all requests to the server using the proxy
-	http.HandleFunc("/", ProxyRequestHandler(listOfProxies))
-	log.Fatal(http.ListenAndServe(":"+config.Port, nil))
+	mux := runtime.NewServeMux()
+	opts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
+
+	listOfProxies := InitProxies(config.Services)
+	for _, svc := range config.Services {
+		for _, proxy := range listOfProxies {
+			if proxy.name == svc.Name {
+				if err := proxy.handler(mux, svc.URL, opts); err != nil {
+					log.Fatalf("Failed to register %s: %v", svc.Name, err)
+				}
+				log.Println("Registered service: " + svc.Name + " at " + svc.URL)
+			}
+		}
+	}
+
+	log.Println("Gateway running on port " + config.Port)
+	log.Fatal(http.ListenAndServe(":"+config.Port, mux))
 }
