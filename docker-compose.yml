@@ -1,0 +1,42 @@
+version: "3.8"
+
+services:
+  blog-service:
+    build:
+      context: ./Blog
+      dockerfile: Dockerfile
+    image: blog-service:latest
+    container_name: blog-service
+    restart: on-failure
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://blog-db:5432/blogdb
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: root
+    depends_on:
+      - blog-db
+    networks:
+      - app-network
+
+  blog-db:
+    image: postgres:16
+    container_name: blog-db
+    restart: always
+    environment:
+      POSTGRES_DB: blogdb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: root
+    ports:
+      - "5433:5432"
+    volumes:
+      - blog-db-data:/var/lib/postgresql/data
+    networks:
+      - app-network
+
+volumes:
+  blog-db-data:
+
+networks:
+  app-network:
+    driver: bridge
