@@ -1,9 +1,9 @@
 
 from sqlalchemy import create_engine, select
-from models.profile import Profile
+from app.models.profile import Profile
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
-from core.database import engine
+from app.core.database import engine
 
 class ProfileRepository:
   def save(self, profile: Profile) -> Profile:

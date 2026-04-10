@@ -1,5 +1,5 @@
 from pydantic import BaseModel, ConfigDict, Field
-from models.profile import Profile
+from app.models.profile import Profile
 
 class ProfileCreate(BaseModel):
   name: str

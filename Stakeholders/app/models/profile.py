@@ -2,7 +2,7 @@ from typing import Self
 
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
-from core.database import Base
+from app.core.database import Base
 
 class Profile(Base):
   __tablename__ = "profiles"

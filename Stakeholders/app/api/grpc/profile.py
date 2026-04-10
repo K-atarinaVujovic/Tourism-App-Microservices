@@ -1,7 +1,7 @@
-from profile_pb2_grpc import ProfileServiceServicer
-from profile_pb2 import ProfileCreate, ProfileResponse, ProfileUpdate #type: ignore
-from schemas.profile import ProfileCreate as ProfileCreateSchema
-from schemas.profile import ProfileUpdate as ProfileUpdateSchema
+from proto.profile_pb2_grpc import ProfileServiceServicer
+from proto.profile_pb2 import ProfileResponse #type: ignore
+from app.schemas.profile import ProfileCreate as ProfileCreateSchema
+from app.schemas.profile import ProfileUpdate as ProfileUpdateSchema
 
 
 class ProfileServicer(ProfileServiceServicer):

@@ -1,7 +1,7 @@
-from models.profile import Profile
-from repositories.profile import ProfileRepository
-from schemas.profile import ProfileCreate, ProfileResponse, ProfileUpdate
-from core.exceptions import NotFoundException, AlreadyExistsException
+from app.models.profile import Profile
+from app.repositories.profile import ProfileRepository
+from app.schemas.profile import ProfileCreate, ProfileResponse, ProfileUpdate
+from app.core.exceptions import NotFoundException, AlreadyExistsException
 
 class ProfileService:
   repo: ProfileRepository = ProfileRepository()

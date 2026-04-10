@@ -2,10 +2,10 @@ from typing import Annotated, Any
 
 from fastapi import Body, Depends, FastAPI, HTTPException, Path
 
-from core.exceptions import AlreadyExistsException, NotFoundException
-from core.security import get_current_user
-from schemas.profile import ProfileCreate, ProfileResponse, ProfileUpdate
-from services.profile import ProfileService
+from app.core.exceptions import AlreadyExistsException, NotFoundException
+from app.core.security import get_current_user
+from app.schemas.profile import ProfileCreate, ProfileResponse, ProfileUpdate
+from app.services.profile import ProfileService
 
 app = FastAPI()
 service = ProfileService()

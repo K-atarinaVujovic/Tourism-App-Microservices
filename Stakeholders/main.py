@@ -1,16 +1,19 @@
+import sys
+sys.path.append("proto")
+
 from concurrent import futures
 
 import grpc
 import uvicorn
 import logging
 
-from api.grpc.profile import ProfileServicer
-import profile_pb2_grpc
-from repositories.profile import ProfileRepository
-from models.profile import Profile
-import core.database as database
-from schemas.profile import ProfileCreate, ProfileUpdate
-from services.profile import ProfileService
+from app.api.grpc.profile import ProfileServicer
+import proto.profile_pb2_grpc as profile_pb2_grpc
+from app.repositories.profile import ProfileRepository
+from app.models.profile import Profile
+import app.core.database as database
+from app.schemas.profile import ProfileCreate, ProfileUpdate
+from app.services.profile import ProfileService
 
 
 GRPC_PORT = "50051"
@@ -18,7 +21,7 @@ LISTEN_ADDR = "[::]:" + GRPC_PORT
 FASTAPI_PORT = 8000
 
 def serve_fastapi():
-    uvicorn.run("api.routes.profile:app", host="0.0.0.0", port=FASTAPI_PORT, reload=True)
+    uvicorn.run("app.api.routes.profile:app", host="0.0.0.0", port=FASTAPI_PORT, reload=True)
 
 def serve_grpc():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
@@ -31,11 +34,9 @@ def serve_grpc():
     return server
 
 if __name__ == "__main__":
-    logging.basicConfig()
+    # logging.basicConfig()
     database.init_db()
-    # serve_fastapi()
-    serve_grpc()
     serve_fastapi()
-    print("eyo")
+    # serve_grpc()
 
 
