@@ -1,8 +1,9 @@
 from typing import Annotated, Any
 
-from fastapi import Body, FastAPI, HTTPException, Path
+from fastapi import Body, Depends, FastAPI, HTTPException, Path
 
 from core.exceptions import AlreadyExistsException, NotFoundException
+from core.security import get_current_user
 from schemas.profile import ProfileCreate, ProfileResponse, ProfileUpdate
 from services.profile import ProfileService
 
@@ -32,10 +33,10 @@ async def create_profile(
 @app.put("/profiles/update", response_model=ProfileResponse)
 async def update_profile(
   profile: Annotated[ProfileUpdate, Body()],
+  current_user = Depends(get_current_user)
 ) -> Any:
   try:
-    # Get logged in user to set profile id...
-    profile_id = 1
+    profile_id = current_user["user_id"]
     return service.update(profile_id, profile)
   except NotFoundException as e:
     raise HTTPException(status_code=404, detail=str(e))
