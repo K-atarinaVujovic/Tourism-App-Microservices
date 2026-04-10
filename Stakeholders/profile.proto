@@ -1,0 +1,40 @@
+syntax = "proto3";
+package stakeholders;
+
+service ProfileService {
+  rpc CreateProfile(ProfileCreate) returns (ProfileResponse);
+  rpc GetProfile(GetProfileRequest) returns (ProfileResponse);
+  rpc UpdateProfile(ProfileUpdate) returns (ProfileResponse);
+}
+
+message GetProfileRequest {
+  int32 user_id = 1;
+}
+
+message ProfileResponse {
+  int32 id = 1;
+  string name = 2;
+  string lastname = 3;
+  string imageUrl = 4;
+  string biography = 5;
+  string quote = 6;
+  int32 user_id = 7;
+}
+
+message ProfileCreate {
+  string name = 1;
+  optional string lastname = 2;
+  optional string imageUrl = 3;
+  optional string biography = 4;
+  optional string quote = 5;
+  int32 user_id = 6;
+}
+
+message ProfileUpdate {
+  optional string name = 1;
+  optional string lastname = 2;
+  optional string imageUrl = 3;
+  optional string biography = 4;
+  optional string quote = 5;
+  int32 user_id = 6;
+}

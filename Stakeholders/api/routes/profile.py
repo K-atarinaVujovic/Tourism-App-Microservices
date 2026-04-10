@@ -36,8 +36,8 @@ async def update_profile(
   current_user = Depends(get_current_user)
 ) -> Any:
   try:
-    profile_id = current_user["user_id"]
-    return service.update(profile_id, profile)
+    user_id = current_user["user_id"]
+    return service.update(user_id, profile)
   except NotFoundException as e:
     raise HTTPException(status_code=404, detail=str(e))
 

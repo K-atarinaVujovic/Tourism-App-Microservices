@@ -19,8 +19,8 @@ class ProfileService:
     )
     return ProfileResponse.model_validate(self.repo.save(new_profile))
 
-  def update(self, profile_id: int, updated_profile_schema: ProfileUpdate) -> ProfileResponse:
-    profile = self.repo.get(profile_id)
+  def update(self, user_id: int, updated_profile_schema: ProfileUpdate) -> ProfileResponse:
+    profile = self.repo.get_by_user_id(user_id)
     if profile is None:
       raise NotFoundException("No profile to update")
     profile.update(
