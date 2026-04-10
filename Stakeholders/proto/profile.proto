@@ -5,6 +5,7 @@ service ProfileService {
   rpc CreateProfile(ProfileCreate) returns (ProfileResponse);
   rpc GetProfile(GetProfileRequest) returns (ProfileResponse);
   rpc UpdateProfile(ProfileUpdate) returns (ProfileResponse);
+  rpc UploadImage(ImageUploadRequest) returns (ImageUploadResponse);
 }
 
 message GetProfileRequest {
@@ -37,4 +38,13 @@ message ProfileUpdate {
   optional string biography = 4;
   optional string quote = 5;
   int32 user_id = 6;
+}
+
+message ImageUploadRequest {
+  bytes file_data = 1;
+  string filename = 2;
+}
+
+message ImageUploadResponse {
+  string imageUrl = 1;
 }

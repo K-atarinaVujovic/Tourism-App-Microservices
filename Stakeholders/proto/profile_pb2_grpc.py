@@ -49,6 +49,11 @@ class ProfileServiceStub(object):
                 request_serializer=profile__pb2.ProfileUpdate.SerializeToString,
                 response_deserializer=profile__pb2.ProfileResponse.FromString,
                 _registered_method=True)
+        self.UploadImage = channel.unary_unary(
+                '/stakeholders.ProfileService/UploadImage',
+                request_serializer=profile__pb2.ImageUploadRequest.SerializeToString,
+                response_deserializer=profile__pb2.ImageUploadResponse.FromString,
+                _registered_method=True)
 
 
 class ProfileServiceServicer(object):
@@ -72,6 +77,12 @@ class ProfileServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def UploadImage(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_ProfileServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -89,6 +100,11 @@ def add_ProfileServiceServicer_to_server(servicer, server):
                     servicer.UpdateProfile,
                     request_deserializer=profile__pb2.ProfileUpdate.FromString,
                     response_serializer=profile__pb2.ProfileResponse.SerializeToString,
+            ),
+            'UploadImage': grpc.unary_unary_rpc_method_handler(
+                    servicer.UploadImage,
+                    request_deserializer=profile__pb2.ImageUploadRequest.FromString,
+                    response_serializer=profile__pb2.ImageUploadResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -172,6 +188,33 @@ class ProfileService(object):
             '/stakeholders.ProfileService/UpdateProfile',
             profile__pb2.ProfileUpdate.SerializeToString,
             profile__pb2.ProfileResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def UploadImage(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/stakeholders.ProfileService/UploadImage',
+            profile__pb2.ImageUploadRequest.SerializeToString,
+            profile__pb2.ImageUploadResponse.FromString,
             options,
             channel_credentials,
             insecure,

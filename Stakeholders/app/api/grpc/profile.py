@@ -1,12 +1,13 @@
 from proto.profile_pb2_grpc import ProfileServiceServicer
-from proto.profile_pb2 import ProfileResponse #type: ignore
+from proto.profile_pb2 import ProfileResponse, ImageUploadResponse #type: ignore
 from app.schemas.profile import ProfileCreate as ProfileCreateSchema
 from app.schemas.profile import ProfileUpdate as ProfileUpdateSchema
 
 
 class ProfileServicer(ProfileServiceServicer):
-  def __init__(self, profile_service):
+  def __init__(self, profile_service, upload_service):
     self.profile_service = profile_service
+    self.upload_service = upload_service
 
   def __get_profile_response_from_result(self, result):
     return ProfileResponse(
@@ -54,3 +55,7 @@ class ProfileServicer(ProfileServiceServicer):
     profile_update = self.__get_profile_update_from_request(request)
     result = self.profile_service.update(user_id, profile_update)
     return self.__get_profile_response_from_result(result)
+
+  def UploadImage(self, request, context):
+    result = self.upload_service.upload_image_bytes(request.file_data, request.filename)
+    return ImageUploadResponse(imageUrl = result["imageUrl"])

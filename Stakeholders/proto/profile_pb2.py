@@ -24,7 +24,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\rprofile.proto\x12\x0cstakeholders\"$\n\x11GetProfileRequest\x12\x0f\n\x07user_id\x18\x01 \x01(\x05\"\x82\x01\n\x0fProfileResponse\x12\n\n\x02id\x18\x01 \x01(\x05\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x10\n\x08lastname\x18\x03 \x01(\t\x12\x10\n\x08imageUrl\x18\x04 \x01(\t\x12\x11\n\tbiography\x18\x05 \x01(\t\x12\r\n\x05quote\x18\x06 \x01(\t\x12\x0f\n\x07user_id\x18\x07 \x01(\x05\"\xba\x01\n\rProfileCreate\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x15\n\x08lastname\x18\x02 \x01(\tH\x00\x88\x01\x01\x12\x15\n\x08imageUrl\x18\x03 \x01(\tH\x01\x88\x01\x01\x12\x16\n\tbiography\x18\x04 \x01(\tH\x02\x88\x01\x01\x12\x12\n\x05quote\x18\x05 \x01(\tH\x03\x88\x01\x01\x12\x0f\n\x07user_id\x18\x06 \x01(\x05\x42\x0b\n\t_lastnameB\x0b\n\t_imageUrlB\x0c\n\n_biographyB\x08\n\x06_quote\"\xc8\x01\n\rProfileUpdate\x12\x11\n\x04name\x18\x01 \x01(\tH\x00\x88\x01\x01\x12\x15\n\x08lastname\x18\x02 \x01(\tH\x01\x88\x01\x01\x12\x15\n\x08imageUrl\x18\x03 \x01(\tH\x02\x88\x01\x01\x12\x16\n\tbiography\x18\x04 \x01(\tH\x03\x88\x01\x01\x12\x12\n\x05quote\x18\x05 \x01(\tH\x04\x88\x01\x01\x12\x0f\n\x07user_id\x18\x06 \x01(\x05\x42\x07\n\x05_nameB\x0b\n\t_lastnameB\x0b\n\t_imageUrlB\x0c\n\n_biographyB\x08\n\x06_quote2\xf8\x01\n\x0eProfileService\x12K\n\rCreateProfile\x12\x1b.stakeholders.ProfileCreate\x1a\x1d.stakeholders.ProfileResponse\x12L\n\nGetProfile\x12\x1f.stakeholders.GetProfileRequest\x1a\x1d.stakeholders.ProfileResponse\x12K\n\rUpdateProfile\x12\x1b.stakeholders.ProfileUpdate\x1a\x1d.stakeholders.ProfileResponseb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\rprofile.proto\x12\x0cstakeholders\"$\n\x11GetProfileRequest\x12\x0f\n\x07user_id\x18\x01 \x01(\x05\"\x82\x01\n\x0fProfileResponse\x12\n\n\x02id\x18\x01 \x01(\x05\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x10\n\x08lastname\x18\x03 \x01(\t\x12\x10\n\x08imageUrl\x18\x04 \x01(\t\x12\x11\n\tbiography\x18\x05 \x01(\t\x12\r\n\x05quote\x18\x06 \x01(\t\x12\x0f\n\x07user_id\x18\x07 \x01(\x05\"\xba\x01\n\rProfileCreate\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x15\n\x08lastname\x18\x02 \x01(\tH\x00\x88\x01\x01\x12\x15\n\x08imageUrl\x18\x03 \x01(\tH\x01\x88\x01\x01\x12\x16\n\tbiography\x18\x04 \x01(\tH\x02\x88\x01\x01\x12\x12\n\x05quote\x18\x05 \x01(\tH\x03\x88\x01\x01\x12\x0f\n\x07user_id\x18\x06 \x01(\x05\x42\x0b\n\t_lastnameB\x0b\n\t_imageUrlB\x0c\n\n_biographyB\x08\n\x06_quote\"\xc8\x01\n\rProfileUpdate\x12\x11\n\x04name\x18\x01 \x01(\tH\x00\x88\x01\x01\x12\x15\n\x08lastname\x18\x02 \x01(\tH\x01\x88\x01\x01\x12\x15\n\x08imageUrl\x18\x03 \x01(\tH\x02\x88\x01\x01\x12\x16\n\tbiography\x18\x04 \x01(\tH\x03\x88\x01\x01\x12\x12\n\x05quote\x18\x05 \x01(\tH\x04\x88\x01\x01\x12\x0f\n\x07user_id\x18\x06 \x01(\x05\x42\x07\n\x05_nameB\x0b\n\t_lastnameB\x0b\n\t_imageUrlB\x0c\n\n_biographyB\x08\n\x06_quote\"9\n\x12ImageUploadRequest\x12\x11\n\tfile_data\x18\x01 \x01(\x0c\x12\x10\n\x08\x66ilename\x18\x02 \x01(\t\"\'\n\x13ImageUploadResponse\x12\x10\n\x08imageUrl\x18\x01 \x01(\t2\xcc\x02\n\x0eProfileService\x12K\n\rCreateProfile\x12\x1b.stakeholders.ProfileCreate\x1a\x1d.stakeholders.ProfileResponse\x12L\n\nGetProfile\x12\x1f.stakeholders.GetProfileRequest\x1a\x1d.stakeholders.ProfileResponse\x12K\n\rUpdateProfile\x12\x1b.stakeholders.ProfileUpdate\x1a\x1d.stakeholders.ProfileResponse\x12R\n\x0bUploadImage\x12 .stakeholders.ImageUploadRequest\x1a!.stakeholders.ImageUploadResponseb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -39,6 +39,10 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_PROFILECREATE']._serialized_end=389
   _globals['_PROFILEUPDATE']._serialized_start=392
   _globals['_PROFILEUPDATE']._serialized_end=592
-  _globals['_PROFILESERVICE']._serialized_start=595
-  _globals['_PROFILESERVICE']._serialized_end=843
+  _globals['_IMAGEUPLOADREQUEST']._serialized_start=594
+  _globals['_IMAGEUPLOADREQUEST']._serialized_end=651
+  _globals['_IMAGEUPLOADRESPONSE']._serialized_start=653
+  _globals['_IMAGEUPLOADRESPONSE']._serialized_end=692
+  _globals['_PROFILESERVICE']._serialized_start=695
+  _globals['_PROFILESERVICE']._serialized_end=1027
 # @@protoc_insertion_point(module_scope)
