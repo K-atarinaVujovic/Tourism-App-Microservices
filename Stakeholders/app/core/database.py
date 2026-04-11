@@ -5,7 +5,7 @@ import os
 class Base(DeclarativeBase):
     id: Mapped[int] = mapped_column(primary_key=True)
 
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql+psycopg2://postgres:root@localhost:5432/stakeholders")
+DATABASE_URL = os.getenv("STAKEHOLDERS_DB_URL", "postgresql+psycopg2://postgres:root@localhost:5432/stakeholders")
 
 engine = create_engine(DATABASE_URL)
 
