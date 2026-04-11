@@ -1,0 +1,36 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: auth-db
+    environment:
+      POSTGRES_DB: tourism-auth
+      POSTGRES_USER: tourism-app
+      POSTGRES_PASSWORD: admin123
+    ports:
+      - "5432:5432"
+    volumes:
+      - auth_db_data:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tourism-app -d tourism-auth"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  auth-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: auth-server
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PORT: 8080
+      DATABASE_URL: postgres://tourism-app:admin123@db:5432/tourism-auth?sslmode=disable
+      JWT_SECRET: super-secret-change-me
+    ports:
+      - "8080:8080"
+
+volumes:
+  auth_db_data:
