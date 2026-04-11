@@ -38,7 +38,7 @@ def serve_grpc():
 if __name__ == "__main__":
     # logging.basicConfig()
     database.init_db()
-    # serve_fastapi()
-    serve_grpc()
+    serve_fastapi()
+    # serve_grpc()
 
 
