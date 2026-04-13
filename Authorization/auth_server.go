@@ -78,8 +78,14 @@ type User struct {
 }
 
 func main() {
-	if err := godotenv.Load(); err != nil {
-		log.Println("No .env file found, using environment variables")
+	useConfig := os.Getenv("USE_CONFIG_FILE") == "true"
+	if useConfig {
+		log.Println("Using .env file for configuration")
+		if err := godotenv.Load(); err != nil {
+			log.Println("No .env file found, falling back to environment variables")
+		}
+	} else {
+		log.Println("Using environment variables for configuration")
 	}
 
 	databaseURL := os.Getenv("DATABASE_URL")
@@ -97,7 +103,7 @@ func main() {
 		port = "8080"
 	}
 
-	log.Printf("Attempting to connect to database...")
+	log.Printf("Attempting to connect to database at %v...", databaseURL)
 	conn, err := pgx.Connect(context.Background(), databaseURL)
 	if err != nil {
 		log.Fatalf("Unable to connect to database: %v", err)
