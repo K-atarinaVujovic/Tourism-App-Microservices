@@ -107,9 +107,14 @@ func main() {
 
 	router := chi.NewRouter()
 
+	// Public routes
 	router.Get("/health", srv.healthHandler)
 	router.Post("/auth/register", srv.registerHandler)
 	router.Post("/auth/login", srv.loginHandler)
+
+	// Admin-only routes (require authentication + admin role)
+	router.Post("/admin/users/block", srv.requireAuth(srv.requireAdmin(srv.blockUserHandler)))
+	router.Post("/admin/users/unblock", srv.requireAuth(srv.requireAdmin(srv.unblockUserHandler)))
 
 	log.Printf("Auth server listening on :%s", port)
 	log.Fatal(http.ListenAndServe(":"+port, router))
