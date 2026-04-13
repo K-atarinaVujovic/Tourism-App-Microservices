@@ -1,15 +1,6 @@
-CREATE EXTENSION IF NOT EXISTS pgcrypto;
-
-CREATE TABLE IF NOT EXISTS users (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    email TEXT NOT NULL UNIQUE,
-    password_hash TEXT NOT NULL,
-    role TEXT NOT NULL DEFAULT 'user' CHECK (role IN ('user', 'admin')),
-    is_blocked BOOLEAN NOT NULL DEFAULT false,
-    blocked_at TIMESTAMPTZ,
-    blocked_by UUID REFERENCES users(id),
-    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
+-- Seed data - default users
+-- NOTE: These passwords are hashed using bcrypt (cost 10)
+-- The plaintext passwords are shown in comments for development purposes only
 
 -- Example admin user:
 -- email: admin@example.com
