@@ -1,0 +1,41 @@
+### Step 1: Login as admin and capture JWT
+POST http://localhost:8080/auth/login
+Content-Type: application/json
+
+{
+  "identifier": "admin",
+  "password": "Password123!"
+}
+
+> {%
+    client.test("Admin login successful", function() {
+        client.assert(response.status === 200, "Expected 200");
+        client.assert(
+            response.body.token || response.body.jwt || response.body.access_token,
+            "Expected a token in response"
+        );
+    });
+
+    const body = response.body;
+    const token = body.token || body.jwt || body.access_token;
+
+    if (!token) {
+        throw new Error("JWT not found in response. Body: " + JSON.stringify(body));
+    }
+
+    client.global.set("auth_token", token);
+    client.log("Token stored: " + token.substring(0, 20) + "...");
+%}
+
+
+### Get all users
+GET http://localhost:8080/admin/users
+Authorization: Bearer {{auth_token}}
+
+> {%
+    client.test("Get all users", function() {
+        client.assert(response.status === 200, "Expected 200 when getting users");
+        client.assert(response.body.length > 0, "Expected at least one user");
+    });
+%}
+###
