@@ -1,0 +1,42 @@
+services:
+  stakeholders:
+    build:
+      context: .
+    env_file:
+      - .env.docker
+    ports:
+      - "${STAKEHOLDERS_PORT}:${STAKEHOLDERS_FASTAPI_PORT}"
+      - "${STAKEHOLDERS_GRPC_PORT}:${STAKEHOLDERS_GRPC_PORT}"
+    depends_on:
+      stakeholders_db:
+        condition: service_healthy
+    volumes:
+      - images-data:/app/images
+    networks:
+      - stakeholders-internal
+
+  stakeholders_db:
+    image: postgres:16
+    restart: always
+    user: postgres
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=stakeholders
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=root 
+    healthcheck:
+      test: [ "CMD", "pg_isready" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - stakeholders-internal
+
+volumes:
+  db-data:
+  images-data:
+
+networks:
+  stakeholders-internal:
+    driver: bridge
