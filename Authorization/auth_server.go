@@ -26,11 +26,12 @@ type Server struct {
 }
 
 type LoginRequest struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
+	Identifier string `json:"identifier"` // Can be username or email
+	Password   string `json:"password"`
 }
 
 type RegisterRequest struct {
+	Username string `json:"username"`
 	Email    string `json:"email"`
 	Password string `json:"password"`
 }
@@ -40,10 +41,11 @@ type LoginResponse struct {
 }
 
 type RegisterResponse struct {
-	UserID string `json:"user_id"`
-	Email  string `json:"email"`
-	Role   string `json:"role"`
-	Token  string `json:"token"`
+	UserID   string `json:"user_id"`
+	Username string `json:"username"`
+	Email    string `json:"email"`
+	Role     string `json:"role"`
+	Token    string `json:"token"`
 }
 
 type BlockUserRequest struct {
@@ -60,9 +62,10 @@ type BlockUserResponse struct {
 }
 
 type Claims struct {
-	UserID string `json:"user_id"`
-	Email  string `json:"email"`
-	Role   string `json:"role"`
+	UserID   string `json:"user_id"`
+	Username string `json:"username"`
+	Email    string `json:"email"`
+	Role     string `json:"role"`
 	jwt.RegisteredClaims
 }
 
@@ -147,9 +150,25 @@ func (s *Server) registerHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Validate input
+	req.Username = strings.TrimSpace(req.Username)
 	req.Email = strings.TrimSpace(strings.ToLower(req.Email))
-	if req.Email == "" || req.Password == "" {
-		writeError(w, http.StatusBadRequest, "email and password are required")
+	if req.Username == "" || req.Email == "" || req.Password == "" {
+		writeError(w, http.StatusBadRequest, "username, email and password are required")
+		return
+	}
+
+	// Username validation
+	if len(req.Username) < 3 {
+		writeError(w, http.StatusBadRequest, "username must be at least 3 characters")
+		return
+	}
+	if len(req.Username) > 30 {
+		writeError(w, http.StatusBadRequest, "username must be at most 30 characters")
+		return
+	}
+	// Only allow alphanumeric and underscores
+	if !isValidUsername(req.Username) {
+		writeError(w, http.StatusBadRequest, "username can only contain letters, numbers, and underscores")
 		return
 	}
 
@@ -177,14 +196,19 @@ func (s *Server) registerHandler(w http.ResponseWriter, r *http.Request) {
 	var userID string
 	var role string
 	err = s.db.QueryRow(r.Context(),
-		`INSERT INTO users (email, password_hash, role) VALUES ($1, $2, 'user') RETURNING id::text, role`,
+		`INSERT INTO users (username, email, password_hash, role) VALUES ($1, $2, $3, 'user') RETURNING id::text, role`,
+		req.Username,
 		req.Email,
 		string(passwordHash),
 	).Scan(&userID, &role)
 
 	if err != nil {
 		if strings.Contains(err.Error(), "duplicate key") || strings.Contains(err.Error(), "unique constraint") {
-			writeError(w, http.StatusConflict, "email already registered")
+			if strings.Contains(err.Error(), "username") {
+				writeError(w, http.StatusConflict, "username already taken")
+			} else {
+				writeError(w, http.StatusConflict, "email already registered")
+			}
 			return
 		}
 		log.Printf("Failed to create user: %v", err)
@@ -193,17 +217,18 @@ func (s *Server) registerHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Generate JWT token for the new user
-	token, err := s.createJWT(userID, req.Email, role)
+	token, err := s.createJWT(userID, req.Username, req.Email, role)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "user created but could not generate token")
 		return
 	}
 
 	writeJSON(w, http.StatusCreated, RegisterResponse{
-		UserID: userID,
-		Email:  req.Email,
-		Role:   role,
-		Token:  token,
+		UserID:   userID,
+		Username: req.Username,
+		Email:    req.Email,
+		Role:     role,
+		Token:    token,
 	})
 }
 
@@ -214,13 +239,13 @@ func (s *Server) loginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	req.Email = strings.TrimSpace(strings.ToLower(req.Email))
-	if req.Email == "" || req.Password == "" {
-		writeError(w, http.StatusBadRequest, "email and password are required")
+	req.Identifier = strings.TrimSpace(req.Identifier)
+	if req.Identifier == "" || req.Password == "" {
+		writeError(w, http.StatusBadRequest, "identifier and password are required")
 		return
 	}
 
-	userID, passwordHash, role, isBlocked, err := s.findUserByEmail(r.Context(), req.Email)
+	userID, username, email, passwordHash, role, isBlocked, err := s.findUserByIdentifier(r.Context(), req.Identifier)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			writeError(w, http.StatusUnauthorized, "invalid credentials")
@@ -241,7 +266,7 @@ func (s *Server) loginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := s.createJWT(userID, req.Email, role)
+	token, err := s.createJWT(userID, username, email, role)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "could not create token")
 		return
@@ -250,27 +275,34 @@ func (s *Server) loginHandler(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, LoginResponse{Token: token})
 }
 
-func (s *Server) findUserByEmail(ctx context.Context, email string) (string, string, string, bool, error) {
+func (s *Server) findUserByIdentifier(ctx context.Context, identifier string) (string, string, string, string, string, bool, error) {
 	var userID string
+	var username string
+	var email string
 	var passwordHash string
 	var role string
 	var isBlocked bool
 
+	// Try to find by username or email (identifier can be either)
+	normalizedIdentifier := strings.ToLower(identifier)
 	err := s.db.QueryRow(ctx,
-		`SELECT id::text, password_hash, role, is_blocked FROM users WHERE email = $1`,
-		email,
-	).Scan(&userID, &passwordHash, &role, &isBlocked)
+		`SELECT id::text, username, email, password_hash, role, is_blocked 
+		 FROM users 
+		 WHERE LOWER(username) = $1 OR LOWER(email) = $1`,
+		normalizedIdentifier,
+	).Scan(&userID, &username, &email, &passwordHash, &role, &isBlocked)
 
-	return userID, passwordHash, role, isBlocked, err
+	return userID, username, email, passwordHash, role, isBlocked, err
 }
 
-func (s *Server) createJWT(userID, email, role string) (string, error) {
+func (s *Server) createJWT(userID, username, email, role string) (string, error) {
 	now := time.Now()
 
 	claims := Claims{
-		UserID: userID,
-		Email:  email,
-		Role:   role,
+		UserID:   userID,
+		Username: username,
+		Email:    email,
+		Role:     role,
 		RegisteredClaims: jwt.RegisteredClaims{
 			Subject:   userID,
 			ExpiresAt: jwt.NewNumericDate(now.Add(s.tokenTTL)),
@@ -467,4 +499,16 @@ func writeError(w http.ResponseWriter, status int, message string) {
 	writeJSON(w, status, map[string]string{
 		"error": message,
 	})
+}
+
+func isValidUsername(username string) bool {
+	for _, char := range username {
+		if !((char >= 'a' && char <= 'z') ||
+			(char >= 'A' && char <= 'Z') ||
+			(char >= '0' && char <= '9') ||
+			char == '_') {
+			return false
+		}
+	}
+	return true
 }
