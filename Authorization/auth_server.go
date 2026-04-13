@@ -70,6 +70,13 @@ type Claims struct {
 	jwt.RegisteredClaims
 }
 
+type User struct {
+	ID        int64  `json:"id"`
+	Username  string `json:"username"`
+	Email     string `json:"email"`
+	IsBlocked bool   `json:"is_blocked"`
+}
+
 func main() {
 	if err := godotenv.Load(); err != nil {
 		log.Println("No .env file found, using environment variables")
@@ -117,6 +124,7 @@ func main() {
 	router.Post("/auth/login", srv.loginHandler)
 
 	// Admin-only routes (require authentication + admin role)
+	router.Get("/admin/users", srv.requireAuth(srv.requireAdmin(srv.getAllUsersHandler)))
 	router.Post("/admin/users/block", srv.requireAuth(srv.requireAdmin(srv.blockUserHandler)))
 	router.Post("/admin/users/unblock", srv.requireAuth(srv.requireAdmin(srv.unblockUserHandler)))
 
@@ -294,6 +302,31 @@ func (s *Server) findUserByIdentifier(ctx context.Context, identifier string) (i
 	).Scan(&userID, &username, &email, &passwordHash, &role, &isBlocked)
 
 	return userID, username, email, passwordHash, role, isBlocked, err
+}
+
+func (s *Server) getAllUsers(ctx context.Context) ([]User, error) {
+	rows, err := s.db.Query(ctx,
+		`SELECT id, username, email, is_blocked FROM users WHERE role = 'user'`,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var users []User
+	for rows.Next() {
+		var u User
+		if err := rows.Scan(&u.ID, &u.Username, &u.Email, &u.IsBlocked); err != nil {
+			return nil, err
+		}
+		users = append(users, u)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return users, nil
 }
 
 func (s *Server) createJWT(userID int64, username, email, role string) (string, error) {
@@ -488,6 +521,17 @@ func (s *Server) unblockUserHandler(w http.ResponseWriter, r *http.Request) {
 		Message: "user unblocked successfully",
 		UserID:  req.UserID,
 	})
+}
+
+func (s *Server) getAllUsersHandler(w http.ResponseWriter, r *http.Request) {
+	users, err := s.getAllUsers(r.Context())
+	if err != nil {
+		log.Printf("Failed to get users: %v", err)
+		writeError(w, http.StatusInternalServerError, "failed to retrieve users")
+		return
+	}
+
+	writeJSON(w, http.StatusOK, users)
 }
 
 func writeJSON(w http.ResponseWriter, status int, payload any) {
