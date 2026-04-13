@@ -2,11 +2,12 @@ FROM golang:latest
 
 WORKDIR /usr/src/app
 
-COPY go.mod go.sum ./
-COPY proto ./proto
+COPY ./Gateway/go.mod ./Gateway/go.sum ./
+COPY ./Gateway/proto ./proto
+COPY ./Common /usr/src/Common
 RUN go mod download
 
-COPY . .
+COPY ./Gateway .
 RUN go build -v -o /usr/local/bin/app ./gateway.go
 
 CMD ["app"]

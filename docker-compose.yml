@@ -34,8 +34,8 @@ services:
 
   gateway:
     build:
-      context: ./Gateway
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./Gateway/Dockerfile
     ports:
       - "8000:8000"
     networks:

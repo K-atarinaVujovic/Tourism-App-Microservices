@@ -15,8 +15,8 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	"gopkg.in/yaml.v3"
 
-	"gateway/jwtreader"
 	servicepb "gateway/proto/service"
+	"jwtreader"
 )
 
 // MicroserviceRegistry Should contain all generated API handlers
