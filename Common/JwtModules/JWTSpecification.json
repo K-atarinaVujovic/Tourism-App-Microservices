@@ -1,0 +1,138 @@
+{
+  "version": "2.1.0",
+  "description": "Tourism App JWT Specification - Cross-Language Compatible",
+  "issuer": "tourism-auth-service",
+  "changelog": {
+    "2.0.0": "Added username claim to support username-based authentication",
+    "2.1.0": "Changed user_id and sub from UUID strings to integer IDs"
+  },
+
+  "algorithm": {
+    "type": "HMAC",
+    "variant": "HS256",
+    "note": "All services must use HS256 (HMAC-SHA256)"
+  },
+
+  "secret": {
+    "source": "JWT_SECRET environment variable",
+    "encoding": "UTF-8 string",
+    "note": "Must be identical across all services"
+  },
+
+  "token_lifetime": {
+    "value": 86400,
+    "unit": "seconds",
+    "description": "24 hours"
+  },
+
+  "claims": {
+    "standard_claims": {
+      "sub": {
+        "type": "string",
+        "format": "numeric-string",
+        "required": true,
+        "description": "Subject - User ID as string (JWT standard requires string)",
+        "example": "1"
+      },
+      "iat": {
+        "type": "integer",
+        "format": "unix-timestamp",
+        "required": true,
+        "description": "Issued At - Token creation time"
+      },
+      "exp": {
+        "type": "integer",
+        "format": "unix-timestamp",
+        "required": true,
+        "description": "Expiration Time"
+      },
+      "nbf": {
+        "type": "integer",
+        "format": "unix-timestamp",
+        "required": true,
+        "description": "Not Before - Token valid from this time"
+      },
+      "jti": {
+        "type": "string",
+        "format": "hex-string",
+        "required": false,
+        "description": "JWT ID - Unique token identifier"
+      }
+    },
+    "custom_claims": {
+      "user_id": {
+        "type": "integer",
+        "format": "int64",
+        "required": true,
+        "description": "User's unique identifier (same as sub)",
+        "example": 1
+      },
+      "username": {
+        "type": "string",
+        "format": "alphanumeric-underscore",
+        "required": true,
+        "description": "User's unique username",
+        "example": "john_doe",
+        "validation": {
+          "min_length": 3,
+          "max_length": 30,
+          "pattern": "^[a-zA-Z0-9_]+$",
+          "note": "Only letters, numbers, and underscores allowed"
+        }
+      },
+      "email": {
+        "type": "string",
+        "format": "email",
+        "required": true,
+        "description": "User's email address",
+        "example": "user@example.com"
+      },
+      "role": {
+        "type": "string",
+        "enum": ["user", "admin"],
+        "required": true,
+        "description": "User's role",
+        "example": "user"
+      }
+    }
+  },
+
+  "token_format": {
+    "header": {
+      "alg": "HS256",
+      "typ": "JWT"
+    },
+    "example_decoded": {
+      "user_id": 1,
+      "username": "john_doe",
+      "email": "user@example.com",
+      "role": "user",
+      "sub": 1,
+      "iat": 1713024000,
+      "exp": 1713110400,
+      "nbf": 1713024000,
+      "jti": "a1b2c3d4e5f6"
+    }
+  },
+
+  "validation_rules": {
+    "signature_verification": "MUST verify using HS256 with shared secret",
+    "expiration_check": "MUST reject if exp < current_time",
+    "not_before_check": "MUST reject if nbf > current_time",
+    "required_claims": ["user_id", "username", "email", "role", "sub", "iat", "exp", "nbf"],
+    "claim_types": "MUST validate types match specification",
+    "role_values": "MUST be exactly 'user' or 'admin' (case-sensitive)",
+    "username_validation": "MUST match pattern ^[a-zA-Z0-9_]{3,30}$"
+  },
+
+  "http_usage": {
+    "header_name": "Authorization",
+    "format": "Bearer {token}",
+    "example": "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+  },
+
+  "migration_notes": {
+    "from_v1": "Services consuming v1.0.0 tokens should upgrade to handle the username claim. The username field is now required in all new tokens.",
+    "from_v2": "Services consuming v2.0.0 tokens should update to handle big integer user_id."
+  }
+}

@@ -1,0 +1,565 @@
+package main
+
+import (
+	"context"
+	"crypto/rand"
+	"encoding/hex"
+	"encoding/json"
+	"errors"
+	"log"
+	"net/http"
+	"os"
+	"strconv"
+	"strings"
+	"time"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/golang-jwt/jwt/v5"
+	"github.com/jackc/pgx/v5"
+	"github.com/joho/godotenv"
+	"golang.org/x/crypto/bcrypt"
+)
+
+type Server struct {
+	db        *pgx.Conn
+	jwtSecret []byte
+	tokenTTL  time.Duration
+}
+
+type LoginRequest struct {
+	Identifier string `json:"identifier"` // Can be username or email
+	Password   string `json:"password"`
+}
+
+type RegisterRequest struct {
+	Username string `json:"username"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+type LoginResponse struct {
+	Token string `json:"token"`
+}
+
+type RegisterResponse struct {
+	UserID   int64  `json:"user_id"`
+	Username string `json:"username"`
+	Email    string `json:"email"`
+	Role     string `json:"role"`
+	Token    string `json:"token"`
+}
+
+type BlockUserRequest struct {
+	UserID int64 `json:"user_id"`
+}
+
+type UnblockUserRequest struct {
+	UserID int64 `json:"user_id"`
+}
+
+type BlockUserResponse struct {
+	Message string `json:"message"`
+	UserID  int64  `json:"user_id"`
+}
+
+type Claims struct {
+	UserID   int64  `json:"user_id"`
+	Username string `json:"username"`
+	Email    string `json:"email"`
+	Role     string `json:"role"`
+	jwt.RegisteredClaims
+}
+
+type User struct {
+	ID        int64  `json:"id"`
+	Username  string `json:"username"`
+	Email     string `json:"email"`
+	IsBlocked bool   `json:"is_blocked"`
+}
+
+func main() {
+	useConfig := os.Getenv("USE_CONFIG_FILE") == "true"
+	if useConfig {
+		log.Println("Using .env file for configuration")
+		if err := godotenv.Load(); err != nil {
+			log.Println("No .env file found, falling back to environment variables")
+		}
+	} else {
+		log.Println("Using environment variables for configuration")
+	}
+
+	databaseURL := os.Getenv("DATABASE_URL")
+	if databaseURL == "" {
+		log.Fatal("DATABASE_URL is required")
+	}
+
+	jwtSecret := os.Getenv("JWT_SECRET")
+	if jwtSecret == "" {
+		log.Fatal("JWT_SECRET is required")
+	}
+
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+
+	log.Printf("Attempting to connect to database at %v...", databaseURL)
+	conn, err := pgx.Connect(context.Background(), databaseURL)
+	if err != nil {
+		log.Fatalf("Unable to connect to database: %v", err)
+	}
+	defer conn.Close(context.Background())
+
+	log.Printf("Connected to database, running ping...")
+	if err := conn.Ping(context.Background()); err != nil {
+		log.Fatalf("Database ping failed: %v", err)
+	}
+	log.Printf("Database ping successful!")
+
+	srv := &Server{
+		db:        conn,
+		jwtSecret: []byte(jwtSecret),
+		tokenTTL:  24 * time.Hour,
+	}
+
+	router := chi.NewRouter()
+
+	// Public routes
+	router.Get("/health", srv.healthHandler)
+	router.Post("/auth/register", srv.registerHandler)
+	router.Post("/auth/login", srv.loginHandler)
+
+	// Admin-only routes (require authentication + admin role)
+	router.Get("/admin/users", srv.requireAuth(srv.requireAdmin(srv.getAllUsersHandler)))
+	router.Post("/admin/users/block", srv.requireAuth(srv.requireAdmin(srv.blockUserHandler)))
+	router.Post("/admin/users/unblock", srv.requireAuth(srv.requireAdmin(srv.unblockUserHandler)))
+
+	log.Printf("Auth server listening on :%s", port)
+	log.Fatal(http.ListenAndServe(":"+port, router))
+}
+
+func (s *Server) healthHandler(w http.ResponseWriter, r *http.Request) {
+	// Test database connection
+	ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
+	defer cancel()
+
+	if err := s.db.Ping(ctx); err != nil {
+		writeJSON(w, http.StatusServiceUnavailable, map[string]string{
+			"status": "unhealthy",
+			"error":  "database connection failed",
+		})
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]string{
+		"status":   "ok",
+		"database": "connected",
+	})
+}
+
+func (s *Server) registerHandler(w http.ResponseWriter, r *http.Request) {
+	var req RegisterRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid json body")
+		return
+	}
+
+	// Validate input
+	req.Username = strings.TrimSpace(req.Username)
+	req.Email = strings.TrimSpace(strings.ToLower(req.Email))
+	if req.Username == "" || req.Email == "" || req.Password == "" {
+		writeError(w, http.StatusBadRequest, "username, email and password are required")
+		return
+	}
+
+	// Username validation
+	if len(req.Username) < 3 {
+		writeError(w, http.StatusBadRequest, "username must be at least 3 characters")
+		return
+	}
+	if len(req.Username) > 30 {
+		writeError(w, http.StatusBadRequest, "username must be at most 30 characters")
+		return
+	}
+	// Only allow alphanumeric and underscores
+	if !isValidUsername(req.Username) {
+		writeError(w, http.StatusBadRequest, "username can only contain letters, numbers, and underscores")
+		return
+	}
+
+	// Basic email validation
+	if !strings.Contains(req.Email, "@") {
+		writeError(w, http.StatusBadRequest, "invalid email format")
+		return
+	}
+
+	// Password strength validation
+	if len(req.Password) < 8 {
+		writeError(w, http.StatusBadRequest, "password must be at least 8 characters")
+		return
+	}
+
+	// Hash password
+	passwordHash, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+	if err != nil {
+		log.Printf("Failed to hash password: %v", err)
+		writeError(w, http.StatusInternalServerError, "failed to process password")
+		return
+	}
+
+	// Create user with default 'user' role
+	var userID int64
+	var role string
+	err = s.db.QueryRow(r.Context(),
+		`INSERT INTO users (username, email, password_hash, role) VALUES ($1, $2, $3, 'user') RETURNING id, role`,
+		req.Username,
+		req.Email,
+		string(passwordHash),
+	).Scan(&userID, &role)
+
+	if err != nil {
+		if strings.Contains(err.Error(), "duplicate key") || strings.Contains(err.Error(), "unique constraint") {
+			if strings.Contains(err.Error(), "username") {
+				writeError(w, http.StatusConflict, "username already taken")
+			} else {
+				writeError(w, http.StatusConflict, "email already registered")
+			}
+			return
+		}
+		log.Printf("Failed to create user: %v", err)
+		writeError(w, http.StatusInternalServerError, "failed to create user")
+		return
+	}
+
+	// Generate JWT token for the new user
+	token, err := s.createJWT(userID, req.Username, req.Email, role)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "user created but could not generate token")
+		return
+	}
+
+	writeJSON(w, http.StatusCreated, RegisterResponse{
+		UserID:   userID,
+		Username: req.Username,
+		Email:    req.Email,
+		Role:     role,
+		Token:    token,
+	})
+}
+
+func (s *Server) loginHandler(w http.ResponseWriter, r *http.Request) {
+	var req LoginRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid json body")
+		return
+	}
+
+	req.Identifier = strings.TrimSpace(req.Identifier)
+	if req.Identifier == "" || req.Password == "" {
+		writeError(w, http.StatusBadRequest, "identifier and password are required")
+		return
+	}
+
+	userID, username, email, passwordHash, role, isBlocked, err := s.findUserByIdentifier(r.Context(), req.Identifier)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			writeError(w, http.StatusUnauthorized, "invalid credentials")
+			return
+		}
+		writeError(w, http.StatusInternalServerError, "database error")
+		return
+	}
+
+	// Check if account is blocked
+	if isBlocked {
+		writeError(w, http.StatusForbidden, "account is blocked")
+		return
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(passwordHash), []byte(req.Password)); err != nil {
+		writeError(w, http.StatusUnauthorized, "invalid credentials")
+		return
+	}
+
+	token, err := s.createJWT(userID, username, email, role)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "could not create token")
+		return
+	}
+
+	writeJSON(w, http.StatusOK, LoginResponse{Token: token})
+}
+
+func (s *Server) findUserByIdentifier(ctx context.Context, identifier string) (int64, string, string, string, string, bool, error) {
+	var userID int64
+	var username string
+	var email string
+	var passwordHash string
+	var role string
+	var isBlocked bool
+
+	// Try to find by username or email (identifier can be either)
+	normalizedIdentifier := strings.ToLower(identifier)
+	err := s.db.QueryRow(ctx,
+		`SELECT id, username, email, password_hash, role, is_blocked 
+		 FROM users 
+		 WHERE LOWER(username) = $1 OR LOWER(email) = $1`,
+		normalizedIdentifier,
+	).Scan(&userID, &username, &email, &passwordHash, &role, &isBlocked)
+
+	return userID, username, email, passwordHash, role, isBlocked, err
+}
+
+func (s *Server) getAllUsers(ctx context.Context) ([]User, error) {
+	rows, err := s.db.Query(ctx,
+		`SELECT id, username, email, is_blocked FROM users WHERE role = 'user'`,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var users []User
+	for rows.Next() {
+		var u User
+		if err := rows.Scan(&u.ID, &u.Username, &u.Email, &u.IsBlocked); err != nil {
+			return nil, err
+		}
+		users = append(users, u)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return users, nil
+}
+
+func (s *Server) createJWT(userID int64, username, email, role string) (string, error) {
+	now := time.Now()
+
+	claims := Claims{
+		UserID:   userID,
+		Username: username,
+		Email:    email,
+		Role:     role,
+		RegisteredClaims: jwt.RegisteredClaims{
+			Subject:   strconv.FormatInt(userID, 10),
+			ExpiresAt: jwt.NewNumericDate(now.Add(s.tokenTTL)),
+			IssuedAt:  jwt.NewNumericDate(now),
+			NotBefore: jwt.NewNumericDate(now),
+			ID:        randomID(),
+		},
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return token.SignedString(s.jwtSecret)
+}
+
+func randomID() string {
+	b := make([]byte, 16)
+	_, err := rand.Read(b)
+	if err != nil {
+		return ""
+	}
+	return hex.EncodeToString(b)
+}
+
+// Middleware to require authentication
+func (s *Server) requireAuth(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		authHeader := r.Header.Get("Authorization")
+		if authHeader == "" {
+			writeError(w, http.StatusUnauthorized, "missing authorization header")
+			return
+		}
+
+		// Expect "Bearer <token>"
+		parts := strings.Split(authHeader, " ")
+		if len(parts) != 2 || parts[0] != "Bearer" {
+			writeError(w, http.StatusUnauthorized, "invalid authorization format")
+			return
+		}
+
+		tokenString := parts[1]
+		claims := &Claims{}
+
+		token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+			return s.jwtSecret, nil
+		})
+
+		if err != nil || !token.Valid {
+			writeError(w, http.StatusUnauthorized, "invalid token")
+			return
+		}
+
+		// Add claims to request context
+		ctx := context.WithValue(r.Context(), "claims", claims)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	}
+}
+
+// Middleware to require admin role
+func (s *Server) requireAdmin(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		claims, ok := r.Context().Value("claims").(*Claims)
+		if !ok {
+			writeError(w, http.StatusInternalServerError, "failed to get user claims")
+			return
+		}
+
+		if claims.Role != "admin" {
+			writeError(w, http.StatusForbidden, "admin access required")
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	}
+}
+
+func (s *Server) blockUserHandler(w http.ResponseWriter, r *http.Request) {
+	claims := r.Context().Value("claims").(*Claims)
+
+	var req BlockUserRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid json body")
+		return
+	}
+
+	if req.UserID == 0 {
+		writeError(w, http.StatusBadRequest, "user_id is required")
+		return
+	}
+
+	// Prevent admin from blocking themselves
+	if req.UserID == claims.UserID {
+		writeError(w, http.StatusBadRequest, "cannot block your own account")
+		return
+	}
+
+	// Check if user exists and get their role
+	var targetRole string
+	var isAlreadyBlocked bool
+	err := s.db.QueryRow(r.Context(),
+		`SELECT role, is_blocked FROM users WHERE id = $1`,
+		req.UserID,
+	).Scan(&targetRole, &isAlreadyBlocked)
+
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			writeError(w, http.StatusNotFound, "user not found")
+			return
+		}
+		writeError(w, http.StatusInternalServerError, "database error")
+		return
+	}
+
+	if isAlreadyBlocked {
+		writeError(w, http.StatusBadRequest, "user is already blocked")
+		return
+	}
+
+	// Block the user
+	_, err = s.db.Exec(r.Context(),
+		`UPDATE users SET is_blocked = true, blocked_at = now(), blocked_by = $1 WHERE id = $2`,
+		claims.UserID,
+		req.UserID,
+	)
+
+	if err != nil {
+		log.Printf("Failed to block user: %v", err)
+		writeError(w, http.StatusInternalServerError, "failed to block user")
+		return
+	}
+
+	writeJSON(w, http.StatusOK, BlockUserResponse{
+		Message: "user blocked successfully",
+		UserID:  req.UserID,
+	})
+}
+
+func (s *Server) unblockUserHandler(w http.ResponseWriter, r *http.Request) {
+	var req UnblockUserRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid json body")
+		return
+	}
+
+	if req.UserID == 0 {
+		writeError(w, http.StatusBadRequest, "user_id is required")
+		return
+	}
+
+	// Check if user exists and is blocked
+	var isBlocked bool
+	err := s.db.QueryRow(r.Context(),
+		`SELECT is_blocked FROM users WHERE id = $1`,
+		req.UserID,
+	).Scan(&isBlocked)
+
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			writeError(w, http.StatusNotFound, "user not found")
+			return
+		}
+		writeError(w, http.StatusInternalServerError, "database error")
+		return
+	}
+
+	if !isBlocked {
+		writeError(w, http.StatusBadRequest, "user is not blocked")
+		return
+	}
+
+	// Unblock the user
+	_, err = s.db.Exec(r.Context(),
+		`UPDATE users SET is_blocked = false, blocked_at = NULL, blocked_by = NULL WHERE id = $1`,
+		req.UserID,
+	)
+
+	if err != nil {
+		log.Printf("Failed to unblock user: %v", err)
+		writeError(w, http.StatusInternalServerError, "failed to unblock user")
+		return
+	}
+
+	writeJSON(w, http.StatusOK, BlockUserResponse{
+		Message: "user unblocked successfully",
+		UserID:  req.UserID,
+	})
+}
+
+func (s *Server) getAllUsersHandler(w http.ResponseWriter, r *http.Request) {
+	users, err := s.getAllUsers(r.Context())
+	if err != nil {
+		log.Printf("Failed to get users: %v", err)
+		writeError(w, http.StatusInternalServerError, "failed to retrieve users")
+		return
+	}
+
+	writeJSON(w, http.StatusOK, users)
+}
+
+func writeJSON(w http.ResponseWriter, status int, payload any) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	_ = json.NewEncoder(w).Encode(payload)
+}
+
+func writeError(w http.ResponseWriter, status int, message string) {
+	writeJSON(w, status, map[string]string{
+		"error": message,
+	})
+}
+
+func isValidUsername(username string) bool {
+	for _, char := range username {
+		if !((char >= 'a' && char <= 'z') ||
+			(char >= 'A' && char <= 'Z') ||
+			(char >= '0' && char <= '9') ||
+			char == '_') {
+			return false
+		}
+	}
+	return true
+}

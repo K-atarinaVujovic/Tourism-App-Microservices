@@ -1,0 +1,92 @@
+### Step 1: Login as admin and capture JWT
+POST http://localhost:8080/auth/login
+Content-Type: application/json
+
+{
+  "identifier": "admin",
+  "password": "Password123!"
+}
+
+> {%
+    client.test("Admin login successful", function() {
+        client.assert(response.status === 200, "Expected 200");
+        client.assert(
+            response.body.token || response.body.jwt || response.body.access_token,
+            "Expected a token in response"
+        );
+    });
+
+    const body = response.body;
+    const token = body.token || body.jwt || body.access_token;
+
+    if (!token) {
+        throw new Error("JWT not found in response. Body: " + JSON.stringify(body));
+    }
+
+    client.global.set("auth_token", token);
+    client.log("Token stored: " + token.substring(0, 20) + "...");
+%}
+
+### Step 2: Block user 2
+POST http://localhost:8080/admin/users/block
+Authorization: Bearer {{auth_token}}
+Content-Type: application/json
+
+{
+  "user_id": 2
+}
+
+> {%
+    client.test("Block user 2 successful", function() {
+        client.assert(response.status === 200, "Expected 200 when blocking user");
+    });
+%}
+
+### Step 3: Try to login as blocked user (should fail)
+POST http://localhost:8080/auth/login
+Content-Type: application/json
+
+{
+  "identifier": "user",
+  "password": "Password123!"
+}
+
+> {%
+    client.test("Blocked user cannot login", function() {
+        client.assert(response.status === 401 || response.status === 403, "Expected 401 or 403 for blocked user");
+    });
+%}
+
+### Step 4: Unblock user 2
+POST http://localhost:8080/admin/users/unblock
+Authorization: Bearer {{auth_token}}
+Content-Type: application/json
+
+{
+  "user_id": 2
+}
+
+> {%
+    client.test("Unblock user 2 successful", function() {
+        client.assert(response.status === 200, "Expected 200 when unblocking user");
+    });
+%}
+
+### Step 5: Try to login as unblocked user (should succeed)
+POST http://localhost:8080/auth/login
+Content-Type: application/json
+
+{
+  "identifier": "user",
+  "password": "Password123!"
+}
+
+> {%
+    client.test("Unblocked user can login again", function() {
+        client.assert(response.status === 200, "Expected 200 after unblocking user");
+        client.assert(
+            response.body.token || response.body.jwt || response.body.access_token,
+            "Expected a token for unblocked user"
+        );
+    });
+%}

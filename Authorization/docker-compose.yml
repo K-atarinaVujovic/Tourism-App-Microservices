@@ -1,0 +1,46 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: auth-db
+    environment:
+      POSTGRES_DB: tourism-auth
+      POSTGRES_USER: tourism-app
+      POSTGRES_PASSWORD: admin123
+    ports:
+      - "5433:5432"
+    volumes:
+      - auth_db_data:/var/lib/postgresql/data
+      - ./db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./db/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tourism-app -d tourism-auth"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - auth-network
+
+  auth-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: auth-server
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      USE_CONFIG_FILE: "false"
+      PORT: 8080
+      DATABASE_URL: postgres://tourism-app:admin123@db:5432/tourism-auth?sslmode=disable
+      JWT_SECRET: super-secret-change-me
+    ports:
+      - "8080:8080"
+    networks:
+      - auth-network
+
+networks:
+  auth-network:
+    driver: bridge
+
+volumes:
+  auth_db_data:
