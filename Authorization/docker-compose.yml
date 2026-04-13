@@ -17,6 +17,8 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+    networks:
+      - auth-network
 
   auth-server:
     build:
@@ -32,6 +34,13 @@ services:
       JWT_SECRET: super-secret-change-me
     ports:
       - "8080:8080"
+    networks:
+      - auth-network
+
+
+networks:
+  auth-net:
+    driver: bridge
 
 volumes:
   auth_db_data:
