@@ -22,6 +22,7 @@ LISTEN_ADDR = "[::]:" + GRPC_PORT
 FASTAPI_PORT = 8000
 
 def serve_fastapi():
+    print(f"Swagger UI: http://127.0.0.1:{FASTAPI_PORT}/docs")
     uvicorn.run("app.api.routes.profile:app", host="0.0.0.0", port=FASTAPI_PORT, reload=True)
 
 def serve_grpc():

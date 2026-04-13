@@ -1,6 +1,8 @@
 from typing import Annotated, Any, Optional
 
-from fastapi import Body, Depends, FastAPI, File, HTTPException, Path, UploadFile
+from fastapi import Body, Depends, FastAPI, File, HTTPException, Path, Request, UploadFile
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from fastapi.staticfiles import StaticFiles
 
@@ -19,6 +21,14 @@ security = HTTPBearer(auto_error=False)
 
 # For serving images
 app.mount("/images", StaticFiles(directory="images"), name="images")
+
+# For making Pydantic exceptions give a clean response
+@app.exception_handler(RequestValidationError)
+async def validation_handler(request: Request, exc: RequestValidationError):
+    return JSONResponse(
+        status_code=422,
+        content={"message": exc.errors()[0]["msg"]}
+    )
 
 @app.post("/profiles/upload-image", response_model=dict)
 async def upload_image(

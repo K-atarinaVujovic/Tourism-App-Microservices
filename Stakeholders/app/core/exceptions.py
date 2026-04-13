@@ -3,3 +3,6 @@ class NotFoundException(Exception):
 
 class AlreadyExistsException(Exception):
     pass
+
+class ValidationError(Exception):
+    pass

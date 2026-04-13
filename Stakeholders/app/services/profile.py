@@ -15,7 +15,8 @@ class ProfileService:
       lastname=profile.lastname,
       imageUrl=profile.imageUrl,
       biography=profile.biography,
-      quote=profile.quote
+      quote=profile.quote,
+      role=profile.role
     )
     return ProfileResponse.model_validate(self.repo.save(new_profile))
 

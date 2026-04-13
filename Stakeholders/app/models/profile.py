@@ -12,19 +12,21 @@ class Profile(Base):
   imageUrl: Mapped[str | None]
   biography: Mapped[str | None]
   quote: Mapped[str | None]
+  role: Mapped[str | None]
 
   user_id: Mapped[int] = mapped_column(nullable=False, unique=True)
 
-  def __init__(self, user_id: int, name: str, lastname: str | None = None, imageUrl: str | None = None, biography: str | None = None, quote: str | None = None):
+  def __init__(self, user_id: int, name: str, lastname: str | None = None, imageUrl: str | None = None, biography: str | None = None, quote: str | None = None, role: str | None = 'tourist'):
     self.user_id = user_id
     self.name = name
     self.lastname = lastname
     self.imageUrl = imageUrl
     self.biography = biography
     self.quote = quote
+    self.role = role
 
   def __repr__(self) -> str:
-    return f"Profile:\nname={self.name}\nlastname={self.lastname}\nimageUrl={self.imageUrl}\nbiography={self.biography}\nquote={self.quote}"
+    return f"Profile:\nname={self.name}\nlastname={self.lastname}\nimageUrl={self.imageUrl}\nbiography={self.biography}\nquote={self.quote}\nrole={self.role}"
 
   def update(self, name: str | None = None, lastname: str | None = None, imageUrl: str | None = None, biography: str | None = None, quote: str | None = None) -> Self:
     self.name = name if name is not None else self.name
