@@ -76,14 +76,13 @@ public static class JwtHelpers
 
     private static void ValidateClaims(JwtClaims c, long nowUnix)
     {
-        if (string.IsNullOrWhiteSpace(c.user_id) ||
+        if (c.user_id == 0 ||
             string.IsNullOrWhiteSpace(c.username) ||
             string.IsNullOrWhiteSpace(c.email) ||
-            string.IsNullOrWhiteSpace(c.role) ||
-            string.IsNullOrWhiteSpace(c.sub))
+            string.IsNullOrWhiteSpace(c.role))
             throw new InvalidOperationException("Missing required claim");
 
-        if (c.iat == 0 || c.exp == 0 || c.nbf == 0)
+        if (c.iat == 0 || c.exp == 0 || c.nbf == 0 || c.sub == 0)
             throw new InvalidOperationException("Missing required timestamp claim");
 
         if (c.role != "user" && c.role != "admin")
@@ -102,43 +101,24 @@ public static class JwtHelpers
             throw new InvalidOperationException("user_id must match sub");
     }
 
-    private static byte[] Base64UrlDecode(string input)
+    public sealed class JwtClaims
     {
-        string s = input.Replace('-', '+').Replace('_', '/');
-        switch (s.Length % 4)
-        {
-            case 2: s += "=="; break;
-            case 3: s += "="; break;
-            case 1: throw new FormatException("Invalid base64url string");
-        }
-        return Convert.FromBase64String(s);
+        public long user_id { get; set; }
+        public string username { get; set; } = "";
+        public string email { get; set; } = "";
+        public string role { get; set; } = "";
+
+        public long sub { get; set; }
+        public long iat { get; set; }
+        public long exp { get; set; }
+        public long nbf { get; set; }
+        public string? jti { get; set; }
     }
-}
 
-public sealed class JwtHeader
-{
-    public string alg { get; set; } = "";
-    public string typ { get; set; } = "";
-}
-
-public sealed class JwtClaims
-{
-    public string user_id { get; set; } = "";
-    public string username { get; set; } = "";
-    public string email { get; set; } = "";
-    public string role { get; set; } = "";
-
-    public string sub { get; set; } = "";
-    public long iat { get; set; }
-    public long exp { get; set; }
-    public long nbf { get; set; }
-    public string? jti { get; set; }
-}
-
-public sealed class JwtToken
-{
-    public string Raw { get; set; } = "";
-    public JwtHeader Header { get; set; } = new();
-    public JwtClaims Claims { get; set; } = new();
-    public string Subject { get; set; } = "";
-}
+    public sealed class JwtToken
+    {
+        public string Raw { get; set; } = "";
+        public JwtHeader Header { get; set; } = new();
+        public JwtClaims Claims { get; set; } = new();
+        public long Subject { get; set; }
+    }

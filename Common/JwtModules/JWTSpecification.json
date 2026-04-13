@@ -1,9 +1,10 @@
 {
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Tourism App JWT Specification - Cross-Language Compatible",
   "issuer": "tourism-auth-service",
   "changelog": {
-    "2.0.0": "Added username claim to support username-based authentication"
+    "2.0.0": "Added username claim to support username-based authentication",
+    "2.1.0": "Changed user_id and sub from UUID strings to integer IDs"
   },
 
   "algorithm": {
@@ -27,11 +28,11 @@
   "claims": {
     "standard_claims": {
       "sub": {
-        "type": "string",
-        "format": "uuid-v4",
+        "type": "integer",
+        "format": "int64",
         "required": true,
         "description": "Subject - User ID",
-        "example": "550e8400-e29b-41d4-a716-446655440000"
+        "example": 1
       },
       "iat": {
         "type": "integer",
@@ -60,11 +61,11 @@
     },
     "custom_claims": {
       "user_id": {
-        "type": "string",
-        "format": "uuid-v4",
+        "type": "integer",
+        "format": "int64",
         "required": true,
         "description": "User's unique identifier (same as sub)",
-        "example": "550e8400-e29b-41d4-a716-446655440000"
+        "example": 1
       },
       "username": {
         "type": "string",
@@ -102,11 +103,11 @@
       "typ": "JWT"
     },
     "example_decoded": {
-      "user_id": "550e8400-e29b-41d4-a716-446655440000",
+      "user_id": 1,
       "username": "john_doe",
       "email": "user@example.com",
       "role": "user",
-      "sub": "550e8400-e29b-41d4-a716-446655440000",
+      "sub": 1,
       "iat": 1713024000,
       "exp": 1713110400,
       "nbf": 1713024000,
@@ -131,6 +132,7 @@
   },
 
   "migration_notes": {
-    "from_v1": "Services consuming v1.0.0 tokens should upgrade to handle the username claim. The username field is now required in all new tokens."
+    "from_v1": "Services consuming v1.0.0 tokens should upgrade to handle the username claim. The username field is now required in all new tokens.",
+    "from_v2": "Services consuming v2.0.0 tokens should update to handle big integer user_id."
   }
 }

@@ -105,6 +105,9 @@ def _validate_claims(c: Dict[str, Any], now_unix: int) -> None:
     if not isinstance(c["username"], str) or not USERNAME_RE.fullmatch(c["username"]):
         raise InvalidUsername("Invalid username")
 
+    if not isinstance(c["user_id"], int) or not isinstance(c["sub"], int):
+        raise JwtError("user_id and sub must be integers")
+
     if not isinstance(c["iat"], int) or not isinstance(c["exp"], int) or not isinstance(c["nbf"], int):
         raise JwtError("Timestamp claims must be integers")
 

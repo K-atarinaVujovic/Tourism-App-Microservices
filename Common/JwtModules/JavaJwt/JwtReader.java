@@ -74,7 +74,7 @@ public final class JwtReader {
     }
 
     private static void validateClaims(JwtClaims c, long nowUnix) {
-        if (isBlank(c.user_id) || isBlank(c.username) || isBlank(c.email) || isBlank(c.role) || isBlank(c.sub)) {
+        if (c.user_id == 0 || isBlank(c.username) || isBlank(c.email) || isBlank(c.role) || c.sub == 0) {
             throw new IllegalArgumentException("Missing required claim");
         }
         if (c.iat == 0 || c.exp == 0 || c.nbf == 0) {
@@ -92,9 +92,9 @@ public final class JwtReader {
         if (c.nbf > nowUnix) {
             throw new IllegalArgumentException("Token not yet valid");
         }
-        if (!c.user_id.equals(c.sub)) {
+        if (c.user_id != c.sub) {
             throw new IllegalArgumentException("user_id must match sub");
-ja mislim da samo treba da napraviš da turista i autor         }
+        }
     }
 
     private static boolean isBlank(String s) {
@@ -115,7 +115,7 @@ ja mislim da samo treba da napraviš da turista i autor         }
         public String username = "";
         public String email = "";
         public String role = "";
-        public String sub = "";
+        public long sub;
         public long iat;
         public long exp;
         public long nbf;

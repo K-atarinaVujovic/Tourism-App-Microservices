@@ -28,12 +28,12 @@ var (
 var usernameRe = regexp.MustCompile(`^[a-zA-Z0-9_]{3,30}$`)
 
 type Claims struct {
-	UserID   string `json:"user_id"`
+	UserID   int64  `json:"user_id"`
 	Username string `json:"username"`
 	Email    string `json:"email"`
 	Role     string `json:"role"`
 
-	Sub string `json:"sub"`
+	Sub int64  `json:"sub"`
 	Iat int64  `json:"iat"`
 	Exp int64  `json:"exp"`
 	Nbf int64  `json:"nbf"`
@@ -49,7 +49,7 @@ type Token struct {
 	Header  Header
 	Claims  Claims
 	Raw     string
-	Subject string
+	Subject int64
 }
 
 func ExtractBearerToken(authHeader string) (string, error) {
@@ -134,10 +134,11 @@ func verifyHS256(signingInput, signatureB64 string, secret string) bool {
 }
 
 func validateClaims(c Claims, nowUnix int64) error {
-	if c.UserID == "" {
+	if c.UserID == 0 {
 		return ErrMissingClaim
 	}
 	if c.Username == "" {
+
 		return ErrMissingClaim
 	}
 	if c.Email == "" {
@@ -146,7 +147,7 @@ func validateClaims(c Claims, nowUnix int64) error {
 	if c.Role == "" {
 		return ErrMissingClaim
 	}
-	if c.Sub == "" {
+	if c.Sub == 0 {
 		return ErrMissingClaim
 	}
 	if c.Iat == 0 || c.Exp == 0 || c.Nbf == 0 {

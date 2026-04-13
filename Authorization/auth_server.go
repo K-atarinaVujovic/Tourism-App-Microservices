@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -41,7 +42,7 @@ type LoginResponse struct {
 }
 
 type RegisterResponse struct {
-	UserID   string `json:"user_id"`
+	UserID   int64  `json:"user_id"`
 	Username string `json:"username"`
 	Email    string `json:"email"`
 	Role     string `json:"role"`
@@ -49,20 +50,20 @@ type RegisterResponse struct {
 }
 
 type BlockUserRequest struct {
-	UserID string `json:"user_id"`
+	UserID int64 `json:"user_id"`
 }
 
 type UnblockUserRequest struct {
-	UserID string `json:"user_id"`
+	UserID int64 `json:"user_id"`
 }
 
 type BlockUserResponse struct {
 	Message string `json:"message"`
-	UserID  string `json:"user_id"`
+	UserID  int64  `json:"user_id"`
 }
 
 type Claims struct {
-	UserID   string `json:"user_id"`
+	UserID   int64  `json:"user_id"`
 	Username string `json:"username"`
 	Email    string `json:"email"`
 	Role     string `json:"role"`
@@ -193,10 +194,10 @@ func (s *Server) registerHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Create user with default 'user' role
-	var userID string
+	var userID int64
 	var role string
 	err = s.db.QueryRow(r.Context(),
-		`INSERT INTO users (username, email, password_hash, role) VALUES ($1, $2, $3, 'user') RETURNING id::text, role`,
+		`INSERT INTO users (username, email, password_hash, role) VALUES ($1, $2, $3, 'user') RETURNING id, role`,
 		req.Username,
 		req.Email,
 		string(passwordHash),
@@ -275,8 +276,8 @@ func (s *Server) loginHandler(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, LoginResponse{Token: token})
 }
 
-func (s *Server) findUserByIdentifier(ctx context.Context, identifier string) (string, string, string, string, string, bool, error) {
-	var userID string
+func (s *Server) findUserByIdentifier(ctx context.Context, identifier string) (int64, string, string, string, string, bool, error) {
+	var userID int64
 	var username string
 	var email string
 	var passwordHash string
@@ -286,7 +287,7 @@ func (s *Server) findUserByIdentifier(ctx context.Context, identifier string) (s
 	// Try to find by username or email (identifier can be either)
 	normalizedIdentifier := strings.ToLower(identifier)
 	err := s.db.QueryRow(ctx,
-		`SELECT id::text, username, email, password_hash, role, is_blocked 
+		`SELECT id, username, email, password_hash, role, is_blocked 
 		 FROM users 
 		 WHERE LOWER(username) = $1 OR LOWER(email) = $1`,
 		normalizedIdentifier,
@@ -295,7 +296,7 @@ func (s *Server) findUserByIdentifier(ctx context.Context, identifier string) (s
 	return userID, username, email, passwordHash, role, isBlocked, err
 }
 
-func (s *Server) createJWT(userID, username, email, role string) (string, error) {
+func (s *Server) createJWT(userID int64, username, email, role string) (string, error) {
 	now := time.Now()
 
 	claims := Claims{
@@ -304,7 +305,7 @@ func (s *Server) createJWT(userID, username, email, role string) (string, error)
 		Email:    email,
 		Role:     role,
 		RegisteredClaims: jwt.RegisteredClaims{
-			Subject:   userID,
+			Subject:   strconv.FormatInt(userID, 10),
 			ExpiresAt: jwt.NewNumericDate(now.Add(s.tokenTTL)),
 			IssuedAt:  jwt.NewNumericDate(now),
 			NotBefore: jwt.NewNumericDate(now),
@@ -386,7 +387,7 @@ func (s *Server) blockUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if req.UserID == "" {
+	if req.UserID == 0 {
 		writeError(w, http.StatusBadRequest, "user_id is required")
 		return
 	}
@@ -445,7 +446,7 @@ func (s *Server) unblockUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if req.UserID == "" {
+	if req.UserID == 0 {
 		writeError(w, http.StatusBadRequest, "user_id is required")
 		return
 	}
