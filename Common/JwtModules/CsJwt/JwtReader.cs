@@ -82,7 +82,7 @@ public static class JwtHelpers
             string.IsNullOrWhiteSpace(c.role))
             throw new InvalidOperationException("Missing required claim");
 
-        if (c.iat == 0 || c.exp == 0 || c.nbf == 0 || c.sub == 0)
+        if (c.iat == 0 || c.exp == 0 || c.nbf == 0 || string.IsNullOrWhiteSpace(c.sub))
             throw new InvalidOperationException("Missing required timestamp claim");
 
         if (c.role != "user" && c.role != "admin")
@@ -97,7 +97,7 @@ public static class JwtHelpers
         if (c.nbf > nowUnix)
             throw new InvalidOperationException("Token not yet valid");
 
-        if (c.user_id != c.sub)
+        if (!long.TryParse(c.sub, out long subId) || c.user_id != subId)
             throw new InvalidOperationException("user_id must match sub");
     }
 
@@ -108,7 +108,7 @@ public static class JwtHelpers
         public string email { get; set; } = "";
         public string role { get; set; } = "";
 
-        public long sub { get; set; }
+        public string? sub { get; set; }
         public long iat { get; set; }
         public long exp { get; set; }
         public long nbf { get; set; }
@@ -120,5 +120,5 @@ public static class JwtHelpers
         public string Raw { get; set; } = "";
         public JwtHeader Header { get; set; } = new();
         public JwtClaims Claims { get; set; } = new();
-        public long Subject { get; set; }
+        public string Subject { get; set; } = "";
     }

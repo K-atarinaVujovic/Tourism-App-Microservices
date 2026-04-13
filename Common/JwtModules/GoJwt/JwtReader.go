@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -165,6 +166,13 @@ func validateClaims(c Claims, nowUnix int64) error {
 	}
 	if c.Nbf > nowUnix {
 		return ErrTokenNotYetValid
+	}
+	subject, err := strconv.ParseInt(c.Sub, 10, 64)
+	if err != nil {
+		return ErrInvalidClaimType
+	}
+	if c.UserID != subject {
+		return ErrInvalidClaimType
 	}
 
 	return nil

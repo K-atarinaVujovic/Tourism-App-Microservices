@@ -74,7 +74,7 @@ public final class JwtReader {
     }
 
     private static void validateClaims(JwtClaims c, long nowUnix) {
-        if (c.user_id == 0 || isBlank(c.username) || isBlank(c.email) || isBlank(c.role) || c.sub == 0) {
+        if (isBlank(c.user_id) || isBlank(c.username) || isBlank(c.email) || isBlank(c.role) || isBlank(c.sub)) {
             throw new IllegalArgumentException("Missing required claim");
         }
         if (c.iat == 0 || c.exp == 0 || c.nbf == 0) {
@@ -92,8 +92,12 @@ public final class JwtReader {
         if (c.nbf > nowUnix) {
             throw new IllegalArgumentException("Token not yet valid");
         }
-        if (c.user_id != c.sub) {
-            throw new IllegalArgumentException("user_id must match sub");
+        try {
+            if (Long.parseLong(c.user_id) != Long.parseLong(c.sub)) {
+                throw new IllegalArgumentException("user_id must match sub");
+            }
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("user_id and sub must be numeric strings");
         }
     }
 
@@ -115,7 +119,7 @@ public final class JwtReader {
         public String username = "";
         public String email = "";
         public String role = "";
-        public long sub;
+        public String sub;
         public long iat;
         public long exp;
         public long nbf;
