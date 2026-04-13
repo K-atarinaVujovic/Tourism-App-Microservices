@@ -33,7 +33,7 @@ type Claims struct {
 	Email    string `json:"email"`
 	Role     string `json:"role"`
 
-	Sub int64  `json:"sub"`
+	Sub string `json:"sub"`
 	Iat int64  `json:"iat"`
 	Exp int64  `json:"exp"`
 	Nbf int64  `json:"nbf"`
@@ -49,7 +49,7 @@ type Token struct {
 	Header  Header
 	Claims  Claims
 	Raw     string
-	Subject int64
+	Subject string
 }
 
 func ExtractBearerToken(authHeader string) (string, error) {
@@ -147,7 +147,7 @@ func validateClaims(c Claims, nowUnix int64) error {
 	if c.Role == "" {
 		return ErrMissingClaim
 	}
-	if c.Sub == 0 {
+	if c.Sub == "" {
 		return ErrMissingClaim
 	}
 	if c.Iat == 0 || c.Exp == 0 || c.Nbf == 0 {
@@ -165,9 +165,6 @@ func validateClaims(c Claims, nowUnix int64) error {
 	}
 	if c.Nbf > nowUnix {
 		return ErrTokenNotYetValid
-	}
-	if c.UserID != c.Sub {
-		return errors.New("user_id must match sub")
 	}
 
 	return nil

@@ -28,11 +28,11 @@
   "claims": {
     "standard_claims": {
       "sub": {
-        "type": "integer",
-        "format": "int64",
+        "type": "string",
+        "format": "numeric-string",
         "required": true,
-        "description": "Subject - User ID",
-        "example": 1
+        "description": "Subject - User ID as string (JWT standard requires string)",
+        "example": "1"
       },
       "iat": {
         "type": "integer",
