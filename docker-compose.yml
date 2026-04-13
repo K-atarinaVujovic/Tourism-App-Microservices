@@ -1,12 +1,12 @@
 version: "3.8"
 
 services:
-  blog-service:
+  blogs:
     build:
       context: ./Blog
       dockerfile: Dockerfile
-    image: blog-service:latest
-    container_name: blog-service
+    image: blogs:latest
+    container_name: blogs
     restart: on-failure
     ports:
       - "8080:8080"
@@ -29,6 +29,15 @@ services:
       POSTGRES_PASSWORD: root
     volumes:
       - blog-db-data:/var/lib/postgresql/data
+    networks:
+      - app-network
+
+  gateway:
+    build:
+      context: ./Gateway
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
     networks:
       - app-network
 

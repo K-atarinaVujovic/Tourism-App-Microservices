@@ -103,11 +103,12 @@ func ProxyRequestHandler(proxies []ProxyRegistry) func(http.ResponseWriter, *htt
 	return func(w http.ResponseWriter, r *http.Request) {
 		proxy := FindProxy(proxies, r)
 		if proxy.name == "" {
+			log.Printf("No proxy found for path: %s", r.URL.Path)
 			http.NotFound(w, r)
 			return
 		}
 
-		r.URL.Path = strings.TrimPrefix(r.URL.Path, "/api/"+proxy.name)
+		r.URL.Path = strings.TrimPrefix(r.URL.Path, "/"+proxy.name)
 
 		// Try gRPC first
 		if proxy.grpcHandler != nil {
@@ -179,7 +180,7 @@ func InitProxies(services []ServiceConfig, opts []grpc.DialOption) []ProxyRegist
 
 func FindProxy(proxies []ProxyRegistry, r *http.Request) ProxyRegistry {
 	for _, proxy := range proxies {
-		if strings.HasPrefix(strings.TrimPrefix(r.URL.Path, "/api/"), proxy.name) {
+		if strings.HasPrefix(r.URL.Path, "/"+proxy.name) {
 			return proxy
 		}
 	}
