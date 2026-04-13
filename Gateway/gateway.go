@@ -190,6 +190,7 @@ func InitProxies(services []ServiceConfig, opts []grpc.DialOption) []ProxyRegist
 		if svc.GRPC_URL != "" {
 			h, err := NewGRPCProxy(svc, opts)
 			if err != nil {
+				// Don't panic so the gateway doesn't crash
 				log.Printf("[%s] gRPC init failed: %v", svc.Name, err)
 			} else {
 				grpcHandler = h
@@ -199,6 +200,7 @@ func InitProxies(services []ServiceConfig, opts []grpc.DialOption) []ProxyRegist
 		if svc.REST_URL != "" {
 			h, err := NewRESTProxy(svc.REST_URL)
 			if err != nil {
+				// Don't panic so the gateway doesn't crash
 				log.Printf("[%s] REST init failed: %v", svc.Name, err)
 			} else {
 				restHandler = h
