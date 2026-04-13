@@ -15,6 +15,7 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	"gopkg.in/yaml.v3"
 
+	"gateway/jwtreader"
 	servicepb "gateway/proto/service"
 )
 
@@ -31,8 +32,9 @@ type ServiceConfig struct {
 }
 
 type Config struct {
-	Port     string          `yaml:"port"`
-	Services []ServiceConfig `yaml:"services"`
+	Port          string          `yaml:"port"`
+	Services      []ServiceConfig `yaml:"services"`
+	ExcludedPaths []string        `yaml:"excluded_paths"`
 }
 
 type ProxyRegistry struct {
@@ -56,6 +58,37 @@ func (rec *responseRecorder) Write(b []byte) (int, error) {
 	return len(b), nil
 }
 
+func JWTAuthMiddleware(excludedPaths []string, next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Skip JWT auth for certain paths if needed
+		if isExcluded(r.URL.Path, excludedPaths) {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		authHeader := r.Header.Get("Authorization")
+		if authHeader == "" {
+			log.Printf("Missing Authorization header")
+			http.Error(w, "Missing Authorization header", http.StatusUnauthorized)
+			return
+		}
+
+		token, err := jwtreader.ReadFromAuthorizationHeader(authHeader)
+		if err != nil {
+			log.Printf("JWT validation failed: %v", err)
+			http.Error(w, "Invalid JWT token", http.StatusUnauthorized)
+			return
+		}
+
+		// Add user info to request context
+		ctx := context.WithValue(r.Context(), "user_id", token.Claims.UserID)
+		ctx = context.WithValue(ctx, "username", token.Claims.Username)
+		ctx = context.WithValue(ctx, "role", token.Claims.Role)
+
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
 func LoadConfig(path string) (*Config, error) {
 	content, err := os.ReadFile(path)
 	if err != nil {
@@ -64,6 +97,15 @@ func LoadConfig(path string) (*Config, error) {
 	var config Config
 	err = yaml.Unmarshal(content, &config)
 	return &config, err
+}
+
+func isExcluded(path string, excludedPaths []string) bool {
+	for _, p := range excludedPaths {
+		if strings.Contains(path, p) {
+			return true
+		}
+	}
+	return false
 }
 
 func NewRESTProxy(targetURL string) (http.Handler, error) {
@@ -194,13 +236,21 @@ func main() {
 		log.Fatal("Failed to load config: ", err)
 	}
 
-	// TODO: Add security
+	// Initialize gRPC options
 	opts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
 
 	// Initialize a reverse proxy for each microservice defined in Microservices
 	listOfProxies := InitProxies(config.Services, opts)
 
-	// Handle all requests to the server using the proxy
-	http.HandleFunc("/", ProxyRequestHandler(listOfProxies))
+	// Create proxy handler
+	proxyHandler := http.HandlerFunc(ProxyRequestHandler(listOfProxies))
+
+	// Wrap with JWT authentication middleware
+	authHandler := JWTAuthMiddleware(config.ExcludedPaths, proxyHandler)
+
+	// Handle all requests to the server using the authenticated proxy
+	http.Handle("/", authHandler)
+
+	log.Printf("Starting gateway on port %s", config.Port)
 	log.Fatal(http.ListenAndServe(":"+config.Port, nil))
 }

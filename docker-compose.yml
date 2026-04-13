@@ -40,6 +40,8 @@ services:
       - "8000:8000"
     networks:
       - app-network
+    environment:
+      JWT_SECRET: super-secret-change-me
 
 volumes:
   blog-db-data:
