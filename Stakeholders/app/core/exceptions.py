@@ -4,5 +4,5 @@ class NotFoundException(Exception):
 class AlreadyExistsException(Exception):
     pass
 
-class ValidationError(Exception):
+class Unauthorized(Exception):
     pass

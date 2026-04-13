@@ -4,18 +4,16 @@ import jwt
 
 # function that gets the token as a string
 security = HTTPBearer()
-SECRET_KEY = "yada_yada_yada"
+SECRET_KEY = "super-secret-change-me"
 ALGORITHM = "HS256"
 
-USER_ID_CLAIM = "sub"
-ROLE_CLAIM = "role"
+USER_ID_CLAIM = "user_id"
 
 def decode_token(token: str) -> dict:
   try:
     payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
     return {
-      "user_id": payload.get(USER_ID_CLAIM),
-      "role": payload.get(ROLE_CLAIM)
+      "user_id": payload.get(USER_ID_CLAIM)
     }
   except jwt.ExpiredSignatureError:
     raise ValueError("Token expired!")

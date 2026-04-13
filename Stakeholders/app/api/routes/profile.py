@@ -1,6 +1,6 @@
 from typing import Annotated, Any, Optional
 
-from fastapi import Body, Depends, FastAPI, File, HTTPException, Path, Request, UploadFile
+from fastapi import APIRouter, Body, Depends, FastAPI, File, HTTPException, Path, Request, UploadFile
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -22,6 +22,9 @@ security = HTTPBearer(auto_error=False)
 # For serving images
 app.mount("/images", StaticFiles(directory="images"), name="images")
 
+# For endpoints that require the user to be logged in
+protected_router = APIRouter(dependencies=[Depends(get_current_user)])
+
 # For making Pydantic exceptions give a clean response
 @app.exception_handler(RequestValidationError)
 async def validation_handler(request: Request, exc: RequestValidationError):
@@ -30,14 +33,14 @@ async def validation_handler(request: Request, exc: RequestValidationError):
         content={"message": exc.errors()[0]["msg"]}
     )
 
-@app.post("/profiles/upload-image", response_model=dict)
+@protected_router.post("/profiles/upload-image", response_model=dict)
 async def upload_image(
   file: UploadFile = File(...)
 ):
   result = await uploader_service.upload_image(file)
   return result
 
-@app.get("/profiles/{user_id}", response_model=ProfileResponse)
+@protected_router.get("/profiles/{user_id}", response_model=ProfileResponse)
 async def get_profile(
   user_id: Annotated[int, Path()]
   ) -> Any:
@@ -47,7 +50,6 @@ async def get_profile(
   except NotFoundException as e:
     raise HTTPException(status_code=404, detail=str(e))
 
-# Should only authorize Auth service to be able to call this later !
 @app.post("/profiles/create", response_model=ProfileResponse)
 async def create_profile(
   profile: Annotated[ProfileCreate, Body()]
@@ -59,15 +61,16 @@ async def create_profile(
     raise HTTPException(status_code=409, detail=str(e))
 
 # Currently requires a jwt to be sent with a user_id
-@app.put("/profiles/update", response_model=ProfileResponse)
+@protected_router.put("/profiles/update", response_model=ProfileResponse)
 async def update_profile(
   profile: Annotated[ProfileUpdate, Body()],
-  # current_user = Depends(get_current_user)
-  user_id: Annotated[int, Body()]
+  current_user = Depends(get_current_user)
+  # user_id: Annotated[int, Body()]
 ) -> Any:
   try:
-    # user_id = current_user["user_id"]
+    user_id = current_user["user_id"]
     return service.update(user_id, profile)
   except NotFoundException as e:
     raise HTTPException(status_code=404, detail=str(e))
 
+app.include_router(protected_router)
