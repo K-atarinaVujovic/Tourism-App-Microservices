@@ -1,0 +1,114 @@
+{
+  "version": "1.0.0",
+  "description": "Tourism App JWT Specification - Cross-Language Compatible",
+  "issuer": "tourism-auth-service",
+  
+  "algorithm": {
+    "type": "HMAC",
+    "variant": "HS256",
+    "note": "All services must use HS256 (HMAC-SHA256)"
+  },
+  
+  "secret": {
+    "source": "JWT_SECRET environment variable",
+    "encoding": "UTF-8 string",
+    "note": "Must be identical across all services"
+  },
+  
+  "token_lifetime": {
+    "value": 86400,
+    "unit": "seconds",
+    "description": "24 hours"
+  },
+  
+  "claims": {
+    "standard_claims": {
+      "sub": {
+        "type": "string",
+        "format": "uuid-v4",
+        "required": true,
+        "description": "Subject - User ID",
+        "example": "550e8400-e29b-41d4-a716-446655440000"
+      },
+      "iat": {
+        "type": "integer",
+        "format": "unix-timestamp",
+        "required": true,
+        "description": "Issued At - Token creation time"
+      },
+      "exp": {
+        "type": "integer",
+        "format": "unix-timestamp",
+        "required": true,
+        "description": "Expiration Time"
+      },
+      "nbf": {
+        "type": "integer",
+        "format": "unix-timestamp",
+        "required": true,
+        "description": "Not Before - Token valid from this time"
+      },
+      "jti": {
+        "type": "string",
+        "format": "hex-string",
+        "required": false,
+        "description": "JWT ID - Unique token identifier"
+      }
+    },
+    "custom_claims": {
+      "user_id": {
+        "type": "string",
+        "format": "uuid-v4",
+        "required": true,
+        "description": "User's unique identifier (same as sub)",
+        "example": "550e8400-e29b-41d4-a716-446655440000"
+      },
+      "email": {
+        "type": "string",
+        "format": "email",
+        "required": true,
+        "description": "User's email address",
+        "example": "user@example.com"
+      },
+      "role": {
+        "type": "string",
+        "enum": ["user", "admin"],
+        "required": true,
+        "description": "User's role",
+        "example": "user"
+      }
+    }
+  },
+  
+  "token_format": {
+    "header": {
+      "alg": "HS256",
+      "typ": "JWT"
+    },
+    "example_decoded": {
+      "user_id": "550e8400-e29b-41d4-a716-446655440000",
+      "email": "user@example.com",
+      "role": "user",
+      "sub": "550e8400-e29b-41d4-a716-446655440000",
+      "iat": 1713024000,
+      "exp": 1713110400,
+      "nbf": 1713024000,
+      "jti": "a1b2c3d4e5f6"
+    }
+  },
+  
+  "validation_rules": {
+    "signature_verification": "MUST verify using HS256 with shared secret",
+    "expiration_check": "MUST reject if exp < current_time",
+    "not_before_check": "MUST reject if nbf > current_time",
+    "required_claims": ["user_id", "email", "role", "sub", "iat", "exp", "nbf"],
+    "claim_types": "MUST validate types match specification",
+    "role_values": "MUST be exactly 'user' or 'admin' (case-sensitive)"
+  },
+  
+  "http_usage": {
+    "header_name": "Authorization",
+    "format": "Bearer {token}",
+    "example": "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+  }
+}
