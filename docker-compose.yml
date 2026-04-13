@@ -82,6 +82,7 @@ services:
       - auth-network
       - service-network
 
+
   stakeholders:
     build:
       context: ./Stakeholders
