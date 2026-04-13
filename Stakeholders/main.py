@@ -6,6 +6,7 @@ from concurrent import futures
 import grpc
 import uvicorn
 import logging
+import os
 
 from app.api.grpc.profile import ProfileServicer
 import proto.profile_pb2_grpc as profile_pb2_grpc
@@ -17,9 +18,9 @@ from app.services.profile import ProfileService
 from app.services.upload import Uploader
 
 
-GRPC_PORT = "50051"
-LISTEN_ADDR = "[::]:" + GRPC_PORT
-FASTAPI_PORT = 8000
+GRPC_PORT = int(os.getenv("STAKEHOLDERS_GRPC_PORT", 50051))
+FASTAPI_PORT = int(os.getenv("STAKEHOLDERS_FASTAPI_PORT", 8000))
+LISTEN_ADDR = "[::]:" + str(GRPC_PORT)
 
 def serve_fastapi():
     print(f"Swagger UI: http://127.0.0.1:{FASTAPI_PORT}/docs")
@@ -32,7 +33,7 @@ def serve_grpc():
     profile_pb2_grpc.add_ProfileServiceServicer_to_server(ProfileServicer(profile_service, upload_service), server)
     server.add_insecure_port(LISTEN_ADDR)
     server.start()
-    print("Server started, listening on " + GRPC_PORT)
+    print("Server started, listening on " + str(GRPC_PORT))
     server.wait_for_termination()
     return server
 
