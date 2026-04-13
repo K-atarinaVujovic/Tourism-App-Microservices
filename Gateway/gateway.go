@@ -2,11 +2,13 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
+	"fmt"
 	"strings"
+	"net/url"
+	"net/http/httputil"
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
@@ -24,7 +26,8 @@ var MicroserviceRegistry = map[string]func(context.Context, *runtime.ServeMux, s
 
 type ServiceConfig struct {
 	Name string `yaml:"name"`
-	URL  string `yaml:"url"`
+	REST_URL  string `yaml:"rest_url"`
+	GRPC_URL  string `yaml:"grpc_url"`
 }
 
 type Config struct {
@@ -32,10 +35,10 @@ type Config struct {
 	Services []ServiceConfig `yaml:"services"`
 }
 
-// ProxyRegistry This is a struct so we can later expand it
 type ProxyRegistry struct {
-	name  string
-	route *runtime.ServeMux
+    name    string
+    handler http.Handler
+    isGRPC  bool
 }
 
 func LoadConfig(path string) (*Config, error) {
@@ -48,45 +51,80 @@ func LoadConfig(path string) (*Config, error) {
 	return &config, err
 }
 
-func NewProxy(svc ServiceConfig, opts []grpc.DialOption) (*runtime.ServeMux, error) {
-	mux := runtime.NewServeMux()
-	register, ok := MicroserviceRegistry[svc.Name]
-	if !ok {
-		return nil, fmt.Errorf("unknown service: %s", svc.Name)
-	}
-	if err := register(context.Background(), mux, svc.URL, opts); err != nil {
-		return nil, err
-	}
-	return mux, nil
+func NewRESTProxy(targetURL string) (http.Handler, error) {
+    u, err := url.Parse(targetURL)
+    if err != nil {
+        return nil, err
+    }
+    return httputil.NewSingleHostReverseProxy(u), nil
+}
+
+func NewGRPCProxy(svc ServiceConfig, opts []grpc.DialOption) (http.Handler, error) {
+    register, ok := MicroserviceRegistry[svc.Name]
+    if !ok {
+        return nil, fmt.Errorf("no gRPC registration found for: %s", svc.Name)
+    }
+    mux := runtime.NewServeMux()
+    if err := register(context.Background(), mux, svc.GRPC_URL, opts); err != nil {
+        return nil, err
+    }
+    return mux, nil
 }
 
 func ProxyRequestHandler(proxies []ProxyRegistry) func(http.ResponseWriter, *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		log.Println("Got request: " + r.Method + " " + r.URL.String())
-		proxy := FindProxy(proxies, r)
-		if proxy.name != "" {
-			r.URL.Path = strings.TrimPrefix(r.URL.Path, "/api/"+proxy.name)
-			proxy.route.ServeHTTP(w, r)
-		} else {
-			http.NotFound(w, r)
-		}
-	}
+    return func(w http.ResponseWriter, r *http.Request) {
+        proxy := FindProxy(proxies, r)
+        if proxy.name == "" {
+            http.NotFound(w, r)
+            return
+        }
+
+        transport := "REST"
+        if proxy.isGRPC {
+            transport = "gRPC"
+        }
+        log.Printf("[%s][%s] %s %s", proxy.name, transport, r.Method, r.URL.String())
+
+        r.URL.Path = strings.TrimPrefix(r.URL.Path, "/api/"+proxy.name)
+        proxy.handler.ServeHTTP(w, r)
+    }
 }
 
 func InitProxies(services []ServiceConfig, opts []grpc.DialOption) []ProxyRegistry {
-	var listOfProxies []ProxyRegistry
-	for _, svc := range services {
-		proxy, err := NewProxy(svc, opts)
-		if err != nil {
-			log.Printf("Failed to create proxy for %s: %v", svc.Name, err)
-			continue // Don't panic so the gateway doesn't crash
-		}
-		listOfProxies = append(listOfProxies, ProxyRegistry{
-			name:  svc.Name,
-			route: proxy,
-		})
-	}
-	return listOfProxies
+    var listOfProxies []ProxyRegistry
+
+    for _, svc := range services {
+        var handler http.Handler
+        isGRPC := false
+
+        // Try gRPC first if a grpc_url is configured
+        if svc.GRPC_URL != "" {
+            grpcHandler, err := NewGRPCProxy(svc, opts)
+            if err != nil {
+                log.Printf("[%s] gRPC init failed (%v), falling back to REST", svc.Name, err)
+            } else {
+                handler = grpcHandler
+                isGRPC = true
+            }
+        }
+
+        // Fall back to REST if gRPC wasn't used
+        if handler == nil {
+            restHandler, err := NewRESTProxy(svc.REST_URL)
+            if err != nil {
+                log.Printf("[%s] REST init also failed (%v), skipping service", svc.Name, err)
+                continue
+            }
+            handler = restHandler
+        }
+
+        listOfProxies = append(listOfProxies, ProxyRegistry{
+            name:    svc.Name,
+            handler: handler,
+            isGRPC:  isGRPC,
+        })
+    }
+    return listOfProxies
 }
 
 func FindProxy(proxies []ProxyRegistry, r *http.Request) ProxyRegistry {
