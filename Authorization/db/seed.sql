@@ -10,7 +10,7 @@ INSERT INTO users (username, email, password_hash, role)
 VALUES (
     'admin',
     'admin@example.com',
-    '$2a$10$wHqW3Vj6KzZ9ZVf2wz4p0eV8Y5fHj9KxY5Q1g5v2Ygq3YjLw1K0e6',
+    '$2b$10$Fyds1M6CRV93il5EycOCneGi0RZ9BVz0Vjf9WnqpiidVJ1KHyrheq',
     'admin'
 )
 ON CONFLICT (email) DO NOTHING;
@@ -23,7 +23,7 @@ INSERT INTO users (username, email, password_hash, role)
 VALUES (
     'user',
     'user@example.com',
-    '$2a$10$wHqW3Vj6KzZ9ZVf2wz4p0eV8Y5fHj9KxY5Q1g5v2Ygq3YjLw1K0e6',
+    '$2b$10$Fyds1M6CRV93il5EycOCneGi0RZ9BVz0Vjf9WnqpiidVJ1KHyrheq',
     'user'
 )
 ON CONFLICT (email) DO NOTHING;
