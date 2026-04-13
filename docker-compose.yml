@@ -1,12 +1,12 @@
 version: "3.8"
 
 services:
-  blogs:
+  blog:
     build:
       context: ./Blog
       dockerfile: Dockerfile
-    image: blogs:latest
-    container_name: blogs
+    image: blog:latest
+    container_name: blog
     restart: on-failure
     ports:
       - "8080:8080"
@@ -17,7 +17,8 @@ services:
     depends_on:
       - blog-db
     networks:
-      - app-network
+      - blog-network
+      - service-network
 
   blog-db:
     image: postgres:16
@@ -30,7 +31,7 @@ services:
     volumes:
       - blog-db-data:/var/lib/postgresql/data
     networks:
-      - app-network
+      - blog-network
 
   gateway:
     build:
@@ -39,13 +40,56 @@ services:
     ports:
       - "8000:8000"
     networks:
-      - app-network
+      - service-network
     environment:
       JWT_SECRET: super-secret-change-me
 
+  auth-db:
+    image: postgres:16-alpine
+    container_name: auth-db
+    environment:
+      POSTGRES_DB: tourism-auth
+      POSTGRES_USER: tourism-app
+      POSTGRES_PASSWORD: admin123
+    volumes:
+      - auth_db_data:/var/lib/postgresql/data
+      - ./db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./db/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql:ro
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U tourism-app -d tourism-auth" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - auth-network
+
+  auth:
+    build:
+      context: ./Authorization
+      dockerfile: Dockerfile
+    container_name: auth
+    depends_on:
+       auth-db:
+          condition: service_healthy
+    environment:
+      USE_CONFIG_FILE: "false"
+      PORT: 8081
+      DATABASE_URL: postgres://tourism-app:admin123@auth-db:5432/tourism-auth?sslmode=disable
+      JWT_SECRET: super-secret-change-me
+    ports:
+      - "8081:8081"
+    networks:
+      - auth-network
+      - service-network
+
 volumes:
   blog-db-data:
+  auth_db_data:
 
 networks:
-  app-network:
+  blog-network:
+    driver: bridge
+  auth-network:
+    driver: bridge
+  service-network:
     driver: bridge
