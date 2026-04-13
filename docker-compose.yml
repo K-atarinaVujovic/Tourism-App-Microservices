@@ -82,9 +82,45 @@ services:
       - auth-network
       - service-network
 
+  stakeholders:
+    build:
+      context: ./Stakeholders
+    env_file:
+      - .env.docker
+    ports:
+      - "${STAKEHOLDERS_PORT}:${STAKEHOLDERS_FASTAPI_PORT}"
+    depends_on:
+      stakeholders_db:
+        condition: service_healthy
+    volumes:
+      - stakeholders_images_data:/app/images
+    networks:
+      - stakeholders-network
+      - service-network
+
+  stakeholders_db:
+    image: postgres:16
+    restart: always
+    user: postgres
+    volumes:
+      - stakeholders_db_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=stakeholders
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=root 
+    healthcheck:
+      test: [ "CMD", "pg_isready" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - stakeholders-network
+
 volumes:
   blog-db-data:
   auth_db_data:
+  stakeholders_db_data:
+  stakeholders_images_data:
 
 networks:
   blog-network:
@@ -92,4 +128,6 @@ networks:
   auth-network:
     driver: bridge
   service-network:
+    driver: bridge
+  stakeholders-network:
     driver: bridge
