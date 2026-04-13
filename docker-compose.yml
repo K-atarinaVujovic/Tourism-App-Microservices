@@ -86,9 +86,7 @@ services:
     build:
       context: ./Stakeholders
     env_file:
-      - .env.docker
-    ports:
-      - "${STAKEHOLDERS_PORT}:${STAKEHOLDERS_FASTAPI_PORT}"
+      - ./Stakeholders/.env.docker
     depends_on:
       stakeholders_db:
         condition: service_healthy
