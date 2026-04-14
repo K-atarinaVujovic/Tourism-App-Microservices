@@ -1,12 +1,12 @@
 version: "3.8"
 
 services:
-  blog-service:
+  blog:
     build:
       context: ./Blog
       dockerfile: Dockerfile
-    image: blog-service:latest
-    container_name: blog-service
+    image: blog:latest
+    container_name: blog
     restart: on-failure
     ports:
       - "8080:8080"
@@ -17,7 +17,8 @@ services:
     depends_on:
       - blog-db
     networks:
-      - app-network
+      - blog-network
+      - service-network
 
   blog-db:
     image: postgres:16
@@ -30,11 +31,102 @@ services:
     volumes:
       - blog-db-data:/var/lib/postgresql/data
     networks:
-      - app-network
+      - blog-network
+
+  gateway:
+    build:
+      context: .
+      dockerfile: ./Gateway/Dockerfile
+    ports:
+      - "8000:8000"
+    networks:
+      - service-network
+    environment:
+      JWT_SECRET: super-secret-change-me
+
+  auth-db:
+    image: postgres:16-alpine
+    container_name: auth-db
+    environment:
+      POSTGRES_DB: tourism-auth
+      POSTGRES_USER: tourism-app
+      POSTGRES_PASSWORD: admin123
+    volumes:
+      - auth_db_data:/var/lib/postgresql/data
+      - ./Authorization/db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./Authorization/db/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql:ro
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U tourism-app -d tourism-auth" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - auth-network
+
+  auth:
+    build:
+      context: ./Authorization
+      dockerfile: Dockerfile
+    container_name: auth
+    depends_on:
+       auth-db:
+          condition: service_healthy
+    environment:
+      USE_CONFIG_FILE: "false"
+      PORT: 8081
+      DATABASE_URL: postgres://tourism-app:admin123@auth-db:5432/tourism-auth?sslmode=disable
+      JWT_SECRET: super-secret-change-me
+    ports:
+      - "8081:8081"
+    networks:
+      - auth-network
+      - service-network
+
+
+  stakeholders:
+    build:
+      context: ./Stakeholders
+    env_file:
+      - ./Stakeholders/.env.docker
+    depends_on:
+      stakeholders_db:
+        condition: service_healthy
+    volumes:
+      - stakeholders_images_data:/app/images
+    networks:
+      - stakeholders-network
+      - service-network
+
+  stakeholders_db:
+    image: postgres:16
+    restart: always
+    user: postgres
+    volumes:
+      - stakeholders_db_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=stakeholders
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=root 
+    healthcheck:
+      test: [ "CMD", "pg_isready" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - stakeholders-network
 
 volumes:
   blog-db-data:
+  auth_db_data:
+  stakeholders_db_data:
+  stakeholders_images_data:
 
 networks:
-  app-network:
+  blog-network:
+    driver: bridge
+  auth-network:
+    driver: bridge
+  service-network:
+    driver: bridge
+  stakeholders-network:
     driver: bridge
