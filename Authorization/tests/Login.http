@@ -1,0 +1,29 @@
+### admin username
+POST http://localhost:8080/auth/login
+Content-Type: application/json
+
+{
+  "identifier": "admin",
+  "password": "Password123!"
+}
+
+> {%
+    client.test("Login admin with username", function() {
+        client.assert(response.status === 200, "Expected 200 when logging in with username");
+    });
+%}
+
+### user email
+POST http://localhost:8080/auth/login
+Content-Type: application/json
+
+{
+  "identifier": "user@example.com",
+  "password": "Password123!"
+}
+
+> {%
+    client.test("Login user with email", function() {
+        client.assert(response.status === 200, "Expected 200 when logging in with email");
+    });
+%}
