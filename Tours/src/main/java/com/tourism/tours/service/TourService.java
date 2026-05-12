@@ -14,7 +14,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class TourService {
-    private TourRepository tourRepository;
+    private final TourRepository tourRepository;
 
     public TourResponse createTour(CreateTourRequest request, CurrentUser user){
         Tour tour = new Tour();

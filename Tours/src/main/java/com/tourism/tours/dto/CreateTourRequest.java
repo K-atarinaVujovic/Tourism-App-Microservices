@@ -2,6 +2,7 @@ package com.tourism.tours.dto;
 
 import com.tourism.tours.enums.TourDifficulty;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -20,7 +21,7 @@ public class CreateTourRequest {
     @NotBlank(message = "Description is required")
     private String description;
 
-    @NotBlank(message = "Difficulty is required")
+    @NotNull(message = "Difficulty is required")
     private TourDifficulty difficulty;
 
     private List<String> tags;

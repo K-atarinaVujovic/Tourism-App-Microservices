@@ -33,7 +33,7 @@ public class Tour {
     @Enumerated(EnumType.STRING)
     private TourDifficulty difficulty;
 
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "tour_tags", joinColumns = @JoinColumn(name = "tour_id"))
     @Column(name = "tags")
     private List<String> tags;
