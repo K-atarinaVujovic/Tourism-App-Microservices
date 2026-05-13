@@ -24,7 +24,7 @@ public class TourReviewController {
                                            @RequestHeader("Authorization") String authorization,
                                            @Valid @RequestBody CreateTourReviewRequest request) {
         CurrentUser user = authService.getCurrentUser(authorization);
-        return tourReviewService.createReview(tourId, request, user);
+        return tourReviewService.createReview(tourId, request, user, authorization);
     }
 
     @GetMapping

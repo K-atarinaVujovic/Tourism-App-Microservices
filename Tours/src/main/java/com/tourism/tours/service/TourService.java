@@ -15,9 +15,12 @@ import java.util.List;
 @RequiredArgsConstructor
 public class TourService {
     private final TourRepository tourRepository;
+    private final StakeholdersClient stakeholdersClient;
 
-    public TourResponse createTour(CreateTourRequest request, CurrentUser user){
-        if (!user.getRole().equals("author")) {
+    public TourResponse createTour(CreateTourRequest request, CurrentUser user, String authorization){
+        String role = stakeholdersClient.getUserRole(user.getId(), authorization);
+
+        if (!"author".equals(role)) {
             throw new RuntimeException("Only authors can create tours");
         }
 

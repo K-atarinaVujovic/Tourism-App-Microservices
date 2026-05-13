@@ -22,7 +22,7 @@ public class TourController {
     public TourResponse createTour(@RequestHeader("Authorization") String authorization,
                                     @Valid @RequestBody CreateTourRequest request){
         CurrentUser user = authService.getCurrentUser(authorization);
-        return tourService.createTour(request, user);
+        return tourService.createTour(request, user, authorization);
     }
     @GetMapping("/my")
     public List<TourResponse> getMyTours(@RequestHeader("Authorization") String authorization){

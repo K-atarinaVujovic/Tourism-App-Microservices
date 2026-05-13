@@ -18,12 +18,15 @@ public class TourReviewService {
 
     private final TourReviewRepository tourReviewRepository;
     private final TourRepository tourRepository;
+    private final StakeholdersClient stakeholdersClient;
 
-    public TourReviewResponse createReview(Long tourId, CreateTourReviewRequest request, CurrentUser user) {
+    public TourReviewResponse createReview(Long tourId, CreateTourReviewRequest request, CurrentUser user, String authorization) {
         tourRepository.findById(tourId)
                 .orElseThrow(() -> new RuntimeException("Tour not found with id: " + tourId));
 
-        if (!user.getRole().equals("tourist")) {
+        String role = stakeholdersClient.getUserRole(user.getId(), authorization);
+
+        if (!"tourist".equals(role)) {
             throw new RuntimeException("Only tourists can review tours");
         }
 

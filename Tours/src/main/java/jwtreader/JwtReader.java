@@ -80,7 +80,7 @@ public final class JwtReader {
         if (c.iat == 0 || c.exp == 0 || c.nbf == 0) {
             throw new IllegalArgumentException("Missing required timestamp claim");
         }
-        if (!"tourist".equals(c.role) && !"author".equals(c.role) && !"admin".equals(c.role)) {
+        if (!"user".equals(c.role) && !"admin".equals(c.role)) {
             throw new IllegalArgumentException("Invalid role");
         }
         if (!USERNAME_PATTERN.matcher(c.username).matches()) {

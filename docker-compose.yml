@@ -129,6 +129,7 @@ services:
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: root
       JWT_SECRET: super-secret-change-me
+      STAKEHOLDERS_URL: http://stakeholders:8082
     depends_on:
       - tours-db
     networks:
