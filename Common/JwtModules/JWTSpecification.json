@@ -89,8 +89,10 @@
       },
       "role": {
         "type": "string",
-        "enum": ["tourist", "author", "admin"],
-        "required": true
+        "enum": ["user", "admin"],
+        "required": true,
+        "description": "User's role",
+        "example": "user"
       }
     }
   },
@@ -119,7 +121,7 @@
     "not_before_check": "MUST reject if nbf > current_time",
     "required_claims": ["user_id", "username", "email", "role", "sub", "iat", "exp", "nbf"],
     "claim_types": "MUST validate types match specification",
-    "role_values": "MUST be exactly 'tourist', 'author' or 'admin' (case-sensitive)",
+    "role_values": "MUST be exactly 'user' or 'admin' (case-sensitive)",
     "username_validation": "MUST match pattern ^[a-zA-Z0-9_]{3,30}$"
   },
 

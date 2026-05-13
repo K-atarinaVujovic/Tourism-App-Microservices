@@ -85,7 +85,7 @@ public static class JwtHelpers
         if (c.iat == 0 || c.exp == 0 || c.nbf == 0 || string.IsNullOrWhiteSpace(c.sub))
             throw new InvalidOperationException("Missing required timestamp claim");
 
-        if (c.role != "tourist" && c.role != "author" && c.role != "admin")
+        if (c.role != "user" && c.role != "admin")
             throw new InvalidOperationException("Invalid role");
 
         if (!UsernameRegex.IsMatch(c.username))
