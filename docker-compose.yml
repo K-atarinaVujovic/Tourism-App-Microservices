@@ -115,11 +115,44 @@ services:
     networks:
       - stakeholders-network
 
+  tours:
+    build:
+      context: ./Tours
+      dockerfile: Dockerfile
+    image: tours:latest
+    container_name: tours
+    restart: on-failure
+    ports:
+      - "8083:8083"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://tours-db:5432/toursdb
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: root
+      JWT_SECRET: super-secret-change-me
+    depends_on:
+      - tours-db
+    networks:
+      - tours-network
+      - service-network
+
+  tours-db:
+    image: postgres:16
+    container_name: tours-db
+    restart: always
+    environment:
+      POSTGRES_DB: toursdb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: root
+    volumes:
+      - tours-db-data:/var/lib/postgresql/data
+    networks:
+      - tours-network
 volumes:
   blog-db-data:
   auth_db_data:
   stakeholders_db_data:
   stakeholders_images_data:
+  tours-db-data:
 
 networks:
   blog-network:
@@ -129,4 +162,6 @@ networks:
   service-network:
     driver: bridge
   stakeholders-network:
+    driver: bridge
+  tours-network:
     driver: bridge
