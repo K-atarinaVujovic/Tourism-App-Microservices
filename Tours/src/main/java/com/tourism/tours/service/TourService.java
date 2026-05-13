@@ -17,12 +17,17 @@ public class TourService {
     private final TourRepository tourRepository;
 
     public TourResponse createTour(CreateTourRequest request, CurrentUser user){
+        if (!user.getRole().equals("author")) {
+            throw new RuntimeException("Only authors can create tours");
+        }
+
         Tour tour = new Tour();
 
         tour.setAuthorId(user.getId());
         tour.setAuthorUsername(user.getUsername());
         tour.setName(request.getName());
         tour.setDescription(request.getDescription());
+        tour.setDifficulty(request.getDifficulty());
         tour.setTags(request.getTags());
         tour.setStatus(TourStatus.DRAFT);
         tour.setPrice(0);

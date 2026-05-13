@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS users (
     username TEXT NOT NULL UNIQUE,
     email TEXT NOT NULL UNIQUE,
     password_hash TEXT NOT NULL,
-    role TEXT NOT NULL DEFAULT 'user' CHECK (role IN ('user', 'admin')),
+    role TEXT NOT NULL DEFAULT 'user' CHECK (role IN ('tourist', 'author', 'admin')),
     is_blocked BOOLEAN NOT NULL DEFAULT false,
     blocked_at TIMESTAMPTZ,
     blocked_by BIGINT REFERENCES users(id),

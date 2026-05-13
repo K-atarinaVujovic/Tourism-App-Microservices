@@ -23,6 +23,10 @@ public class TourReviewService {
         tourRepository.findById(tourId)
                 .orElseThrow(() -> new RuntimeException("Tour not found with id: " + tourId));
 
+        if (!user.getRole().equals("tourist")) {
+            throw new RuntimeException("Only tourists can review tours");
+        }
+
         TourReview review = new TourReview();
         review.setTourId(tourId);
         review.setTouristId(user.getId());

@@ -35,6 +35,7 @@ type RegisterRequest struct {
 	Username string `json:"username"`
 	Email    string `json:"email"`
 	Password string `json:"password"`
+	Role     string `json:"role"`
 }
 
 type LoginResponse struct {
@@ -172,6 +173,17 @@ func (s *Server) registerHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+    req.Role = strings.TrimSpace(strings.ToLower(req.Role))
+
+    if req.Role == "" {
+        req.Role = "tourist"
+    }
+
+    if req.Role != "tourist" && req.Role != "author" {
+        writeError(w, http.StatusBadRequest, "role must be tourist or author")
+        return
+    }
+
 	// Username validation
 	if len(req.Username) < 3 {
 		writeError(w, http.StatusBadRequest, "username must be at least 3 characters")
@@ -211,10 +223,11 @@ func (s *Server) registerHandler(w http.ResponseWriter, r *http.Request) {
 	var userID int64
 	var role string
 	err = s.db.QueryRow(r.Context(),
-		`INSERT INTO users (username, email, password_hash, role) VALUES ($1, $2, $3, 'user') RETURNING id, role`,
+		`INSERT INTO users (username, email, password_hash, role) VALUES ($1, $2, $3, $4) RETURNING id, role`,
 		req.Username,
 		req.Email,
 		string(passwordHash),
+        req.Role,
 	).Scan(&userID, &role)
 
 	if err != nil {

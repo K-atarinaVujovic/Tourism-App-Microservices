@@ -15,15 +15,28 @@ VALUES (
 )
 ON CONFLICT (email) DO NOTHING;
 
--- Example regular user:
--- username: user
--- email: user@example.com
+-- Example author user:
+-- username: author
+-- email: author@example.com
 -- password: Password123!
 INSERT INTO users (username, email, password_hash, role)
 VALUES (
-    'user',
-    'user@example.com',
-    '$2b$10$Fyds1M6CRV93il5EycOCneGi0RZ9BVz0Vjf9WnqpiidVJ1KHyrheq',
-    'user'
-)
-ON CONFLICT (email) DO NOTHING;
+           'author',
+           'author@example.com',
+           '$2b$10$Fyds1M6CRV93il5EycOCneGi0RZ9BVz0Vjf9WnqpiidVJ1KHyrheq',
+           'author'
+       )
+    ON CONFLICT (email) DO NOTHING;
+
+-- Example tourist user:
+-- username: tourist
+-- email: tourist@example.com
+-- password: Password123!
+INSERT INTO users (username, email, password_hash, role)
+VALUES (
+           'tourist',
+           'tourist@example.com',
+           '$2b$10$Fyds1M6CRV93il5EycOCneGi0RZ9BVz0Vjf9WnqpiidVJ1KHyrheq',
+           'tourist'
+       )
+    ON CONFLICT (email) DO NOTHING;

@@ -99,7 +99,7 @@ def _validate_claims(c: Dict[str, Any], now_unix: int) -> None:
         if key not in c or c[key] in (None, ""):
             raise MissingClaim(f"Missing required claim: {key}")
 
-    if c["role"] not in ("user", "admin"):
+    if c["role"] not in ("tourist", "author", "admin"):
         raise InvalidRole("Invalid role")
 
     if not isinstance(c["username"], str) or not USERNAME_RE.fullmatch(c["username"]):

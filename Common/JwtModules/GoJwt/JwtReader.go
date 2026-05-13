@@ -155,9 +155,9 @@ func validateClaims(c Claims, nowUnix int64) error {
 		return ErrMissingClaim
 	}
 
-	if c.Role != "user" && c.Role != "admin" {
-		return ErrInvalidRole
-	}
+	if c.Role != "tourist" && c.Role != "author" && c.Role != "admin" {
+        return ErrInvalidRole
+    }
 	if !usernameRe.MatchString(c.Username) {
 		return ErrInvalidUsername
 	}
