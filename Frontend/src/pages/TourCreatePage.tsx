@@ -3,38 +3,37 @@ import { useNavigate } from 'react-router';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Save, MapPin } from 'lucide-react';
+import { Save, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import TourMap from '@/features/tours/components/TourMap';
-import type { Keypoint } from '@/types/tour';
+import { tourService, type TourDifficulty } from '@/features/tours/services/tourService';
 
 // ---------------------------------------------------------------------------
-// Form schema
+// Schema
 // ---------------------------------------------------------------------------
 
 const tourSchema = z.object({
     name: z.string().min(1, 'Tour name is required').max(100, 'Max 100 characters'),
     description: z.string().min(1, 'Description is required').max(500, 'Max 500 characters'),
+    difficulty: z.enum(['EASY', 'MEDIUM', 'HARD']),
+    tags: z.string(),
 });
 
 type TourFormValues = z.infer<typeof tourSchema>;
 
+const DIFFICULTIES: { value: TourDifficulty; label: string }[] = [
+    { value: 'EASY', label: 'Easy' },
+    { value: 'MEDIUM', label: 'Medium' },
+    { value: 'HARD', label: 'Hard' },
+];
+
 // ---------------------------------------------------------------------------
-// TourCreatePage
+// Component
 // ---------------------------------------------------------------------------
 
-/**
- * TODO (backend integration — do this in order):
- *   1. Call tourService.create({ name, description }) → get back the real tourId.
- *   2. For each keypoint, call keypointService.create({ ...kp, tourId }).
- *   3. Navigate to /tours/:id on success.
- *   The keypoint list is intentionally kept in local state here until
- *   the backend is ready — TourMap renders and routes them client-side already.
- */
 export default function TourCreatePage() {
     const navigate = useNavigate();
-    const [keypoints, setKeypoints] = useState<Keypoint[]>([]);
     const [isSaving, setIsSaving] = useState(false);
+    const [saveError, setSaveError] = useState<string | null>(null);
 
     const {
         register,
@@ -42,42 +41,47 @@ export default function TourCreatePage() {
         formState: { errors },
     } = useForm<TourFormValues>({
         resolver: zodResolver(tourSchema),
+        defaultValues: { difficulty: 'EASY', tags: '' },
     });
 
-    const onSave = async (_values: TourFormValues) => {
+    const onSubmit = async (values: TourFormValues) => {
         setIsSaving(true);
+        setSaveError(null);
         try {
-            /**
-             * TODO: replace this block with real API calls
-             *
-             * const tour = await tourService.create({ name: values.name, description: values.description });
-             * await Promise.all(
-             *   keypoints.map((kp) =>
-             *     keypointService.create({ ...kp, tourId: tour.id })
-             *   )
-             * );
-             * navigate(`/tours/${tour.id}`);
-             */
-            console.log('Tour saved (local only — backend not connected yet)', {
-                keypoints,
+            const tags = values.tags
+                .split(',')
+                .map((t) => t.trim())
+                .filter(Boolean);
+
+            const tour = await tourService.create({
+                name: values.name,
+                description: values.description,
+                difficulty: values.difficulty,
+                tags,
             });
+
+            navigate(`/tours/${tour.id}/keypoints`);
+        } catch (err) {
+            setSaveError(err instanceof Error ? err.message : 'Failed to create tour');
         } finally {
             setIsSaving(false);
         }
     };
 
     return (
-        <div className="flex flex-col h-[calc(100vh-3.5rem)]">
-            {/* ── Tour details header ── */}
-            <div className="shrink-0 border-b border-(--border) bg-(--bg) px-4 py-3">
-                <div className="max-w-7xl mx-auto flex items-start gap-4">
+        <div className="min-h-[calc(100vh-3.5rem)] flex items-start justify-center bg-(--bg) px-4 py-12">
+            <div className="w-full max-w-lg">
+                <h1 className="text-xl font-semibold text-(--text-h) mb-6">Create Tour</h1>
+
+                <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5">
                     {/* Name */}
-                    <div className="flex flex-col gap-1 w-64">
+                    <div className="flex flex-col gap-1">
+                        <label className="text-sm font-medium text-(--text-h)">Name</label>
                         <input
                             {...register('name')}
-                            placeholder="Tour name"
+                            placeholder="e.g. Novi Sad City Walk"
                             className={cn(
-                                'rounded-md border px-3 py-1.5 text-sm bg-(--bg) text-(--text-h) font-medium',
+                                'rounded-md border px-3 py-2 text-sm bg-(--bg) text-(--text)',
                                 'placeholder:text-(--text)/40 outline-none',
                                 'focus:ring-2 focus:ring-(--accent)/30 focus:border-(--accent)',
                                 'transition-colors',
@@ -90,13 +94,15 @@ export default function TourCreatePage() {
                     </div>
 
                     {/* Description */}
-                    <div className="flex flex-col gap-1 flex-1">
-                        <input
+                    <div className="flex flex-col gap-1">
+                        <label className="text-sm font-medium text-(--text-h)">Description</label>
+                        <textarea
                             {...register('description')}
-                            placeholder="Short description"
+                            rows={4}
+                            placeholder="What will tourists see and experience?"
                             className={cn(
-                                'rounded-md border px-3 py-1.5 text-sm bg-(--bg) text-(--text)',
-                                'placeholder:text-(--text)/40 outline-none',
+                                'rounded-md border px-3 py-2 text-sm bg-(--bg) text-(--text)',
+                                'placeholder:text-(--text)/40 outline-none resize-none',
                                 'focus:ring-2 focus:ring-(--accent)/30 focus:border-(--accent)',
                                 'transition-colors',
                                 errors.description ? 'border-red-400' : 'border-(--border)'
@@ -107,43 +113,75 @@ export default function TourCreatePage() {
                         )}
                     </div>
 
-                    {/* Keypoint counter */}
-                    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-(--accent-bg) text-xs text-(--accent) font-medium shrink-0 self-start mt-px">
-                        <MapPin className="h-3.5 w-3.5" />
-                        {keypoints.length} {keypoints.length === 1 ? 'keypoint' : 'keypoints'}
+                    {/* Difficulty */}
+                    <div className="flex flex-col gap-1">
+                        <label className="text-sm font-medium text-(--text-h)">Difficulty</label>
+                        <select
+                            {...register('difficulty')}
+                            className={cn(
+                                'rounded-md border px-3 py-2 text-sm bg-(--bg) text-(--text)',
+                                'outline-none border-(--border)',
+                                'focus:ring-2 focus:ring-(--accent)/30 focus:border-(--accent)',
+                                'transition-colors'
+                            )}
+                        >
+                            {DIFFICULTIES.map((d) => (
+                                <option key={d.value} value={d.value}>
+                                    {d.label}
+                                </option>
+                            ))}
+                        </select>
                     </div>
 
-                    {/* Save button */}
-                    <button
-                        onClick={handleSubmit(onSave)}
-                        disabled={isSaving}
-                        className={cn(
-                            'flex items-center gap-2 rounded-md px-4 py-1.5 text-sm font-medium shrink-0 self-start mt-px',
-                            'bg-(--accent) text-white hover:opacity-90 transition-opacity',
-                            'disabled:opacity-50 disabled:cursor-not-allowed'
-                        )}
-                    >
-                        <Save className="h-4 w-4" />
-                        {isSaving ? 'Saving…' : 'Save Tour'}
-                    </button>
+                    {/* Tags */}
+                    <div className="flex flex-col gap-1">
+                        <label className="text-sm font-medium text-(--text-h)">
+                            Tags{' '}
+                            <span className="font-normal text-(--text)/50">(comma separated)</span>
+                        </label>
+                        <input
+                            {...register('tags')}
+                            placeholder="e.g. history, walking, city"
+                            className={cn(
+                                'rounded-md border px-3 py-2 text-sm bg-(--bg) text-(--text)',
+                                'placeholder:text-(--text)/40 outline-none border-(--border)',
+                                'focus:ring-2 focus:ring-(--accent)/30 focus:border-(--accent)',
+                                'transition-colors'
+                            )}
+                        />
+                    </div>
 
-                    {/* Cancel */}
-                    <button
-                        onClick={() => navigate(-1)}
-                        className="self-start mt-px rounded-md border border-(--border) px-4 py-1.5 text-sm text-(--text) hover:bg-(--accent-bg) transition-colors shrink-0"
-                    >
-                        Cancel
-                    </button>
-                </div>
-            </div>
+                    {/* Error */}
+                    {saveError && (
+                        <div className="flex items-center gap-2 text-xs text-red-600 bg-red-50 border border-red-200 rounded-md px-3 py-2">
+                            <X className="h-3.5 w-3.5 shrink-0" />
+                            {saveError}
+                        </div>
+                    )}
 
-            {/* ── Map (fills remaining space) ── */}
-            <div className="flex-1 relative overflow-hidden">
-                <TourMap
-                    keypoints={keypoints}
-                    onKeypointsChange={setKeypoints}
-                    className="h-full"
-                />
+                    {/* Actions */}
+                    <div className="flex gap-3 pt-1">
+                        <button
+                            type="submit"
+                            disabled={isSaving}
+                            className={cn(
+                                'flex items-center gap-2 rounded-md px-5 py-2 text-sm font-medium',
+                                'bg-(--accent) text-white hover:opacity-90 transition-opacity',
+                                'disabled:opacity-50 disabled:cursor-not-allowed'
+                            )}
+                        >
+                            <Save className="h-4 w-4" />
+                            {isSaving ? 'Creating…' : 'Create Tour'}
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => navigate(-1)}
+                            className="rounded-md border border-(--border) px-5 py-2 text-sm text-(--text) hover:bg-(--accent-bg) transition-colors"
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     );

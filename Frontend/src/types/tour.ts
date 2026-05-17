@@ -1,34 +1,56 @@
-// Application-level role comes from the Stakeholders / Profile service,
-// NOT from the JWT. Fetch it separately when you need to gate UI by app role.
-export type AppRole = 'TOURIST' | 'GUIDE' | 'AUTHOR';
+import type { TourDifficulty } from '@/features/tours/services/tourService';
+
+// ── Keypoint ────────────────────────────────────────────────────────────────
+
+export type KeypointType =
+    | 'MUSEUM'
+    | 'PARK'
+    | 'MONUMENT'
+    | 'RESTAURANT'
+    | 'VIEWPOINT'
+    | 'OTHER';
 
 export interface Keypoint {
     id: number;
     tourId: number;
     name: string;
     description: string;
+    type: KeypointType;
+    imageUrl?: string;
     latitude: number;
     longitude: number;
-    imageUrl?: string;
     order: number;
 }
 
-export type CreateKeypointPayload = {
-    tourId: number;
+export interface CreateKeypointPayload {
     name: string;
     description: string;
+    type: KeypointType;
+    imageUrl?: string;
     latitude: number;
     longitude: number;
-    order: number;
-    image?: File;
-};
+}
 
-export type UpdateKeypointPayload = Partial<Omit<CreateKeypointPayload, 'tourId'>>;
+export interface UpdateKeypointPayload {
+    name?: string;
+    description?: string;
+    type?: KeypointType;
+    imageUrl?: string;
+    latitude?: number;
+    longitude?: number;
+    order?: number;
+}
+
+// ── Tour ─────────────────────────────────────────────────────────────────────
 
 export interface Tour {
     id: number;
     name: string;
     description: string;
+    difficulty: TourDifficulty;
+    tags: string[];
+    status: 'DRAFT' | 'PUBLISHED';
+    price: number;
     authorId: number;
-    keypoints: Keypoint[];
+    keypoints?: Keypoint[];
 }

@@ -2,19 +2,41 @@ import { useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { MapPin, X, Upload } from 'lucide-react';
+import { MapPin, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import type { Keypoint } from '@/types/tour';
+import type { Keypoint, KeypointType } from '@/types/tour';
 import type { LatLng } from '@/store/positionStore';
+
+// ---------------------------------------------------------------------------
+// Constants
+// ---------------------------------------------------------------------------
+
+const KEYPOINT_TYPES: { value: KeypointType; label: string }[] = [
+    { value: 'MUSEUM', label: 'Museum' },
+    { value: 'PARK', label: 'Park' },
+    { value: 'MONUMENT', label: 'Monument' },
+];
+
+// ---------------------------------------------------------------------------
+// Schema
+// ---------------------------------------------------------------------------
 
 const keypointSchema = z.object({
     name: z.string().min(1, 'Name is required').max(100, 'Max 100 characters'),
     description: z.string().min(1, 'Description is required').max(500, 'Max 500 characters'),
+    type: z.enum(['MUSEUM', 'PARK', 'MONUMENT'], {
+        error: 'Select a type',
+    }),
+    imageUrl: z.string().url('Must be a valid URL').optional().or(z.literal('')),
     latitude: z.number({ error: 'Pick a location on the map' }),
     longitude: z.number({ error: 'Pick a location on the map' }),
 });
 
-type KeypointFormValues = z.infer<typeof keypointSchema>;
+export type KeypointFormValues = z.infer<typeof keypointSchema>;
+
+// ---------------------------------------------------------------------------
+// Props
+// ---------------------------------------------------------------------------
 
 interface KeypointFormPanelProps {
     isOpen: boolean;
@@ -23,9 +45,14 @@ interface KeypointFormPanelProps {
     /** The lat/lng the user last clicked on the map */
     draftLatLng: LatLng | null;
     onPickLocation: () => void;
-    onSubmit: (values: KeypointFormValues, image: File | null) => void;
+    onSubmit: (values: KeypointFormValues) => void;
     onClose: () => void;
+    isSaving?: boolean;
 }
+
+// ---------------------------------------------------------------------------
+// Component
+// ---------------------------------------------------------------------------
 
 export default function KeypointFormPanel({
                                               isOpen,
@@ -34,9 +61,10 @@ export default function KeypointFormPanel({
                                               onPickLocation,
                                               onSubmit,
                                               onClose,
+                                              isSaving = false,
                                           }: KeypointFormPanelProps) {
     const isEditing = keypoint !== null;
-    const imageRef = useRef<File | null>(null);
+    const imagePreviewRef = useRef<string | null>(null);
 
     const {
         register,
@@ -47,10 +75,12 @@ export default function KeypointFormPanel({
         formState: { errors },
     } = useForm<KeypointFormValues>({
         resolver: zodResolver(keypointSchema),
+        defaultValues: { type: 'MUSEUM' },
     });
 
     const lat = watch('latitude');
     const lng = watch('longitude');
+    const imageUrl = watch('imageUrl');
 
     // Pre-fill form when switching between create/edit
     useEffect(() => {
@@ -58,14 +88,15 @@ export default function KeypointFormPanel({
             reset({
                 name: keypoint.name,
                 description: keypoint.description,
+                type: 'MUSEUM',
+                imageUrl: keypoint.imageUrl ?? '',
                 latitude: keypoint.latitude,
                 longitude: keypoint.longitude,
             });
-            imageRef.current = null;
         } else {
-            reset({ name: '', description: '' });
-            imageRef.current = null;
+            reset({ name: '', description: '', type: 'MUSEUM', imageUrl: '' });
         }
+        imagePreviewRef.current = null;
     }, [keypoint, isEditing, reset]);
 
     // Sync map clicks into the form
@@ -77,8 +108,11 @@ export default function KeypointFormPanel({
     }, [draftLatLng, setValue]);
 
     const handleFormSubmit = (values: KeypointFormValues) => {
-        onSubmit(values, imageRef.current);
+        onSubmit(values);
     };
+
+    // Resolve image to show in preview: typed URL or existing keypoint URL
+    const previewSrc = imageUrl || keypoint?.imageUrl || null;
 
     return (
         <div
@@ -111,9 +145,9 @@ export default function KeypointFormPanel({
                     <p className="text-xs font-medium text-(--text-h) mb-1">Location</p>
                     {lat && lng ? (
                         <div className="flex items-center justify-between rounded-md border border-(--border) px-3 py-2 bg-(--accent-bg)/40">
-              <span className="text-xs text-(--text) font-mono">
-                {lat.toFixed(5)}, {lng.toFixed(5)}
-              </span>
+                            <span className="text-xs text-(--text) font-mono">
+                                {lat.toFixed(5)}, {lng.toFixed(5)}
+                            </span>
                             <button
                                 type="button"
                                 onClick={onPickLocation}
@@ -166,7 +200,7 @@ export default function KeypointFormPanel({
                     <label className="text-xs font-medium text-(--text-h) mb-1 block">Description</label>
                     <textarea
                         {...register('description')}
-                        rows={4}
+                        rows={3}
                         placeholder="What's interesting about this place?"
                         className={cn(
                             'w-full rounded-md border px-3 py-2 text-sm bg-(--bg) text-(--text)',
@@ -181,34 +215,57 @@ export default function KeypointFormPanel({
                     )}
                 </div>
 
-                {/* Image upload */}
+                {/* Type */}
                 <div>
-                    <label className="text-xs font-medium text-(--text-h) mb-1 block">
-                        Image {isEditing && keypoint?.imageUrl && '(leave empty to keep current)'}
-                    </label>
-                    <label
+                    <label className="text-xs font-medium text-(--text-h) mb-1 block">Type</label>
+                    <select
+                        {...register('type')}
                         className={cn(
-                            'flex items-center gap-2 w-full rounded-md border border-dashed border-(--border)',
-                            'px-3 py-3 cursor-pointer text-sm text-(--text)',
-                            'hover:border-(--accent) hover:text-(--accent) transition-colors'
+                            'w-full rounded-md border px-3 py-2 text-sm bg-(--bg) text-(--text)',
+                            'outline-none',
+                            'focus:ring-2 focus:ring-(--accent)/30 focus:border-(--accent)',
+                            'transition-colors',
+                            errors.type ? 'border-red-400' : 'border-(--border)'
                         )}
                     >
-                        <Upload className="h-4 w-4 shrink-0" />
-                        <span id="image-label" className="truncate">
-              {imageRef.current ? imageRef.current.name : 'Upload image'}
-            </span>
-                        <input
-                            type="file"
-                            accept="image/*"
-                            className="sr-only"
-                            onChange={(e) => {
-                                const file = e.target.files?.[0] ?? null;
-                                imageRef.current = file;
-                                const label = document.getElementById('image-label');
-                                if (label) label.textContent = file ? file.name : 'Upload image';
-                            }}
-                        />
+                        {KEYPOINT_TYPES.map((t) => (
+                            <option key={t.value} value={t.value}>
+                                {t.label}
+                            </option>
+                        ))}
+                    </select>
+                    {errors.type && (
+                        <p className="mt-1 text-xs text-red-500">{errors.type.message}</p>
+                    )}
+                </div>
+
+                {/* Image URL */}
+                <div>
+                    <label className="text-xs font-medium text-(--text-h) mb-1 block">
+                        Image URL{isEditing && keypoint?.imageUrl && ' (leave empty to keep current)'}
                     </label>
+                    <input
+                        {...register('imageUrl')}
+                        placeholder="https://example.com/image.jpg"
+                        className={cn(
+                            'w-full rounded-md border px-3 py-2 text-sm bg-(--bg) text-(--text)',
+                            'placeholder:text-(--text)/40 outline-none',
+                            'focus:ring-2 focus:ring-(--accent)/30 focus:border-(--accent)',
+                            'transition-colors',
+                            errors.imageUrl ? 'border-red-400' : 'border-(--border)'
+                        )}
+                    />
+                    {errors.imageUrl && (
+                        <p className="mt-1 text-xs text-red-500">{errors.imageUrl.message}</p>
+                    )}
+                    {previewSrc && (
+                        <img
+                            src={previewSrc}
+                            alt="Preview"
+                            className="mt-2 w-full h-24 object-cover rounded-md border border-(--border)"
+                            onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+                        />
+                    )}
                 </div>
 
                 {/* Actions */}
@@ -225,12 +282,14 @@ export default function KeypointFormPanel({
                     </button>
                     <button
                         type="submit"
+                        disabled={isSaving}
                         className={cn(
                             'flex-1 rounded-md px-4 py-2 text-sm font-medium',
-                            'bg-(--accent) text-white hover:opacity-90 transition-opacity'
+                            'bg-(--accent) text-white hover:opacity-90 transition-opacity',
+                            'disabled:opacity-50 disabled:cursor-not-allowed'
                         )}
                     >
-                        {isEditing ? 'Save Changes' : 'Add Keypoint'}
+                        {isSaving ? 'Saving…' : isEditing ? 'Save Changes' : 'Add Keypoint'}
                     </button>
                 </div>
             </form>
