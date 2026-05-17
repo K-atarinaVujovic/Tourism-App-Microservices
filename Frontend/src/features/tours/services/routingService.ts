@@ -1,36 +1,29 @@
 import axios from 'axios';
 import type { LatLng } from '@/store/positionStore';
 
-const ORS_BASE = 'https://api.openrouteservice.org/v2';
-const API_KEY = import.meta.env.VITE_ORS_API_KEY as string;
+// OSRM public demo server — no API key required.
+// Acceptable for academic / non-commercial use.
+// Docs: http://project-osrm.org/docs/v5.24.0/api/
+const OSRM_BASE = 'https://router.project-osrm.org/route/v1/driving';
 
-/**
- * Fetches a driving route from ORS for the given ordered waypoints.
- *
- * ORS expects coordinates as [lng, lat].
- * Leaflet expects positions as [lat, lng].
- * This function handles the conversion in both directions.
- *
- * Returns an empty array when fewer than 2 waypoints are provided.
- */
 export async function fetchRoute(waypoints: LatLng[]): Promise<[number, number][]> {
     if (waypoints.length < 2) return [];
 
-    // ORS wants [longitude, latitude]
-    const coordinates = waypoints.map(({ lat, lng }) => [lng, lat]);
+    // OSRM expects coordinates as a semicolon-separated list of "lng,lat" pairs
+    const coords = waypoints.map(({ lat, lng }) => `${lng},${lat}`).join(';');
 
-    const { data } = await axios.post(
-        `${ORS_BASE}/directions/driving-car/geojson`,
-        { coordinates },
-        {
-            headers: {
-                Authorization: API_KEY,
-                'Content-Type': 'application/json',
-            },
-        }
-    );
+    const { data } = await axios.get(`${OSRM_BASE}/${coords}`, {
+        params: {
+            overview: 'full',      // return the full geometry, not simplified
+            geometries: 'geojson', // ask for GeoJSON so we get [lng, lat] arrays
+        },
+    });
 
-    // GeoJSON gives [lng, lat], Leaflet needs [lat, lng]
-    const coords = data.features[0].geometry.coordinates as [number, number][];
-    return coords.map(([lng, lat]) => [lat, lng]);
+    if (data.code !== 'Ok' || !data.routes?.length) {
+        throw new Error(`OSRM returned no route: ${data.code}`);
+    }
+
+    // GeoJSON geometry coordinates are [lng, lat] — flip to [lat, lng] for Leaflet
+    const coords2d = data.routes[0].geometry.coordinates as [number, number][];
+    return coords2d.map(([lng, lat]) => [lat, lng]);
 }

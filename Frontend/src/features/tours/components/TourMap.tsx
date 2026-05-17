@@ -1,13 +1,13 @@
 import 'leaflet/dist/leaflet.css';
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import { Trash2, Edit2, MapPin } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { fetchRoute } from '../services/routingService';
 import KeypointFormPanel from './KeypointFormPanel';
 import type { Keypoint } from '@/types/tour';
 import type { LatLng } from '@/store/positionStore';
-
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
@@ -19,14 +19,24 @@ interface KeypointFormValues {
     longitude: number;
 }
 
+interface TourMapProps {
+    keypoints: Keypoint[];
+    onKeypointsChange: (keypoints: Keypoint[]) => void;
+    /**
+     * Tailwind class controlling the map container height.
+     * Defaults to full viewport minus navbar height.
+     */
+    className?: string;
+}
+
 // ---------------------------------------------------------------------------
-// Custom marker icons
+// Marker icons
 // ---------------------------------------------------------------------------
 
 function createKeypointIcon(order: number, active: boolean) {
     return L.divIcon({
         html: `<div style="
-      background:${active ? 'var(--accent, #6366f1)' : '#3b82f6'};
+      background:${active ? '#6366f1' : '#3b82f6'};
       color:#fff;width:30px;height:30px;border-radius:50%;
       display:flex;align-items:center;justify-content:center;
       font-weight:700;font-size:13px;
@@ -73,14 +83,18 @@ function MapClickHandler({
 
 /**
  * TODO (backend integration):
- *   1. Replace `keypoints` local state with `const { data: keypoints = [] } = useKeypoints(tourId)`.
- *   2. Replace local create/update/delete handlers with the corresponding mutation hooks.
- *   3. `tourId` will come from `useParams()` once this lives under `/tours/:id/edit`.
+ *   - Replace local keypoint state in TourCreatePage with useKeypoints(tourId).
+ *   - Replace the local create/update/delete handlers in TourCreatePage with
+ *     the corresponding mutation hooks from useKeypoints.ts.
+ *   - tourId will come from useParams() once this lives under /tours/:id/edit.
  */
-export default function TourMap() {
-    // ── Local keypoint state (swap for useKeypoints hook when backend is ready) ──
-    const [keypoints, setKeypoints] = useState<Keypoint[]>([]);
-    const [nextId, setNextId] = useState(1); // temporary local id counter
+export default function TourMap({
+                                    keypoints,
+                                    onKeypointsChange,
+                                    className,
+                                }: TourMapProps) {
+    // Temporary local ID counter — only needed until the backend assigns real IDs
+    const nextId = useRef(1);
 
     // ── Map interaction state ──
     const [isPickingMode, setIsPickingMode] = useState(false);
@@ -90,13 +104,13 @@ export default function TourMap() {
 
     // ── Route state ──
     const [route, setRoute] = useState<[number, number][]>([]);
-    const [routeError, setRouteError] = useState(false);
+    const [routeError, setRouteError] = useState<string | null>(null);
 
-    // ── Re-fetch route whenever keypoints change ──
+    // ── Re-fetch ORS route whenever keypoints change ──
     useEffect(() => {
         if (keypoints.length < 2) {
             setRoute([]);
-            setRouteError(false);
+            setRouteError(null);
             return;
         }
         const ordered = [...keypoints].sort((a, b) => a.order - b.order);
@@ -105,22 +119,25 @@ export default function TourMap() {
         fetchRoute(waypoints)
             .then((coords) => {
                 setRoute(coords);
-                setRouteError(false);
+                setRouteError(null);
             })
-            .catch(() => setRouteError(true));
+            .catch((err: unknown) => {
+                const msg =
+                    err instanceof Error ? err.message : String(err);
+                console.error('[TourMap] ORS routing failed:', err);
+                setRouteError(msg);
+            });
     }, [keypoints]);
 
     // ── Map click handler ──
     const handleMapClick = useCallback(
         (lat: number, lng: number) => {
             if (isPickingMode) {
-                // User was picking a location for the open form — update coords and return to form
                 setDraftLatLng({ lat, lng });
                 setIsPickingMode(false);
                 return;
             }
-            if (isFormOpen) return; // ignore stray clicks while form is open
-            // Open create form at clicked position
+            if (isFormOpen) return;
             setEditingKeypoint(null);
             setDraftLatLng({ lat, lng });
             setIsFormOpen(true);
@@ -128,32 +145,29 @@ export default function TourMap() {
         [isPickingMode, isFormOpen]
     );
 
-    // ── Form actions ──
+    // ── CRUD handlers ──
     const handleFormSubmit = (values: KeypointFormValues, _image: File | null) => {
         /**
          * TODO (backend integration):
-         *   CREATE → call createKeypoint mutation with { ...values, tourId, order, image }
-         *   UPDATE → call updateKeypoint mutation with { id, payload: { ...values, image } }
-         *   On success TanStack Query will invalidate and re-fetch automatically.
+         *   CREATE → keypointService.create({ ...values, tourId, order, image })
+         *   UPDATE → keypointService.update(id, { ...values, image })
+         *   On success, invalidate the keypoints query — local state goes away.
          */
         if (editingKeypoint) {
-            setKeypoints((prev) =>
-                prev.map((kp) =>
-                    kp.id === editingKeypoint.id
-                        ? { ...kp, ...values }
-                        : kp
+            onKeypointsChange(
+                keypoints.map((kp) =>
+                    kp.id === editingKeypoint.id ? { ...kp, ...values } : kp
                 )
             );
         } else {
             const newKeypoint: Keypoint = {
-                id: nextId,
-                tourId: 0, // TODO: real tourId from URL params
+                id: nextId.current++,
+                tourId: 0, // TODO: real tourId from URL params / creation response
                 order: keypoints.length + 1,
                 imageUrl: undefined,
                 ...values,
             };
-            setKeypoints((prev) => [...prev, newKeypoint]);
-            setNextId((n) => n + 1);
+            onKeypointsChange([...keypoints, newKeypoint]);
         }
         closeForm();
     };
@@ -165,11 +179,9 @@ export default function TourMap() {
     };
 
     const handleDelete = (id: number) => {
-        // TODO (backend): call deleteKeypoint mutation
-        setKeypoints((prev) => {
-            const filtered = prev.filter((kp) => kp.id !== id);
-            return filtered.map((kp, i) => ({ ...kp, order: i + 1 }));
-        });
+        // TODO (backend): keypointService.delete(id)
+        const filtered = keypoints.filter((kp) => kp.id !== id);
+        onKeypointsChange(filtered.map((kp, i) => ({ ...kp, order: i + 1 })));
     };
 
     const closeForm = () => {
@@ -179,18 +191,18 @@ export default function TourMap() {
         setIsPickingMode(false);
     };
 
-    const handlePickLocation = () => {
-        setIsPickingMode(true);
-    };
-
     // ── Render ──
     return (
-        <div className="relative h-[calc(100vh-3.5rem)] w-full overflow-hidden">
+        <div
+            className={cn(
+                'relative w-full overflow-hidden',
+                className ?? 'h-[calc(100vh-3.5rem)]'
+            )}
+        >
             <MapContainer
-                center={[44.0165, 21.0059]} // Serbia center; TODO: derive from tour or user location
+                center={[44.0165, 21.0059]}
                 zoom={7}
                 className="h-full w-full"
-                zoomControl={true}
             >
                 <TileLayer
                     attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
@@ -243,7 +255,7 @@ export default function TourMap() {
                     </Marker>
                 ))}
 
-                {/* Draft marker shown while form is open but position not yet confirmed */}
+                {/* Draft marker while form is open for a new keypoint */}
                 {isFormOpen && !isPickingMode && draftLatLng && !editingKeypoint && (
                     <Marker position={[draftLatLng.lat, draftLatLng.lng]} icon={draftIcon} />
                 )}
@@ -259,7 +271,7 @@ export default function TourMap() {
                 </div>
             )}
 
-            {/* ── Add keypoint hint (only when idle) ── */}
+            {/* ── Idle hint ── */}
             {!isFormOpen && !isPickingMode && (
                 <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-[1000] pointer-events-none">
                     <p className="rounded-full bg-black/50 text-white text-xs px-4 py-2 backdrop-blur-sm">
@@ -270,9 +282,9 @@ export default function TourMap() {
 
             {/* ── ORS routing error ── */}
             {routeError && (
-                <div className="absolute top-4 right-84 z-[1000] pointer-events-none">
+                <div className="absolute top-4 right-[22rem] z-[1000] pointer-events-none max-w-xs">
                     <p className="rounded-md bg-red-50 border border-red-200 text-red-700 text-xs px-3 py-2">
-                        Route unavailable — check your ORS API key
+                        Route unavailable: {routeError}
                     </p>
                 </div>
             )}
@@ -282,7 +294,7 @@ export default function TourMap() {
                 isOpen={isFormOpen}
                 keypoint={editingKeypoint}
                 draftLatLng={draftLatLng}
-                onPickLocation={handlePickLocation}
+                onPickLocation={() => setIsPickingMode(true)}
                 onSubmit={handleFormSubmit}
                 onClose={closeForm}
             />

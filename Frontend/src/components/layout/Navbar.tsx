@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from 'react-router';
-import { LayoutDashboard, Shield, Map } from 'lucide-react';
+import { LayoutDashboard, Shield, Map, PlusCircle } from 'lucide-react';
 import { LogOut } from 'lucide-react';
 import { cn } from '../../lib/utils.ts';
 import {
@@ -22,7 +22,7 @@ interface NavItem {
   icon: React.ElementType;
   /** null = always visible, true = only when logged in, false = only when logged out */
   requiresAuth: boolean | null;
-  /** null = visible to any role, otherwise restricted to that JWT role */
+  /** null = any JWT role, otherwise restricted to that specific JWT role */
   requiresRole: AuthRole | null;
 }
 
@@ -46,7 +46,16 @@ const navItems: NavItem[] = [
     label: 'Map',
     icon: Map,
     requiresAuth: true,
-    requiresRole: null, // visible to both 'user' and 'admin'
+    requiresRole: null,
+  },
+  {
+    path: '/tours/create',
+    label: 'Create Tour',
+    icon: PlusCircle,
+    requiresAuth: true,
+    // TODO: restrict to app-role AUTHOR/GUIDE once Stakeholders service is available.
+    // JWT role alone can't tell us this — it only knows 'user' | 'admin'.
+    requiresRole: null,
   },
 ];
 
@@ -57,9 +66,6 @@ const navItems: NavItem[] = [
 export default function Navbar() {
   const navigate = useNavigate();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
-
-  // NOTE: JWT role is 'user' | 'admin'. App role (tourist/guide/author) comes
-  // from the Stakeholders service — use that for UI gating, not this.
   const jwtRole = useAuthStore((s) => s.user?.role ?? null);
 
   const visibleItems = navItems.filter(({ requiresAuth, requiresRole }) => {
