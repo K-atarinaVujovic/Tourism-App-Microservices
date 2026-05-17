@@ -1,7 +1,7 @@
 # Created by https://www.toptal.com/developers/gitignore/api/visualstudio,visualstudiocode,intellij,rider,pycharm,java,aspnetcore,go,goland,python
 # Edit at https://www.toptal.com/developers/gitignore?templates=visualstudio,visualstudiocode,intellij,rider,pycharm,java,aspnetcore,go,goland,python
 
-### FRONTEND ###
+### Frontend ###
 .vite
 
 ### CUSTOM ###
@@ -710,7 +710,7 @@ celerybeat.pid
 *.sage.py
 
 # Environments
-Frontend/.env
+.env
 .venv
 env/
 venv/

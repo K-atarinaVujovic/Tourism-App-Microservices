@@ -2,7 +2,7 @@
 // The application role (tourist, guide, etc.) lives in the Profile model
 // on the Stakeholders service and must be fetched separately when needed.
 
-export type AuthRole = 'user' | 'admin';
+export type AuthRole = "user" | "admin";
 
 export interface AuthUser {
   id: number;
@@ -11,7 +11,14 @@ export interface AuthUser {
   role: AuthRole;
 }
 
-// API request/response shapes
+export interface AdminUser {
+  id: number;
+  username: string;
+  email: string;
+  is_blocked: boolean;
+}
+
+//  API request/response shapes
 
 export interface LoginRequest {
   identifier: string; // username or email, backend accepts both

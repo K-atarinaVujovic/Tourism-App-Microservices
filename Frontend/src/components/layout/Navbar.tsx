@@ -1,7 +1,8 @@
-import { NavLink, useNavigate } from 'react-router';
-import { LayoutDashboard, Shield, Map, PlusCircle } from 'lucide-react';
+import { NavLink, useNavigate } from "react-router";
 import { LogOut } from 'lucide-react';
-import { cn } from '../../lib/utils.ts';
+import { cn } from "../../lib/utils.ts";
+import { Grape, Map, PlusCircle, LayoutDashboard, PersonStanding, Shield, Wheat } from "lucide-react";
+import { NavLink, useNavigate } from 'react-router';
 import {
   NavigationMenu,
   NavigationMenuItem,
@@ -65,14 +66,23 @@ const navItems: NavItem[] = [
 
 export default function Navbar() {
   const navigate = useNavigate();
-  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
-  const jwtRole = useAuthStore((s) => s.user?.role ?? null);
+  // const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const { user, isAuthenticated } = useAuthStore();
 
-  const visibleItems = navItems.filter(({ requiresAuth, requiresRole }) => {
-    if (requiresAuth === true && !isAuthenticated) return false;
-    if (requiresAuth === false && isAuthenticated) return false;
-    if (requiresRole !== null && jwtRole !== requiresRole) return false;
-    return true;
+ const navItems = [
+  { path: "/home", label: "Home", icon: LayoutDashboard, requiresAuth: null, requiresAdmin: false },
+  { path: "/admin/users", label: "Users", icon: PersonStanding, requiresAuth: true, requiresAdmin: true },
+  { path: "/login", label: "Log in", icon: Shield, requiresAuth: false, requiresAdmin: false },
+  { path: `/profile/${user?.id}`, label: "My Profile", icon: Wheat, requiresAuth: true, requiresAdmin: false },
+];
+
+
+  // Decides which navbar items are visible depending on whether the user is logged in or not
+  const visibleItems = navItems.filter(({ requiresAuth, requiresAdmin }) => {
+    if (requiresAdmin && user?.role !== "admin") return false;
+    if (requiresAuth === null) return true;
+    if (requiresAuth === true) return isAuthenticated && !!user?.id;
+    if (requiresAuth === false) return !isAuthenticated;
   });
 
   const handleLogout = () => {
