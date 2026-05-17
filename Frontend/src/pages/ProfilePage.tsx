@@ -7,6 +7,7 @@ import { useProfile, useUpdateProfile } from "@/features/stakeholders/hooks/useP
 import { updateProfileSchema, type UpdateProfileFormValues } from "@/lib/schemas";
 import { useImageUpload } from "@hooks/useImageUpload";
 import { uploadProfileImage } from "@/features/stakeholders/services/stakeholdersService";
+import { useFollowUser } from "@/features/followers/hooks/useProfile";
 
 export default function ProfilePage() {
   const { userId } = useParams<{ userId: string }>();
@@ -23,6 +24,8 @@ export default function ProfilePage() {
   const [pendingFile, setPendingFile] = useState<File | null>(null);
 
   const { upload, isUploading } = useImageUpload(uploadProfileImage);
+
+  const { mutate: followUser } = useFollowUser();
 
   const { register, handleSubmit, setValue, formState: { errors } } = useForm<UpdateProfileFormValues>({
     resolver: zodResolver(updateProfileSchema),
@@ -98,7 +101,10 @@ export default function ProfilePage() {
               Edit
             </button>
           ) : (
-            <button className="px-4 py-2 border text-sm rounded">
+            <button
+              onClick={() => followUser(parsedUserId)}
+              className="px-4 py-2 border text-sm rounded"
+            >
               Follow
             </button>
           )}
