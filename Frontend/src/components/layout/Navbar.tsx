@@ -1,6 +1,6 @@
 import { NavLink, useNavigate } from "react-router";
 import { cn } from "../../lib/utils.ts";
-import { LayoutDashboard, Shield } from "lucide-react";
+import { LayoutDashboard, Shield, Wheat } from "lucide-react";
 import {
   NavigationMenu,
   NavigationMenuItem,
@@ -12,20 +12,22 @@ import { LogOut } from "lucide-react";
 import { useAuthStore } from "../../store/authStore";
 
 
-
-const navItems = [
-  { path: "/", label: "Home", icon: LayoutDashboard, requiresAuth: null },
-  { path: "/login", label: "Log in", icon: Shield, requiresAuth: false },                 
-];
-
-
 export default function Navbar() {
   const navigate = useNavigate();
-  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  // const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const { user, isAuthenticated } = useAuthStore();
+
+  const navItems = [
+    { path: "/", label: "Home", icon: LayoutDashboard, requiresAuth: null },
+    { path: "/login", label: "Log in", icon: Shield, requiresAuth: false },  
+    { path:  `/profile/${user?.id}`, label: "My profile", icon: Wheat, requiresAuth: true}, // this one jsut leads to current users profile, so user id will probably be fetched from jwt            
+  ];
+
+
   // Decides which navbar items are visible depending on whether the user is logged in or not
   const visibleItems = navItems.filter(({ requiresAuth }) => {
     if (requiresAuth === null) return true;       
-    if (requiresAuth === true) return isAuthenticated;   
+    if (requiresAuth === true) return isAuthenticated && !!user?.id;   
     if (requiresAuth === false) return !isAuthenticated;
   });
 

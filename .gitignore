@@ -1,6 +1,9 @@
 # Created by https://www.toptal.com/developers/gitignore/api/visualstudio,visualstudiocode,intellij,rider,pycharm,java,aspnetcore,go,goland,python
 # Edit at https://www.toptal.com/developers/gitignore?templates=visualstudio,visualstudiocode,intellij,rider,pycharm,java,aspnetcore,go,goland,python
 
+### Frontend ###
+.vite
+
 ### CUSTOM ###
 Stakeholders/images/*
 !Stakeholders/images/.gitkeep
