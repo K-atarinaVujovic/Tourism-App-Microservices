@@ -3,6 +3,8 @@ import HomePage from '../pages/HomePage.tsx';
 import RootLayout from '../components/layout/RootLayout';
 import RegistrationPage from '../pages/RegistrationPage';
 import LoginPage from '../pages/LoginPage';
+import ProfilePage from '@/pages/ProfilePage.tsx';
+import AdminPage from '@/pages/AdminPage.tsx';
 
 export const router = createBrowserRouter([
   {
@@ -25,6 +27,14 @@ export const router = createBrowserRouter([
         path: 'home',
         element: <HomePage />,
       },
+      {
+        path: 'profile/:userId', // modify this however needed
+        element: <ProfilePage />,
+      },
+      {
+        path: 'admin/users',
+        element: <AdminPage />,
+      }
     ],
   },
 ]);

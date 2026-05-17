@@ -4,7 +4,7 @@ from app.models.profile import Profile
 
 class Role(str, Enum):
     TOURIST = "tourist"
-    ADMIN = "admin"
+    AUTHOR = "author"
 
 class ProfileCreate(BaseModel):
   name: str
