@@ -5,45 +5,19 @@ import L from 'leaflet';
 import { Navigation, MapPin, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { usePositionStore, type LatLng } from '@/store/positionStore';
+import waypointImg from '@/assets/icons/bread.png';
+import positionImg from '@/assets/icons/duck.png';
 
-// ---------------------------------------------------------------------------
-// Custom marker icons
-// ---------------------------------------------------------------------------
-
-const currentPositionIcon = L.divIcon({
-    html: `<div style="
-    background:#6366f1;color:#fff;width:28px;height:28px;border-radius:50%;
-    display:flex;align-items:center;justify-content:center;
-    border:3px solid #fff;box-shadow:0 0 0 3px rgba(99,102,241,0.35),0 2px 6px rgba(0,0,0,0.3);
-  ">
-    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
-      fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-      <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/>
-    </svg>
-  </div>`,
-    className: '',
-    iconSize: [28, 28],
-    iconAnchor: [14, 14],
-    popupAnchor: [0, -18],
+// Confirmed current position
+const currentPositionIcon = L.icon({
+    iconUrl: positionImg,
+    iconSize: [48, 48],
 });
 
-const pendingIcon = L.divIcon({
-    html: `<div style="
-    background:#f59e0b;color:#fff;width:28px;height:28px;border-radius:50%;
-    display:flex;align-items:center;justify-content:center;
-    border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.3);
-    animation:pulse 1.5s ease-in-out infinite;
-  ">
-    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
-      fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>
-    </svg>
-  </div>
-  <style>@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.15)}}</style>`,
-    className: '',
-    iconSize: [28, 28],
-    iconAnchor: [14, 28],
-    popupAnchor: [0, -32],
+// Pending (unconfirmed) waypoint
+const pendingIcon = L.icon({
+    iconUrl: waypointImg,
+    iconSize: [48, 48],
 });
 
 // ---------------------------------------------------------------------------
