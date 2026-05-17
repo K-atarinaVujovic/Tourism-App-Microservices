@@ -53,6 +53,12 @@ public class TourService {
                 .toList();
     }
 
+    public TourResponse getTourById(Long id) {
+        return tourRepository.findById(id)
+                .map(this::mapToResponse)
+                .orElseThrow(() -> new RuntimeException("Tour not found"));
+    }
+
     private TourResponse mapToResponse(Tour tour){
         return new TourResponse(
                 tour.getId(),

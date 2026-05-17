@@ -31,7 +31,12 @@ public class TourController {
     }
 
     @GetMapping
-    public List<TourResponse> getAllTours(){
+    public List<TourResponse> getAllTours(@RequestHeader("Authorization") String authorizatio){
         return tourService.getAllTours();
+    }
+
+    @GetMapping("/{id}")
+    public TourResponse getTourById(@RequestHeader("Authorization") String authorization, @PathVariable Long id){
+        return tourService.getTourById(id);
     }
 }
