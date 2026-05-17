@@ -1,10 +1,12 @@
 import { useParams } from "react-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useAuthStore } from "@/store/authStore";
 import { useProfile, useUpdateProfile } from "@/features/stakeholders/hooks/useProfile";
 import { updateProfileSchema, type UpdateProfileFormValues } from "@/lib/schemas";
+import { useImageUpload } from "@/hooks/useImageUpload";
+import { uploadProfileImage } from "@/features/stakeholders/services/stakeholdersService";
 
 export default function ProfilePage() {
   const { userId } = useParams<{ userId: string }>();
@@ -17,8 +19,11 @@ export default function ProfilePage() {
   const { mutate: updateProfile, isPending } = useUpdateProfile(parsedUserId);
 
   const [isEditing, setIsEditing] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string>("");
 
-  const { register, handleSubmit, formState: { errors } } = useForm<UpdateProfileFormValues>({
+  const { upload, isUploading } = useImageUpload(uploadProfileImage);
+
+  const { register, handleSubmit, setValue, formState: { errors } } = useForm<UpdateProfileFormValues>({
     resolver: zodResolver(updateProfileSchema),
     values: profile
       ? {
@@ -30,6 +35,10 @@ export default function ProfilePage() {
         }
       : undefined,
   });
+
+  useEffect(() => {
+    if (profile?.imageUrl) setPreviewUrl(profile.imageUrl);
+  }, [profile?.imageUrl]);
 
   if (isLoading) return <p className="p-4">Loading...</p>;
   if (isError || !profile) return <p className="p-4">Failed to load profile.</p>;
@@ -48,11 +57,10 @@ export default function ProfilePage() {
 
   return (
     <div className="max-w-lg mx-auto mt-10 p-6 space-y-4">
-
       {/* Avatar */}
       <div className="flex justify-center">
         <img
-          src={profile.imageUrl}
+          src={previewUrl || profile.imageUrl}
           alt="Profile image"
           className="size-24 rounded-full object-cover"
         />
@@ -65,7 +73,6 @@ export default function ProfilePage() {
             <p className="text-xl font-semibold">{profile.name} {profile.lastname}</p>
             <p className="text-sm text-gray-500 capitalize">{profile.role}</p>
           </div>
-
           <div className="space-y-2 text-sm">
             <p><span className="font-medium">Bio:</span> {profile.biography}</p>
             <p><span className="font-medium">Quote:</span> "{profile.quote}"</p>
@@ -86,9 +93,31 @@ export default function ProfilePage() {
           )}
         </>
       ) : (
-        /* Edit form */
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
-          {(["name", "lastname", "imageUrl", "biography", "quote"] as const).map((field) => (
+
+          {/* Image upload */}
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-medium">Profile Image</label>
+            <input
+              type="file"
+              accept="image/*"
+              disabled={isUploading}
+              onChange={async (e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                const url = await upload(file);
+                if (url) {
+                  setValue("imageUrl", url);
+                  setPreviewUrl(url);
+                }
+              }}
+              className="text-sm"
+            />
+            {isUploading && <span className="text-xs text-gray-500">Uploading...</span>}
+          </div>
+
+          {/* Other fields */}
+          {(["name", "lastname", "biography", "quote"] as const).map((field) => (
             <div key={field} className="flex flex-col gap-1">
               <label className="text-sm font-medium capitalize">{field}</label>
               <input
@@ -104,7 +133,7 @@ export default function ProfilePage() {
           <div className="flex gap-2 pt-1">
             <button
               type="submit"
-              disabled={isPending}
+              disabled={isPending || isUploading}
               className="px-4 py-2 bg-black text-white text-sm rounded disabled:opacity-50"
             >
               {isPending ? "Saving..." : "Save"}
