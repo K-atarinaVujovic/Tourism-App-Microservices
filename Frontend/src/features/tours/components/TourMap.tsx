@@ -27,7 +27,7 @@ interface TourMapProps {
 function createKeypointIcon(order: number, active: boolean) {
     return L.divIcon({
         html: `<div style="
-      background:${active ? '--primary' : '--accent'};
+      background:${active ? '#6366f1' : '#3b82f6'};
       color:#fff;width:30px;height:30px;border-radius:50%;
       display:flex;align-items:center;justify-content:center;
       font-weight:700;font-size:13px;
@@ -184,7 +184,7 @@ export default function TourMap({ tourId, keypoints, className }: TourMapProps) 
                 {route.length > 0 && (
                     <Polyline
                         positions={route}
-                        pathOptions={{ color: '--primary', weight: 4, opacity: 0.8 }}
+                        pathOptions={{ color: '#6366f1', weight: 4, opacity: 0.8 }}
                     />
                 )}
 
