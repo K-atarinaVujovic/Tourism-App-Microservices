@@ -2,9 +2,11 @@ import { useParams } from "react-router";
 import { useAuthStore } from "@/store/authStore";
 import {
   useBlog, useComments, useAddComment, useEditComment,
+  useLikeCount, useHasLiked, useLikeBlog, useUnlikeBlog,
 } from "@/features/blog/hooks/useBlog";
 import BlogHeader from "@/features/blog/components/BlogHeader";
 import BlogImages from "@/features/blog/components/BlogImages";
+import BlogActions from "@/features/blog/components/BlogActions";
 import CommentForm from "@/features/blog/components/CommentForm";
 import CommentItem from "@/features/blog/components/CommentItem";
 import type { CommentFormValues } from "@/lib/schemas";
@@ -16,14 +18,16 @@ export default function BlogPage() {
 
   const { data: blog, isLoading, isError } = useBlog(parsedBlogId);
   const { data: comments } = useComments(parsedBlogId);
+  const { data: likeCount } = useLikeCount(parsedBlogId);
+  const { data: liked } = useHasLiked(parsedBlogId, user?.id ?? 0);
 
+  const { mutate: like } = useLikeBlog(parsedBlogId, user?.id ?? 0);
+  const { mutate: unlike } = useUnlikeBlog(parsedBlogId, user?.id ?? 0);
   const { mutate: addComment } = useAddComment(parsedBlogId);
   const { mutate: editComment } = useEditComment(parsedBlogId);
 
-
   if (isLoading) return <p className="p-4">Loading...</p>;
   if (isError || !blog) return <p className="p-4">Failed to load blog.</p>;
-
 
   function onComment(values: CommentFormValues) {
     if (!user) return;
@@ -38,6 +42,12 @@ export default function BlogPage() {
     <div className="max-w-lg mx-auto mt-10 p-6 space-y-4">
       <BlogHeader title={blog.title} description={blog.description} />
       <BlogImages imageUrls={blog.imageUrls} />
+      <BlogActions
+        liked={liked ?? false}
+        likeCount={likeCount ?? 0}
+        onLike={like}
+        onUnlike={unlike}
+      />
       <CommentForm onSubmit={onComment} />
       <div className="space-y-3">
         {comments?.map((comment) => (
