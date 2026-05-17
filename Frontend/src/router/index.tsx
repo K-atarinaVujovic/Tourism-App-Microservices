@@ -1,5 +1,6 @@
 import { createBrowserRouter, Navigate } from 'react-router';
 import HomePage from '../pages/HomePage.tsx';
+import MapPage from '../pages/MapPage.tsx';
 import RootLayout from '../components/layout/RootLayout';
 import RegistrationPage from '../pages/RegistrationPage';
 import LoginPage from '../pages/LoginPage';
@@ -15,15 +16,19 @@ export const router = createBrowserRouter([
       },
       {
         path: 'register',
-        element: <RegistrationPage />
+        element: <RegistrationPage />,
       },
       {
         path: 'login',
-        element: <LoginPage />
+        element: <LoginPage />,
       },
       {
         path: 'home',
         element: <HomePage />,
+      },
+      {
+        path: 'map',
+        element: <MapPage />,
       },
     ],
   },
