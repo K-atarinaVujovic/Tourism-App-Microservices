@@ -1,6 +1,7 @@
 import apiClient from "@/lib/api-client";
 import { useAuthStore } from "@/store/authStore";
 import type {
+    AdminUser,
     LoginRequest,
     LoginResponse,
     RegisterRequest,
@@ -21,4 +22,17 @@ export async function registerUser(data: RegisterRequest): Promise<void> {
 
 export function logoutUser(): void {
     useAuthStore.getState().clearAuth();
+}
+
+export async function getUsers(): Promise<AdminUser[]> {
+  const response = await apiClient.get<AdminUser[]>(`/auth/admin/users`);
+  return response.data;
+}
+
+export async function blockUser(userId: number): Promise<void> {
+  await apiClient.post(`/auth/admin/users/block`, { user_id: userId });
+}
+
+export async function unblockUser(userId: number): Promise<void> {
+  await apiClient.post(`/auth/admin/users/unblock`, { user_id: userId });
 }

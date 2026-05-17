@@ -11,6 +11,13 @@ export interface AuthUser {
   role: AuthRole;
 }
 
+export interface AdminUser {
+  id: number;
+  username: string;
+  email: string;
+  is_blocked: boolean;
+}
+
 //  API request/response shapes
 
 export interface LoginRequest {
