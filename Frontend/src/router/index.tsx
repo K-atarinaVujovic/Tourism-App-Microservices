@@ -5,6 +5,9 @@ import RegistrationPage from '../pages/RegistrationPage';
 import LoginPage from '../pages/LoginPage';
 import ProfilePage from '@/pages/ProfilePage.tsx';
 import AdminPage from '@/pages/AdminPage.tsx';
+import BlogListPage from '@/pages/BlogListPage.tsx';
+import CreateBlogPage from '@/pages/CreateBlogPage.tsx';
+import BlogPage from '@/pages/BlogPage.tsx';
 
 export const router = createBrowserRouter([
   {
@@ -34,7 +37,16 @@ export const router = createBrowserRouter([
       {
         path: 'admin/users',
         element: <AdminPage />,
-      }
+      },
+      { path: "blogs", 
+        element: <BlogListPage /> 
+      },
+      { path: "blogs/create", 
+        element: <CreateBlogPage /> 
+      },
+      { path: "blogs/:blogId", 
+        element: <BlogPage /> 
+      },
     ],
   },
 ]);
