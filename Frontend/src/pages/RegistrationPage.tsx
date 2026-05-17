@@ -13,7 +13,7 @@ export default function RegistrationPage() {
   const { mutate, isPending } = useMutation({
     mutationFn: ({ username, email, password }: RegisterFormData) =>
         registerUser({ username, email, password }),
-    onSuccess: () => navigate("/dashboard"),
+    onSuccess: () => navigate("/home"),
     onError: (error: Error) => setErrorMsg(error.message),
   });
 
