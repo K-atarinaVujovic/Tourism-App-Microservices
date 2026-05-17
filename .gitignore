@@ -601,7 +601,8 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
+Stakeholders/lib/
+#lib/
 lib64/
 parts/
 sdist/
