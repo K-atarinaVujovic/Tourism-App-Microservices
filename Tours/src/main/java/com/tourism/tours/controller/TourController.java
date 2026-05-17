@@ -29,4 +29,9 @@ public class TourController {
         CurrentUser user = authService.getCurrentUser(authorization);
         return tourService.getMyTours(user);
     }
+
+    @GetMapping
+    public List<TourResponse> getAllTours(){
+        return tourService.getAllTours();
+    }
 }

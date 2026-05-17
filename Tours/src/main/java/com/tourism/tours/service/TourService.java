@@ -46,6 +46,13 @@ public class TourService {
                 .toList();
     }
 
+    public List<TourResponse> getAllTours(){
+        return tourRepository.findAll()
+                .stream()
+                .map(this::mapToResponse)
+                .toList();
+    }
+
     private TourResponse mapToResponse(Tour tour){
         return new TourResponse(
                 tour.getId(),

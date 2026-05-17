@@ -5,10 +5,7 @@ import type { TourDifficulty } from '@/features/tours/services/tourService';
 export type KeypointType =
     | 'MUSEUM'
     | 'PARK'
-    | 'MONUMENT'
-    | 'RESTAURANT'
-    | 'VIEWPOINT'
-    | 'OTHER';
+    | 'MONUMENT';
 
 export interface Keypoint {
     id: number;
@@ -19,7 +16,6 @@ export interface Keypoint {
     imageUrl?: string;
     latitude: number;
     longitude: number;
-    order: number;
 }
 
 export interface CreateKeypointPayload {
@@ -38,7 +34,6 @@ export interface UpdateKeypointPayload {
     imageUrl?: string;
     latitude?: number;
     longitude?: number;
-    order?: number;
 }
 
 // ── Tour ─────────────────────────────────────────────────────────────────────
