@@ -1,7 +1,7 @@
 import { NavLink, useNavigate } from "react-router";
 import { LogOut } from 'lucide-react';
 import { cn } from "../../lib/utils.ts";
-import { Map, PlusCircle, LayoutDashboard, PersonStanding, Shield, Wheat } from "lucide-react";
+import { Map, PlusCircle, LayoutDashboard, PersonStanding, Shield, Wheat, Route } from "lucide-react";
 import {
   NavigationMenu,
   NavigationMenuItem,
@@ -21,12 +21,13 @@ export default function Navbar() {
   const { user, isAuthenticated } = useAuthStore();
 
  const navItems = [
-  { path: "/home", label: "Home", icon: LayoutDashboard, requiresAuth: null, requiresAdmin: false },
-  { path: "/admin/users", label: "Users", icon: PersonStanding, requiresAuth: true, requiresAdmin: true },
-  { path: "/login", label: "Log in", icon: Shield, requiresAuth: false, requiresAdmin: false },
-  { path: `/profile/${user?.id}`, label: "My Profile", icon: Wheat, requiresAuth: true, requiresAdmin: false },
-  { path: "/tours/create", label: "Create Tour", icon: PlusCircle, requiresAuth: true, requiresAdmin: false },
-  { path: "/map", label: "Map", icon: Map, requiresAuth: true, requiresAdmin: false },
+      { path: "/home", label: "Home", icon: LayoutDashboard, requiresAuth: null, requiresAdmin: false },
+      { path: "/admin/users", label: "Users", icon: PersonStanding, requiresAuth: true, requiresAdmin: true },
+      { path: "/login", label: "Log in", icon: Shield, requiresAuth: false, requiresAdmin: false },
+      { path: `/profile/${user?.id}`, label: "My Profile", icon: Wheat, requiresAuth: true, requiresAdmin: false },
+      { path: "/tours/create", label: "Create Tour", icon: PlusCircle, requiresAuth: true, requiresAdmin: false },
+      { path: "/map", label: "Map", icon: Map, requiresAuth: true, requiresAdmin: false },
+      { path: "/tours", label: "Tours", icon: Route, requiresAuth: true, requiresAdmin: false },
 ];
 
 

@@ -8,6 +8,8 @@ import RegistrationPage from '../pages/RegistrationPage';
 import LoginPage from '../pages/LoginPage';
 import ProfilePage from '@/pages/ProfilePage.tsx';
 import AdminPage from '@/pages/AdminPage.tsx';
+import ToursPage from "@/pages/ToursPage.tsx";
+import TourDetailPage from "@/pages/ToursDetailPage.tsx";
 
 export const router = createBrowserRouter([
   {
@@ -49,6 +51,14 @@ export const router = createBrowserRouter([
       {
         path: 'admin/users',
         element: <AdminPage />,
+      },
+      {
+        path: 'tours/',
+        element: <ToursPage />,
+      },
+      {
+        path: 'tours/:id',
+        element: <TourDetailPage />,
       }
     ],
   },

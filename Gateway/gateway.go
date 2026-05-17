@@ -234,7 +234,7 @@ func FindProxy(proxies []ProxyRegistry, r *http.Request) ProxyRegistry {
 // CORSMiddleware Middleware to handle CORS
 func CORSMiddleware(next http.Handler) http.Handler {
     allowed := map[string]bool{
-        "http://localhost:5173": true,
+        "http://localhost:5174": true,
         "http://localhost:8080": true,
     }
 

@@ -40,12 +40,34 @@ export interface UpdateKeypointPayload {
 
 export interface Tour {
     id: number;
+    authorId: number;
+    authorUsername: string;
     name: string;
     description: string;
     difficulty: TourDifficulty;
     tags: string[];
     status: 'DRAFT' | 'PUBLISHED';
     price: number;
-    authorId: number;
     keypoints?: Keypoint[];
+}
+
+// ── Tour Review ───────────────────────────────────────────────────────────────
+
+export interface TourReview {
+    id: number;
+    tourId: number;
+    touristId: number;
+    touristUsername: string;
+    rating: number;       // 1–5
+    comment: string;
+    visitedAt: string;    // ISO date string "YYYY-MM-DD" (Java LocalDate)
+    commentedAt: string;  // ISO datetime string (Java LocalDateTime)
+    imageUrls: string[];
+}
+
+export interface CreateReviewPayload {
+    rating: number;
+    comment: string;
+    visitedAt: string;    // "YYYY-MM-DD"
+    imageUrls?: string[];
 }

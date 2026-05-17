@@ -16,6 +16,11 @@ export const tourService = {
         return data;
     },
 
+    getAll: async (): Promise<Tour[]> => {
+        const { data } = await apiClient.get<Tour[]>('/tours/tours');
+        return data;
+    },
+
     getMyTours: async (): Promise<Tour[]> => {
         const { data } = await apiClient.get<Tour[]>('/tours/tours/my');
         return data;
