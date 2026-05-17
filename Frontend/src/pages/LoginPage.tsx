@@ -12,7 +12,7 @@ export default function LoginPage() {
 
   const { mutate, isPending } = useMutation({
     mutationFn: loginUser,
-    onSuccess: () => navigate("/dashboard"),
+    onSuccess: () => navigate("/home"),
     onError: (error: Error) => setErrorMsg(error.message),
   });
 
