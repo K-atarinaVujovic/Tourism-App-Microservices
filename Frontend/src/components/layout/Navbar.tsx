@@ -1,8 +1,7 @@
 import { NavLink, useNavigate } from "react-router";
 import { LogOut } from 'lucide-react';
 import { cn } from "../../lib/utils.ts";
-import { Grape, Map, PlusCircle, LayoutDashboard, PersonStanding, Shield, Wheat } from "lucide-react";
-import { NavLink, useNavigate } from 'react-router';
+import { Map, PlusCircle, LayoutDashboard, PersonStanding, Shield, Wheat } from "lucide-react";
 import {
   NavigationMenu,
   NavigationMenuItem,
@@ -11,54 +10,6 @@ import {
 } from '../molecules/navigation-menu.tsx';
 import { logoutUser } from '../../features/auth/services/authService';
 import { useAuthStore } from '../../store/authStore';
-import type { AuthRole } from '../../types/auth';
-
-// ---------------------------------------------------------------------------
-// Nav item definition
-// ---------------------------------------------------------------------------
-
-interface NavItem {
-  path: string;
-  label: string;
-  icon: React.ElementType;
-  /** null = always visible, true = only when logged in, false = only when logged out */
-  requiresAuth: boolean | null;
-  /** null = any JWT role, otherwise restricted to that specific JWT role */
-  requiresRole: AuthRole | null;
-}
-
-const navItems: NavItem[] = [
-  {
-    path: '/home',
-    label: 'Home',
-    icon: LayoutDashboard,
-    requiresAuth: null,
-    requiresRole: null,
-  },
-  {
-    path: '/login',
-    label: 'Log in',
-    icon: Shield,
-    requiresAuth: false,
-    requiresRole: null,
-  },
-  {
-    path: '/map',
-    label: 'Map',
-    icon: Map,
-    requiresAuth: true,
-    requiresRole: null,
-  },
-  {
-    path: '/tours/create',
-    label: 'Create Tour',
-    icon: PlusCircle,
-    requiresAuth: true,
-    // TODO: restrict to app-role AUTHOR/GUIDE once Stakeholders service is available.
-    // JWT role alone can't tell us this — it only knows 'user' | 'admin'.
-    requiresRole: null,
-  },
-];
 
 // ---------------------------------------------------------------------------
 // Navbar
@@ -74,6 +25,8 @@ export default function Navbar() {
   { path: "/admin/users", label: "Users", icon: PersonStanding, requiresAuth: true, requiresAdmin: true },
   { path: "/login", label: "Log in", icon: Shield, requiresAuth: false, requiresAdmin: false },
   { path: `/profile/${user?.id}`, label: "My Profile", icon: Wheat, requiresAuth: true, requiresAdmin: false },
+  { path: "/tours/create", label: "Create Tour", icon: PlusCircle, requiresAuth: true, requiresAdmin: false },
+  { path: "/map", label: "Map", icon: Map, requiresAuth: true, requiresAdmin: false },
 ];
 
 
