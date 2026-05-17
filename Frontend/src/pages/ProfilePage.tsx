@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useAuthStore } from "@/store/authStore";
 import { useProfile, useUpdateProfile } from "@/features/stakeholders/hooks/useProfile";
 import { updateProfileSchema, type UpdateProfileFormValues } from "@/lib/schemas";
-import { useImageUpload } from "@/hooks/useImageUpload";
+import { useImageUpload } from "@hooks/useImageUpload";
 import { uploadProfileImage } from "@/features/stakeholders/services/stakeholdersService";
 
 export default function ProfilePage() {
@@ -20,6 +20,7 @@ export default function ProfilePage() {
 
   const [isEditing, setIsEditing] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string>("");
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
 
   const { upload, isUploading } = useImageUpload(uploadProfileImage);
 
@@ -43,13 +44,23 @@ export default function ProfilePage() {
   if (isLoading) return <p className="p-4">Loading...</p>;
   if (isError || !profile) return <p className="p-4">Failed to load profile.</p>;
 
-  function onSubmit(values: UpdateProfileFormValues) {
+  async function onSubmit(values: UpdateProfileFormValues) {
+    let imageUrl = values.imageUrl;
+
+    if (pendingFile) {
+      const uploaded = await upload(pendingFile);
+      if (!uploaded) return;
+      imageUrl = uploaded;
+      setValue("imageUrl", imageUrl);
+    }
+
     updateProfile(
-      { ...values, user_id: parsedUserId },
+      { ...values, imageUrl, user_id: parsedUserId },
       {
         onSuccess: () => {
           alert("Profile updated.");
           setIsEditing(false);
+          setPendingFile(null);
         },
       }
     );
@@ -93,7 +104,7 @@ export default function ProfilePage() {
           )}
         </>
       ) : (
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
+        <form onSubmit={(e) => { e.preventDefault(); handleSubmit(onSubmit)(e); }} className="space-y-3">
 
           {/* Image upload */}
           <div className="flex flex-col gap-1">
@@ -102,14 +113,11 @@ export default function ProfilePage() {
               type="file"
               accept="image/*"
               disabled={isUploading}
-              onChange={async (e) => {
+              onChange={(e) => {
                 const file = e.target.files?.[0];
                 if (!file) return;
-                const url = await upload(file);
-                if (url) {
-                  setValue("imageUrl", url);
-                  setPreviewUrl(url);
-                }
+                setPendingFile(file);
+                setPreviewUrl(URL.createObjectURL(file));
               }}
               className="text-sm"
             />
@@ -136,11 +144,15 @@ export default function ProfilePage() {
               disabled={isPending || isUploading}
               className="px-4 py-2 bg-black text-white text-sm rounded disabled:opacity-50"
             >
-              {isPending ? "Saving..." : "Save"}
+              {isPending || isUploading ? "Saving..." : "Save"}
             </button>
             <button
               type="button"
-              onClick={() => setIsEditing(false)}
+              onClick={() => {
+                setIsEditing(false);
+                setPendingFile(null);
+                setPreviewUrl(profile.imageUrl);
+              }}
               className="px-4 py-2 border text-sm rounded"
             >
               Cancel
