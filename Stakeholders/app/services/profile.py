@@ -6,8 +6,8 @@ from app.core.exceptions import NotFoundException, AlreadyExistsException
 class ProfileService:
   repo: ProfileRepository = ProfileRepository()
 
-  def create(self, profile: ProfileCreate) -> ProfileResponse:
-    if self.repo.get_by_user_id(profile.user_id) is not None:
+  async def create(self, profile: ProfileCreate) -> ProfileResponse:
+    if await self.repo.get_by_user_id(profile.user_id) is not None:
       raise AlreadyExistsException("Profile already exists for this user")
     new_profile = Profile(
       user_id=profile.user_id,
@@ -18,31 +18,39 @@ class ProfileService:
       quote=profile.quote,
       role=profile.role
     )
-    return ProfileResponse.model_validate(self.repo.save(new_profile))
+    saved = await self.repo.save(new_profile)
+    data = saved.model_dump() # because uhhh getting id from doc db or something idk
+    data["id"] = str(saved.id)
+    return ProfileResponse.model_validate(data)
 
-  def update(self, user_id: int, updated_profile_schema: ProfileUpdate) -> ProfileResponse:
-    profile = self.repo.get_by_user_id(user_id)
+  async def update(self, user_id: int, updated_profile_schema: ProfileUpdate) -> ProfileResponse:
+    profile = await self.repo.get_by_user_id(user_id)
     if profile is None:
       raise NotFoundException("No profile to update")
-    profile.update(
+    profile.update_fields(
       name=updated_profile_schema.name,
       lastname=updated_profile_schema.lastname,
       imageUrl=updated_profile_schema.imageUrl,
       biography=updated_profile_schema.biography,
       quote=updated_profile_schema.quote
     )
-    return ProfileResponse.model_validate(self.repo.update(profile))
+    updated = await self.repo.update(profile)
+    data = updated.model_dump()
+    data["id"] = str(updated.id)
+    return ProfileResponse.model_validate(data)
 
-  def get(self, profile_id: int) -> ProfileResponse:
-    profile = self.repo.get(profile_id)
+  async def get(self, profile_id: str) -> ProfileResponse:
+    profile = await self.repo.get(profile_id)
     if profile is None:
       raise NotFoundException("Profile not found")
+    data = profile.model_dump()
+    data["id"] = str(profile.id)
+    return ProfileResponse.model_validate(data)
 
-    return ProfileResponse.model_validate(profile)
-  
-  def get_by_user_id(self, user_id: int) -> ProfileResponse:
-    profile = self.repo.get_by_user_id(user_id)
+  async def get_by_user_id(self, user_id: int) -> ProfileResponse:
+    profile = await self.repo.get_by_user_id(user_id)
     if profile is None:
       raise NotFoundException("Profile not found")
-
-    return ProfileResponse.model_validate(profile)
+    data = profile.model_dump()
+    data["id"] = str(profile.id)
+    return ProfileResponse.model_validate(data)
