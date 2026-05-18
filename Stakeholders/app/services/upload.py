@@ -13,8 +13,9 @@ class Uploader:
     with open(file_path, "wb") as f:
         contents = await file.read()
         f.write(contents)
-    
-    return {"imageUrl": f"/images/{filename}"}
+
+    # ugly bad and no-no url hardcoding but uhmmmm
+    return {"imageUrl": f"http://localhost:8000/stakeholders/images/{filename}"}
   
   def upload_image_bytes(self, file_data: bytes, filename: str):
     os.makedirs("images", exist_ok=True)
@@ -25,4 +26,4 @@ class Uploader:
     with open(file_path, "wb") as f:
         f.write(file_data)
     
-    return {"imageUrl": f"/images/{generated_filename}"}
+    return {"imageUrl": f"http://localhost:8000/stakeholders/images/{generated_filename}"}
