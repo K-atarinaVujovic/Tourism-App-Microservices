@@ -41,6 +41,11 @@ public class FollowerService {
             throw new RuntimeException("A user cannot follow themselves!");
         }
 
+        // In followUser, before the upsert block:
+        if (userRepository.isFollowing(followerId, followingId)) {
+            throw new RuntimeException("User " + followerId + " is already following user " + followingId);
+        }
+
         // Ensure both users exist in the external Stakeholders service
         fetchUserProfile(followerId);
         fetchUserProfile(followingId);
@@ -61,14 +66,11 @@ public class FollowerService {
     public void unfollowUser(Long followerId, Long followingId) {
         log.info("User {} is unfollowing user {}", followerId, followingId);
 
-        User follower = userRepository.findByUserId(followerId)
-                .orElseThrow(() -> new RuntimeException("User " + followerId + " not found"));
+        if (!userRepository.isFollowing(followerId, followingId)) {
+            throw new RuntimeException("User " + followerId + " is not following user " + followingId);
+        }
 
-        User following = userRepository.findByUserId(followingId)
-                .orElseThrow(() -> new RuntimeException("User " + followingId + " not found"));
-
-        follower.getFollowing().remove(following);
-        userRepository.save(follower);
+        userRepository.deleteFollowRelationship(followerId, followingId);
 
         log.info("FOLLOWS relationship removed: {} -> {}", followerId, followingId);
     }
