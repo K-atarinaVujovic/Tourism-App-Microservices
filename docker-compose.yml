@@ -96,6 +96,8 @@ services:
     networks:
       - stakeholders-network
       - service-network
+    ports:
+      - "8082:8082"
 
   stakeholders_db:
     image: postgres:16
