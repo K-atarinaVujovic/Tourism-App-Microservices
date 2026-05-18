@@ -93,6 +93,8 @@ services:
         condition: service_healthy
     volumes:
       - stakeholders_images_data:/app/images
+    ports:
+      - "8082:8082"
     networks:
       - stakeholders-network
       - service-network

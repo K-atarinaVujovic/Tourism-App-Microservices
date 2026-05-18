@@ -21,9 +21,11 @@ public class User {
     @Id
     private Long userId;
 
+    @Builder.Default
     @Relationship(type = "FOLLOWS", direction = Relationship.Direction.OUTGOING)
     private Set<User> following = new HashSet<>();
 
+    @Builder.Default
     @Relationship(type = "FOLLOWS", direction = Relationship.Direction.INCOMING)
     private Set<User> followers = new HashSet<>();
 }

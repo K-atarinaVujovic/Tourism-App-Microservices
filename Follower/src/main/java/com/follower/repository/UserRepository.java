@@ -11,6 +11,7 @@ import java.util.Optional;
 @Repository
 public interface UserRepository extends Neo4jRepository<User, Long> {
 
+    @Query("MATCH (u:User {userId: $userId}) RETURN u")
     Optional<User> findByUserId(Long userId);
 
     @Query("MATCH (u:User {userId: $userId})-[:FOLLOWS]->(following:User) RETURN following")
