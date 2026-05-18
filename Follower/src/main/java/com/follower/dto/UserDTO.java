@@ -4,13 +4,15 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class UserDTO {
-    private Long userId;    // maps to user_id in ProfileResponse
+    @JsonProperty("user_id")
+    private Long userId;
     private String name;
     private String lastname;
     private String imageUrl;
