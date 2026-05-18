@@ -9,3 +9,16 @@ export const updateProfileSchema = z.object({
 });
 
 export type UpdateProfileFormValues = z.infer<typeof updateProfileSchema>;
+
+
+export const createBlogSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+  description: z.string().min(1, "Description is required"),
+  imageUrls: z.string(), // comma separated, split on submit
+});
+export type CreateBlogFormValues = z.infer<typeof createBlogSchema>;
+
+export const commentSchema = z.object({
+  text: z.string().min(1, "Comment cannot be empty"),
+});
+export type CommentFormValues = z.infer<typeof commentSchema>;

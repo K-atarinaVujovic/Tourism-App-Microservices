@@ -1,7 +1,7 @@
 import { NavLink, useNavigate } from "react-router";
 import { LogOut } from 'lucide-react';
 import { cn } from "../../lib/utils.ts";
-import { Map, PlusCircle, LayoutDashboard, PersonStanding, Shield, Wheat, Route } from "lucide-react";
+import { BookOpen, Map, PlusCircle, LayoutDashboard, PenLine, PersonStanding, Shield, Wheat, Route } from "lucide-react";
 import {
   NavigationMenu,
   NavigationMenuItem,
@@ -28,6 +28,8 @@ export default function Navbar() {
       { path: "/tours/create", label: "Create Tour", icon: PlusCircle, requiresAuth: true, requiresAdmin: false },
       { path: "/map", label: "Map", icon: Map, requiresAuth: true, requiresAdmin: false },
       { path: "/tours", label: "Tours", icon: Route, requiresAuth: true, requiresAdmin: false },
+      { path: "/blogs", label: "Blogs", icon: BookOpen, requiresAuth: null },
+      { path: "/blogs/create", label: "Create Blog", icon: PenLine, requiresAuth: true },
 ];
 
 

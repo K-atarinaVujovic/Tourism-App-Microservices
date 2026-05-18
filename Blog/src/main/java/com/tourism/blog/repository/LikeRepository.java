@@ -7,5 +7,4 @@ public interface LikeRepository extends JpaRepository<Like, Long> {
     boolean existsByBlogIdAndUserId(Long blogId, Long userId);
     void deleteByBlogIdAndUserId(Long blogId, Long userId);
     int countByBlogId(Long blogId);
-
 }
