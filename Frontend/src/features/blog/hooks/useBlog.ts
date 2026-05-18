@@ -4,10 +4,11 @@ import {
   getComments, addComment, editComment,
   getLikeCount, hasLiked, likeBlog, unlikeBlog,
 } from "../services/blogService";
+import { getFollowerBlogs } from "@/features/followers/services/followerService";
 import type { CreateBlog, CreateComment, UpdateComment } from "@/types/blog";
 
 export function useAllBlogs() {
-  return useQuery({ queryKey: ["blogs"], queryFn: getAllBlogs });
+  return useQuery({ queryKey: ["blogs"], queryFn: getFollowerBlogs });
 }
 
 export function useBlog(blogId: number) {

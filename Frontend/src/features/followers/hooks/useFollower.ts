@@ -34,7 +34,7 @@ export function useFollowUser(followingId: number) {
     mutationFn: () => follow(followingId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["is-following", followingId] });
-      queryClient.invalidateQueries({ queryKey: ["recommendations"] });
+      // removed recommendations invalidation
     },
     onError: () => alert("Failed to follow user."),
   });

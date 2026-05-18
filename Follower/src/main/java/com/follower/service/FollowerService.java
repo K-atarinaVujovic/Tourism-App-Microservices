@@ -59,7 +59,7 @@ public class FollowerService {
 
         follower.getFollowing().add(following);
         userRepository.save(follower);
-
+        
         log.info("FOLLOWS relationship created: {} -> {}", followerId, followingId);
     }
 

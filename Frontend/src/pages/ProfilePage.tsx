@@ -19,6 +19,7 @@ export default function ProfilePage() {
   const isOwner = user?.id === parsedUserId;
 
   const { data: following } = useIsFollowing(parsedUserId);
+  console.log("isFollowing", following);
   const { mutate: follow } = useFollowUser(parsedUserId);
   const { mutate: unfollow } = useUnfollowUser(parsedUserId);
 

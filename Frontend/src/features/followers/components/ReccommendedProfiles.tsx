@@ -1,7 +1,20 @@
-import { useRecommendations, useFollowUser } from "../hooks/useFollower";
+import { useState } from "react";
+import { useRecommendations, useFollowUser, useUnfollowUser } from "../hooks/useFollower";
 
 function RecommendedCard({ user }: { user: import("@/types/follower").User }) {
-  const { mutate: follow } = useFollowUser(user.userId);
+  const [followed, setFollowed] = useState(false);
+  const { mutate: follow } = useFollowUser(user.user_id);
+  const { mutate: unfollow } = useUnfollowUser(user.user_id);
+
+  function handleToggle() {
+    if (followed) {
+      unfollow();
+      setFollowed(false);
+    } else {
+      follow();
+      setFollowed(true);
+    }
+  }
 
   return (
     <div className="flex items-center gap-3 border rounded px-3 py-2 min-w-48">
@@ -14,10 +27,10 @@ function RecommendedCard({ user }: { user: import("@/types/follower").User }) {
         <p className="text-sm font-medium truncate">{user.name} {user.lastname}</p>
       </div>
       <button
-        onClick={() => follow()}
+        onClick={handleToggle}
         className="px-3 py-1 border text-xs rounded shrink-0"
       >
-        Follow
+        {followed ? "Unfollow" : "Follow"}
       </button>
     </div>
   );
@@ -36,7 +49,7 @@ export default function RecommendedProfiles() {
       ) : (
         <div className="flex gap-3 overflow-x-auto pb-2">
           {recommendations.map((user) => (
-            <RecommendedCard key={user.userId} user={user} />
+            <RecommendedCard key={user.user_id} user={user} />
           ))}
         </div>
       )}

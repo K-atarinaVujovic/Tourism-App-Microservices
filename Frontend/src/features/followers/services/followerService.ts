@@ -9,6 +9,7 @@ export async function follow(followingId: number): Promise<void> {
 }
 
 export async function unfollow(followingId: number): Promise<void> {
+  console.log("UNFOLLOW");
   await apiClient.delete(`${BASE}/unfollow/${followingId}`);
 }
 
@@ -34,5 +35,6 @@ export async function getFollowerBlogs(): Promise<Blog[]> {
 
 export async function getRecommendations(limit = 10): Promise<User[]> {
   const response = await apiClient.get<User[]>(`${BASE}/recommendations`, { params: { limit } });
+  console.log(response.data);
   return response.data;
 }
