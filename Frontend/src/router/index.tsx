@@ -13,6 +13,7 @@ import TourDetailPage from "@/pages/ToursDetailPage.tsx";
 import BlogListPage from '@/pages/BlogListPage.tsx';
 import CreateBlogPage from '@/pages/CreateBlogPage.tsx';
 import BlogPage from '@/pages/BlogPage.tsx';
+import FollowersPage from '@/pages/FollowersPage.tsx';
 
 export const router = createBrowserRouter([
   {
@@ -72,6 +73,8 @@ export const router = createBrowserRouter([
       { path: "blogs/:blogId", 
         element: <BlogPage /> 
       },
+      { path: "followers", 
+        element: <FollowersPage /> }
     ],
   },
 ]);
