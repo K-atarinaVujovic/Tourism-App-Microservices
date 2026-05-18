@@ -1,4 +1,4 @@
-import { useParams } from "react-router";
+import { Link, useParams } from "react-router";
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -7,7 +7,9 @@ import { useProfile, useUpdateProfile } from "@/features/stakeholders/hooks/useP
 import { updateProfileSchema, type UpdateProfileFormValues } from "@/lib/schemas";
 import { useImageUpload } from "@hooks/useImageUpload";
 import { uploadProfileImage } from "@/features/stakeholders/services/stakeholdersService";
-import { useFollowUser } from "@/features/followers/hooks/useProfile";
+// import { useFollowUser } from "@/features/followers/hooks/useProfile";
+import { useFollowUser, useUnfollowUser, useIsFollowing } from "@/features/followers/hooks/useFollower";
+import RecommendedProfiles from "@/features/followers/components/ReccommendedProfiles";
 
 export default function ProfilePage() {
   const { userId } = useParams<{ userId: string }>();
@@ -15,6 +17,11 @@ export default function ProfilePage() {
 
   const { user } = useAuthStore();
   const isOwner = user?.id === parsedUserId;
+
+  const { data: following } = useIsFollowing(parsedUserId);
+  console.log("isFollowing", following);
+  const { mutate: follow } = useFollowUser(parsedUserId);
+  const { mutate: unfollow } = useUnfollowUser(parsedUserId);
 
   const { data: profile, isLoading, isError } = useProfile(parsedUserId);
   const { mutate: updateProfile, isPending } = useUpdateProfile(parsedUserId);
@@ -25,7 +32,7 @@ export default function ProfilePage() {
 
   const { upload, isUploading } = useImageUpload(uploadProfileImage);
 
-  const { mutate: followUser } = useFollowUser();
+  // const { mutate: followUser } = useFollowUser();
 
   const { register, handleSubmit, setValue, formState: { errors } } = useForm<UpdateProfileFormValues>({
     resolver: zodResolver(updateProfileSchema),
@@ -87,6 +94,10 @@ export default function ProfilePage() {
             <p className="text-xl font-semibold">{profile.name} {profile.lastname}</p>
             <p className="text-sm text-gray-500 capitalize">{profile.role}</p>
           </div>
+          <div className="flex justify-center gap-8 text-sm">
+            <Link to={`/followers?tab=followers`} className="hover:underline">Followers</Link>
+            <Link to={`/followers?tab=following`} className="hover:underline">Following</Link>
+          </div>
           <div className="space-y-2 text-sm">
             <p><span className="font-medium">Bio:</span> {profile.biography}</p>
             <p><span className="font-medium">Quote:</span> "{profile.quote}"</p>
@@ -102,12 +113,13 @@ export default function ProfilePage() {
             </button>
           ) : (
             <button
-              onClick={() => followUser(parsedUserId)}
+              onClick={() => following ? unfollow() : follow()}
               className="px-4 py-2 border text-sm rounded"
             >
-              Follow
+              {following ? "Unfollow" : "Follow"}
             </button>
           )}
+          {isOwner && <RecommendedProfiles />}
         </>
       ) : (
         <form onSubmit={(e) => { e.preventDefault(); handleSubmit(onSubmit)(e); }} className="space-y-3">

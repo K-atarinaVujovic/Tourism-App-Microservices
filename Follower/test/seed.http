@@ -1,0 +1,321 @@
+## =====================================================
+## Seed Script — Initialize test data
+## Run top to bottom in order.
+##
+## Services:
+##   Auth         → http://localhost:8081
+##   Stakeholders → http://localhost:8082
+##   Blog         → http://localhost:8080
+##
+## Creates:
+##   3 users (admin already exists via db seed)
+##   3 profiles in Stakeholders
+##   4 blogs in Blog service (2 by user_b, 2 by user_c)
+##   alice follows bob and carol via the follower service
+## =====================================================
+
+
+### ── STEP 1: Register User A (alice) ──────────────────
+### We capture the token and user_id for use in later steps.
+POST http://localhost:8081/auth/register
+Content-Type: application/json
+
+{
+  "username": "alice",
+  "email": "alice@example.com",
+  "password": "Password123!"
+}
+
+> {%
+    client.test("Register alice - 201", function() {
+        client.assert(response.status === 201, "Expected 201, got " + response.status + ": " + JSON.stringify(response.body));
+    });
+    client.global.set("alice_token", response.body.token);
+    client.global.set("alice_id", response.body.user_id);
+    client.log("alice id=" + response.body.user_id);
+%}
+
+
+### ── STEP 2: Register User B (bob) ───────────────────
+POST http://localhost:8081/auth/register
+Content-Type: application/json
+
+{
+  "username": "bob",
+  "email": "bob@example.com",
+  "password": "Password123!"
+}
+
+> {%
+    client.test("Register bob - 201", function() {
+        client.assert(response.status === 201, "Expected 201, got " + response.status + ": " + JSON.stringify(response.body));
+    });
+    client.global.set("bob_token", response.body.token);
+    client.global.set("bob_id", response.body.user_id);
+    client.log("bob id=" + response.body.user_id);
+%}
+
+
+### ── STEP 3: Register User C (carol) ─────────────────
+POST http://localhost:8081/auth/register
+Content-Type: application/json
+
+{
+  "username": "carol",
+  "email": "carol@example.com",
+  "password": "Password123!"
+}
+
+> {%
+    client.test("Register carol - 201", function() {
+        client.assert(response.status === 201, "Expected 201, got " + response.status + ": " + JSON.stringify(response.body));
+    });
+    client.global.set("carol_token", response.body.token);
+    client.global.set("carol_id", response.body.user_id);
+    client.log("carol id=" + response.body.user_id);
+%}
+
+
+### ── STEP 4: Login as admin (seeded via db/seed.sql) ─
+POST http://localhost:8081/auth/login
+Content-Type: application/json
+
+{
+  "identifier": "admin",
+  "password": "Password123!"
+}
+
+> {%
+    client.test("Login admin - 200", function() {
+        client.assert(response.status === 200, "Expected 200, got " + response.status + ": " + JSON.stringify(response.body));
+    });
+    const token = response.body.token || response.body.jwt || response.body.access_token;
+    client.global.set("admin_token", token);
+    client.log("admin token stored");
+%}
+
+
+### ── STEP 5: Create Stakeholder profile for alice ────
+### /profiles/create has no auth requirement
+POST http://localhost:8082/profiles/create
+Content-Type: application/json
+
+{
+  "user_id": {{alice_id}},
+  "name": "Alice",
+  "lastname": "Smith",
+  "biography": "Travel enthusiast and blogger.",
+  "role": "tourist"
+}
+
+> {%
+    client.test("Create alice profile - 200/201", function() {
+        client.assert(response.status === 200 || response.status === 201,
+            "Expected 200 or 201, got " + response.status + ": " + JSON.stringify(response.body));
+    });
+%}
+
+
+### ── STEP 6: Create Stakeholder profile for bob ──────
+POST http://localhost:8082/profiles/create
+Content-Type: application/json
+
+{
+  "user_id": {{bob_id}},
+  "name": "Bob",
+  "lastname": "Jones",
+  "biography": "Mountain hiker and photographer.",
+  "role": "tourist"
+}
+
+> {%
+    client.test("Create bob profile - 200/201", function() {
+        client.assert(response.status === 200 || response.status === 201,
+            "Expected 200 or 201, got " + response.status + ": " + JSON.stringify(response.body));
+    });
+%}
+
+
+### ── STEP 7: Create Stakeholder profile for carol ────
+POST http://localhost:8082/profiles/create
+Content-Type: application/json
+
+{
+  "user_id": {{carol_id}},
+  "name": "Carol",
+  "lastname": "Taylor",
+  "biography": "Food and culture explorer.",
+  "role": "tourist"
+}
+
+> {%
+    client.test("Create carol profile - 200/201", function() {
+        client.assert(response.status === 200 || response.status === 201,
+            "Expected 200 or 201, got " + response.status + ": " + JSON.stringify(response.body));
+    });
+%}
+
+
+### ── STEP 8: Bob writes a blog ───────────────────────
+### Blog service reads authorId from the request body (no JWT extraction yet)
+POST http://localhost:8080/blogs
+Content-Type: application/json
+
+{
+  "authorId": {{bob_id}},
+  "title": "Hiking Kopaonik in Winter",
+  "description": "A detailed guide to the best ski and hiking trails on Kopaonik mountain.",
+  "imageUrls": []
+}
+
+> {%
+    client.test("Bob blog 1 - 200/201", function() {
+        client.assert(response.status === 200 || response.status === 201,
+            "Expected 200 or 201, got " + response.status + ": " + JSON.stringify(response.body));
+    });
+    client.global.set("bob_blog_1_id", response.body.id);
+%}
+
+
+### ── STEP 9: Bob writes a second blog ───────────────
+POST http://localhost:8080/blogs
+Content-Type: application/json
+
+{
+  "authorId": {{bob_id}},
+  "title": "Best Coffee Spots in Belgrade",
+  "description": "My top picks for specialty coffee in the city.",
+  "imageUrls": []
+}
+
+> {%
+    client.test("Bob blog 2 - 200/201", function() {
+        client.assert(response.status === 200 || response.status === 201,
+            "Expected 200 or 201, got " + response.status + ": " + JSON.stringify(response.body));
+    });
+    client.global.set("bob_blog_2_id", response.body.id);
+%}
+
+
+### ── STEP 10: Carol writes a blog ───────────────────
+POST http://localhost:8080/blogs
+Content-Type: application/json
+
+{
+  "authorId": {{carol_id}},
+  "title": "Visiting Tara National Park",
+  "description": "Everything you need to know about Serbia's most beautiful national park.",
+  "imageUrls": []
+}
+
+> {%
+    client.test("Carol blog 1 - 200/201", function() {
+        client.assert(response.status === 200 || response.status === 201,
+            "Expected 200 or 201, got " + response.status + ": " + JSON.stringify(response.body));
+    });
+    client.global.set("carol_blog_1_id", response.body.id);
+%}
+
+
+### ── STEP 11: Carol writes a second blog ────────────
+POST http://localhost:8080/blogs
+Content-Type: application/json
+
+{
+  "authorId": {{carol_id}},
+  "title": "Street Food in Novi Sad",
+  "description": "The best street food stands at Exit festival and beyond.",
+  "imageUrls": []
+}
+
+> {%
+    client.test("Carol blog 2 - 200/201", function() {
+        client.assert(response.status === 200 || response.status === 201,
+            "Expected 200 or 201, got " + response.status + ": " + JSON.stringify(response.body));
+    });
+    client.global.set("carol_blog_2_id", response.body.id);
+%}
+
+
+### ── STEP 12: Alice follows Bob ─────────────────────
+### Uses alice's JWT — follower service reads her id from the token
+POST http://localhost:8084/followers/follow/{{bob_id}}
+Authorization: Bearer {{alice_token}}
+
+> {%
+    client.test("Alice follows bob - 200", function() {
+        client.assert(response.status === 200,
+            "Expected 200, got " + response.status + ": " + JSON.stringify(response.body));
+    });
+%}
+
+
+### ── STEP 13: Alice follows Carol ───────────────────
+POST http://localhost:8084/followers/follow/{{carol_id}}
+Authorization: Bearer {{alice_token}}
+
+> {%
+    client.test("Alice follows carol - 200", function() {
+        client.assert(response.status === 200,
+            "Expected 200, got " + response.status + ": " + JSON.stringify(response.body));
+    });
+%}
+
+
+### ── STEP 14: Bob follows Carol ─────────────────────
+### This sets up the friends-of-friends chain:
+### alice → bob → carol, so carol will appear in alice's recommendations
+POST http://localhost:8084/followers/follow/{{carol_id}}
+Authorization: Bearer {{bob_token}}
+
+> {%
+    client.test("Bob follows carol - 200", function() {
+        client.assert(response.status === 200,
+            "Expected 200, got " + response.status + ": " + JSON.stringify(response.body));
+    });
+%}
+
+
+### ── STEP 15: Sanity check — verify alice's feed has blogs ──
+GET http://localhost:8084/followers/feed
+Authorization: Bearer {{alice_token}}
+
+> {%
+    client.test("Alice feed is non-empty - 200", function() {
+        client.assert(response.status === 200,
+            "Expected 200, got " + response.status + ": " + JSON.stringify(response.body));
+        client.assert(Array.isArray(response.body) && response.body.length > 0,
+            "Expected at least one blog in alice's feed, got: " + JSON.stringify(response.body));
+    });
+    client.log("Alice's feed contains " + response.body.length + " blogs");
+%}
+
+
+### ── STEP 16: Sanity check — verify alice's following list ──
+GET http://localhost:8084/followers/following
+Authorization: Bearer {{alice_token}}
+
+> {%
+    client.test("Alice following list - 200", function() {
+        client.assert(response.status === 200,
+            "Expected 200, got " + response.status + ": " + JSON.stringify(response.body));
+        client.assert(response.body.length === 2,
+            "Expected alice to follow 2 users, got " + response.body.length);
+    });
+%}
+
+
+### ── DONE ─────────────────────────────────────────────
+### Tokens and IDs are stored in client globals and can
+### be used directly in follower-tests.http:
+###
+###   alice_token, alice_id
+###   bob_token,   bob_id
+###   carol_token, carol_id
+###   admin_token
+###
+### To reset: delete Neo4j nodes, truncate blogs and
+### users tables, then re-run this script from step 1.
+###
+### Neo4j reset (run in browser at localhost:7474):
+###   MATCH (n) DETACH DELETE n
