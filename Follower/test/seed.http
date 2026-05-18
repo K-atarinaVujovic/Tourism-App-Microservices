@@ -239,7 +239,7 @@ Content-Type: application/json
 
 ### ── STEP 12: Alice follows Bob ─────────────────────
 ### Uses alice's JWT — follower service reads her id from the token
-POST http://localhost:8084/api/v1/followers/follow/{{bob_id}}
+POST http://localhost:8084/followers/follow/{{bob_id}}
 Authorization: Bearer {{alice_token}}
 
 > {%
@@ -251,7 +251,7 @@ Authorization: Bearer {{alice_token}}
 
 
 ### ── STEP 13: Alice follows Carol ───────────────────
-POST http://localhost:8084/api/v1/followers/follow/{{carol_id}}
+POST http://localhost:8084/followers/follow/{{carol_id}}
 Authorization: Bearer {{alice_token}}
 
 > {%
@@ -265,7 +265,7 @@ Authorization: Bearer {{alice_token}}
 ### ── STEP 14: Bob follows Carol ─────────────────────
 ### This sets up the friends-of-friends chain:
 ### alice → bob → carol, so carol will appear in alice's recommendations
-POST http://localhost:8084/api/v1/followers/follow/{{carol_id}}
+POST http://localhost:8084/followers/follow/{{carol_id}}
 Authorization: Bearer {{bob_token}}
 
 > {%
@@ -277,7 +277,7 @@ Authorization: Bearer {{bob_token}}
 
 
 ### ── STEP 15: Sanity check — verify alice's feed has blogs ──
-GET http://localhost:8084/api/v1/followers/feed
+GET http://localhost:8084/followers/feed
 Authorization: Bearer {{alice_token}}
 
 > {%
@@ -292,7 +292,7 @@ Authorization: Bearer {{alice_token}}
 
 
 ### ── STEP 16: Sanity check — verify alice's following list ──
-GET http://localhost:8084/api/v1/followers/following
+GET http://localhost:8084/followers/following
 Authorization: Bearer {{alice_token}}
 
 > {%

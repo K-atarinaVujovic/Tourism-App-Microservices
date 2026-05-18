@@ -29,8 +29,6 @@ management:
 
 server:
   port: ${SERVER_PORT:8084}
-  servlet:
-    context-path: /api/v1
 
 logging:
   level:
