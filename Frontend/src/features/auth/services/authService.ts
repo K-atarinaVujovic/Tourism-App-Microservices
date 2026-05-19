@@ -27,7 +27,7 @@ export async function registerUser(data: RegisterRequest): Promise<void> {
       imageUrl: null,
       biography: null,
       quote: null,
-      role: "tourist"
+      role: data.role, 
     });
     useAuthStore.getState().setAuth(response.data.token);
 }

@@ -29,6 +29,7 @@ export interface RegisterRequest {
   username: string;
   email: string;
   password: string;
+  role: "tourist" | "author"
 }
 
 export interface LoginResponse {

@@ -14,6 +14,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
+
 // Validation rules match auth_server.go exactly so errors are caught
 // client-side before hitting the network.
 const registrationSchema = z
@@ -29,6 +30,9 @@ const registrationSchema = z
         email: z.string().email("Invalid email address"),
         password: z.string().min(8, "Password must be at least 8 characters"),
         confirmPassword: z.string(),
+        role: z.enum(["tourist", "author"], {
+            message: "Please select a role",
+        }),
     })
     .refine((data) => data.password === data.confirmPassword, {
         message: "Passwords do not match",
@@ -53,6 +57,7 @@ export function RegistrationForm({ onSubmit, isLoading }: RegistrationFormProps)
             email: "",
             password: "",
             confirmPassword: "",
+            role: "tourist",
         },
     });
 
@@ -148,6 +153,26 @@ export function RegistrationForm({ onSubmit, isLoading }: RegistrationFormProps)
                                         {showConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
                                     </button>
                                 </div>
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
+
+                <FormField
+                    control={form.control}
+                    name="role"
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Role</FormLabel>
+                            <FormControl>
+                                <select
+                                    {...field}
+                                    className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                                >
+                                    <option value="tourist">Tourist</option>
+                                    <option value="author">Author</option>
+                                </select>
                             </FormControl>
                             <FormMessage />
                         </FormItem>
