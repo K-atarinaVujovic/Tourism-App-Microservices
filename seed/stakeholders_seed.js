@@ -7,7 +7,7 @@
 // No imageUrl
 // ============================================================
 
-db = db.getSiblingDB('stakeholders_db');
+db = db.getSiblingDB('stakeholders');
 
 db.profiles.insertMany([
   {

@@ -97,17 +97,17 @@ INSERT INTO tour_tags (tour_id, tags) VALUES
 -- tour 4: 1 review  | tour 5: 2 | tour 6: 0 | tour 7: 1
 -- no images
 -- -----------------------------------------------
-INSERT INTO tour_reviews (tour_id, tourist_id, tourist_username, rating, comment, visited_at, commented_at, image_urls) VALUES
+INSERT INTO tour_reviews (tour_id, tourist_id, tourist_username, rating, comment, visited_at, commented_at) VALUES
 -- tour 1: Algarve Cliffs
 (1, 1, 'admin',
  5,
  'Absolutely breathtaking. The sea caves near Ponta da Piedade were the highlight — the colour of the water is unlike anything I have seen. The pace was perfect for all fitness levels.',
- '2024-05-10', '2024-05-14 10:00:00', '{}'),
+ '2024-05-10', '2024-05-14 10:00:00'),
 
 (1, 2, 'user',
  4,
  'Great tour overall. The guide was knowledgeable and the route well-planned. Knocked one star off only because the midday sun was brutal — bring plenty of water.',
- '2024-06-02', '2024-06-05 16:30:00', '{}'),
+ '2024-06-02', '2024-06-05 16:30:00'),
 
 -- tour 2: Lisbon to Sintra — 0 reviews
 
@@ -115,34 +115,34 @@ INSERT INTO tour_reviews (tour_id, tourist_id, tourist_username, rating, comment
 (3, 1, 'admin',
  5,
  'The hardest thing I have ever done and the most rewarding. Crossing the Grand Col Ferret into Italy on day three is a memory I will carry forever.',
- '2024-07-20', '2024-07-25 09:15:00', '{}'),
+ '2024-07-20', '2024-07-25 09:15:00'),
 
 (3, 2, 'user',
  4,
  'Outstanding scenery throughout. The refuges were cosy and the food surprisingly good at altitude. Make sure your boots are properly broken in before you go.',
- '2024-07-22', '2024-07-28 11:00:00', '{}'),
+ '2024-07-22', '2024-07-28 11:00:00'),
 
 (3, 3, 'user3',
  5,
  'Did this tour with two friends who had never hiked before — they are already planning to come back. The support from the guide on the steeper sections made all the difference.',
- '2024-08-05', '2024-08-09 14:45:00', '{}'),
+ '2024-08-05', '2024-08-09 14:45:00'),
 
 -- tour 4: Dolomites Valley
 (4, 3, 'user3',
  4,
  'Lovely introduction to alpine hiking. The Alpe di Siusi plateau at golden hour looks like a screensaver — in the best way. Cable car access is a real bonus.',
- '2024-08-15', '2024-08-18 20:00:00', '{}'),
+ '2024-08-15', '2024-08-18 20:00:00'),
 
 -- tour 5: Tuscany Wine and Villages
 (5, 1, 'admin',
  5,
  'The winery stop in Greve in Chianti alone was worth the price of the tour. Monteriggioni at sunset with a glass of local Sangiovese — perfection.',
- '2024-09-08', '2024-09-10 18:30:00', '{}'),
+ '2024-09-08', '2024-09-10 18:30:00'),
 
 (5, 2, 'user',
  5,
  'Effortlessly relaxed pace. The guide knew every producer personally and that access made the tastings feel genuinely special rather than touristy.',
- '2024-09-15', '2024-09-17 12:00:00', '{}'),
+ '2024-09-15', '2024-09-17 12:00:00'),
 
 -- tour 6: Inca Trail — 0 reviews
 
@@ -150,4 +150,4 @@ INSERT INTO tour_reviews (tour_id, tourist_id, tourist_username, rating, comment
 (7, 3, 'user3',
  5,
  'A perfect week. Waking up anchored in a quiet cove off Hvar with no one else around is the kind of thing that makes you question why you ever stay on land.',
- '2024-08-28', '2024-09-01 10:00:00', '{}');
+ '2024-08-28', '2024-09-01 10:00:00');

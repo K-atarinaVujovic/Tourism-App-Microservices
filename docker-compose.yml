@@ -30,9 +30,10 @@ services:
       POSTGRES_PASSWORD: root
     volumes:
       - blog-db-data:/var/lib/postgresql/data
-      - ./seed/blog_seed.sql:/docker-entrypoint-initdb.d/seed.sql:ro
+      - ./seed/blog_schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./seed/blog_seed.sql:/docker-entrypoint-initdb.d/02-seed.sql:ro
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U postgres -d blogdb" ]
+      test: ["CMD-SHELL", "psql -U postgres -d blogdb -c 'SELECT 1'"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -62,7 +63,8 @@ services:
       - ./Authorization/db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
       - ./seed/auth_seed.sql:/docker-entrypoint-initdb.d/02-seed.sql:ro
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U tourism-app -d tourism-auth" ]
+#      test: [ "CMD-SHELL", "pg_isready -U tourism-app -d tourism-auth" ]
+      test: ["CMD-SHELL", "psql -U tourism-app -d tourism-auth -c 'SELECT 1'"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -152,13 +154,14 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: root
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U postgres -d toursdb" ]
+      test: ["CMD-SHELL", "psql -U postgres -d toursdb -c 'SELECT 1'"]
       interval: 5s
       timeout: 5s
       retries: 10
     volumes:
       - tours-db-data:/var/lib/postgresql/data
-      - ./seed/tours_seed.sql:/docker-entrypoint-initdb.d/seed.sql:ro
+      - ./seed/tours_schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./seed/tours_seed.sql:/docker-entrypoint-initdb.d/02-seed.sql:ro
     networks:
       - tours-network
 
@@ -198,11 +201,11 @@ services:
       - "7687:7687"
     volumes:
       - neo4j_data:/var/lib/neo4j/data
-      - ./seed/followers_seed.cypher:/var/lib/neo4j/import/seed.cypher:ro
+      - ./seed/followers_seed.cypher:/seed/seed.cypher:ro
       - ./seed/followers_entrypoint.sh:/startup/entrypoint.sh:ro
     entrypoint: [ "/bin/bash", "/startup/entrypoint.sh" ]
     healthcheck:
-      test: [ "CMD", "cypher-shell", "-u", "neo4j", "-p", "password", "RETURN 1" ]
+      test: ["CMD-SHELL", "bash -c 'cat /dev/null > /dev/tcp/localhost/7687'"]
       interval: 10s
       timeout: 5s
       retries: 10
