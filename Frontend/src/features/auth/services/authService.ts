@@ -7,6 +7,7 @@ import type {
     RegisterRequest,
     RegisterResponse,
 } from "@/types/auth";
+import { createProfile } from "@/features/stakeholders/services/stakeholdersService";
 
 // Logs the user in and stores the token in the auth store.
 export async function loginUser(data: LoginRequest): Promise<void> {
@@ -17,6 +18,17 @@ export async function loginUser(data: LoginRequest): Promise<void> {
 // Registers a new user; the backend returns a token immediately (no email activation).
 export async function registerUser(data: RegisterRequest): Promise<void> {
     const response = await apiClient.post<RegisterResponse>("/auth/auth/register", data);
+    const userId = response.data.user_id;
+    console.log(userId);
+    await createProfile({
+      user_id: userId,
+      name: response.data.username,
+      lastname: null,
+      imageUrl: null,
+      biography: null,
+      quote: null,
+      role: "tourist"
+    });
     useAuthStore.getState().setAuth(response.data.token);
 }
 
