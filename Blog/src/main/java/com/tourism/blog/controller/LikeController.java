@@ -28,4 +28,9 @@ public class LikeController {
     public int countLikes(@PathVariable Long blogId){
         return likeService.countLikes(blogId);
     }
+
+    @GetMapping("/has-liked")
+    public boolean hasLiked(@RequestParam Long userId, @PathVariable Long blogId){
+        return likeService.hasLiked(userId, blogId);
+    }
 }

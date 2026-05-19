@@ -29,4 +29,14 @@ public class TourController {
         CurrentUser user = authService.getCurrentUser(authorization);
         return tourService.getMyTours(user);
     }
+
+    @GetMapping
+    public List<TourResponse> getAllTours(@RequestHeader("Authorization") String authorizatio){
+        return tourService.getAllTours();
+    }
+
+    @GetMapping("/{id}")
+    public TourResponse getTourById(@RequestHeader("Authorization") String authorization, @PathVariable Long id){
+        return tourService.getTourById(id);
+    }
 }
