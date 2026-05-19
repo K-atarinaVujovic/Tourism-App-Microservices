@@ -181,12 +181,9 @@ services:
       SERVICES_BLOG_URL: http://blog:8080
       SERVER_PORT: 8084
     depends_on:
-      follower-neo4j:
-        condition: service_healthy
-      blog:
-        condition: service_started
-      stakeholders:
-        condition: service_started
+      - follower-neo4j
+      - blog
+      - stakeholders
     networks:
       - follower-network
       - service-network
@@ -201,15 +198,6 @@ services:
       - "7687:7687"
     volumes:
       - neo4j_data:/var/lib/neo4j/data
-      - ./seed/followers_seed.cypher:/seed/seed.cypher:ro
-      - ./seed/followers_entrypoint.sh:/startup/entrypoint.sh:ro
-    entrypoint: [ "/bin/bash", "/startup/entrypoint.sh" ]
-    healthcheck:
-      test: ["CMD-SHELL", "bash -c 'cat /dev/null > /dev/tcp/localhost/7687'"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 30s
     restart: unless-stopped
     networks:
       - follower-network
