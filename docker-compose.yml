@@ -15,7 +15,8 @@ services:
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: root
     depends_on:
-      - blog-db
+      blog-db:
+        condition: service_healthy
     networks:
       - blog-network
       - service-network
@@ -30,6 +31,11 @@ services:
     volumes:
       - blog-db-data:/var/lib/postgresql/data
       - ./seed/blog_seed.sql:/docker-entrypoint-initdb.d/seed.sql:ro
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d blogdb" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
     networks:
       - blog-network
 
@@ -131,7 +137,8 @@ services:
       JWT_SECRET: super-secret-change-me
       STAKEHOLDERS_URL: http://stakeholders:8082
     depends_on:
-      - tours-db
+      tours-db:
+        condition: service_healthy
     networks:
       - tours-network
       - service-network
@@ -144,6 +151,11 @@ services:
       POSTGRES_DB: toursdb
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: root
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d toursdb" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
     volumes:
       - tours-db-data:/var/lib/postgresql/data
       - ./seed/tours_seed.sql:/docker-entrypoint-initdb.d/seed.sql:ro
@@ -166,9 +178,12 @@ services:
       SERVICES_BLOG_URL: http://blog:8080
       SERVER_PORT: 8084
     depends_on:
-      - follower-neo4j
-      - blog
-      - stakeholders
+      follower-neo4j:
+        condition: service_healthy
+      blog:
+        condition: service_started
+      stakeholders:
+        condition: service_started
     networks:
       - follower-network
       - service-network
@@ -186,7 +201,12 @@ services:
       - ./seed/followers_seed.cypher:/var/lib/neo4j/import/seed.cypher:ro
       - ./seed/followers_entrypoint.sh:/startup/entrypoint.sh:ro
     entrypoint: [ "/bin/bash", "/startup/entrypoint.sh" ]
-
+    healthcheck:
+      test: [ "CMD", "cypher-shell", "-u", "neo4j", "-p", "password", "RETURN 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
     restart: unless-stopped
     networks:
       - follower-network
