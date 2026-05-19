@@ -13,7 +13,7 @@ db.profiles.insertMany([
   {
     name: "Admin",
     lastname: "Tourist1",
-    imageUrl: null,
+    imageUrl: "https://c.tenor.com/if83iwNEvKcAAAAd/tenor.gif",
     biography: "Avid traveler exploring hidden gems around the world.",
     quote: "The world is a book, and those who do not travel read only one page.",
     role: "tourist",
@@ -22,7 +22,7 @@ db.profiles.insertMany([
   {
     name: "Marko",
     lastname: "Tourist2",
-    imageUrl: null,
+    imageUrl: "https://c.tenor.com/MNe1MBAdoLkAAAAd/tenor.gif",
     biography: "Backpacker at heart, always chasing the next adventure.",
     quote: "Travel far enough, you meet yourself.",
     role: "tourist",
@@ -31,7 +31,7 @@ db.profiles.insertMany([
   {
     name: "Stana",
     lastname: "Tourist3",
-    imageUrl: null,
+    imageUrl: "https://static.klipy.com/ii/925f17378dd1893b674a723c07535afe/a7/b5/ayM58e3h.gif",
     biography: "Weekend wanderer and food tourist.",
     quote: "Not all those who wander are lost.",
     role: "tourist",
@@ -40,7 +40,7 @@ db.profiles.insertMany([
   {
     name: "Boban",
     lastname: "Author4",
-    imageUrl: null,
+    imageUrl: "https://c.tenor.com/DbkOnZvFb6MAAAAd/tenor.gif",
     biography: "Travel writer with a passion for coastal destinations and city breaks.",
     quote: "Write what you know — I know the road.",
     role: "author",
@@ -49,7 +49,7 @@ db.profiles.insertMany([
   {
     name: "Lejla",
     lastname: "Author5",
-    imageUrl: null,
+    imageUrl: "https://c.tenor.com/xiDneWFini8AAAAd/tenor.gif",
     biography: "Crafting immersive travel narratives from mountain trails to bustling bazaars.",
     quote: "Every journey deserves to be told.",
     role: "author",
@@ -58,7 +58,7 @@ db.profiles.insertMany([
   {
     name: "Petar",
     lastname: "Author6",
-    imageUrl: null,
+    imageUrl: "https://c.tenor.com/rkzdlwxESqUAAAAd/tenor.gif",
     biography: "Adventure tour curator and storyteller. Turning trips into memories.",
     quote: "Adventure is worthwhile in itself.",
     role: "author",

@@ -32,10 +32,10 @@ VALUES (
     ON CONFLICT (email) DO NOTHING;
 
 INSERT INTO users (username, email, password_hash, role) VALUES
-('user3', 'user3@example.com', 'password', 'user'),
-('user4', 'user4@example.com', 'password', 'user'),
-('user5', 'user5@example.com', 'password', 'user'),
-('user6', 'user6@example.com', 'password', 'user');
+('user3', 'user3@example.com', '$2b$10$Fyds1M6CRV93il5EycOCneGi0RZ9BVz0Vjf9WnqpiidVJ1KHyrheq', 'user'),
+('user4', 'user4@example.com', '$2b$10$Fyds1M6CRV93il5EycOCneGi0RZ9BVz0Vjf9WnqpiidVJ1KHyrheq', 'user'),
+('user5', 'user5@example.com', '$2b$10$Fyds1M6CRV93il5EycOCneGi0RZ9BVz0Vjf9WnqpiidVJ1KHyrheq', 'user'),
+('user6', 'user6@example.com', '$2b$10$Fyds1M6CRV93il5EycOCneGi0RZ9BVz0Vjf9WnqpiidVJ1KHyrheq', 'user');
 
 -- Expected resulting IDs:
 -- 1 = admin
