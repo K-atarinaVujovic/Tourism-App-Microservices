@@ -1,38 +1,32 @@
-from typing import Self
+from typing import Annotated, Self
+from beanie import Document, Indexed
+from enum import Enum
 
-from sqlalchemy import ForeignKey
-from sqlalchemy.orm import Mapped, mapped_column
-from app.core.database import Base
+class Role(str, Enum):
+  TOURIST = "tourist"
+  AUTHOR = "author"
 
-class Profile(Base):
-  __tablename__ = "profiles"
+class Profile(Document):
+  # ID is automatically set up by Beanie's Document
+  name: str | None = None
+  lastname: str | None = None
+  imageUrl: str | None = None
+  biography: str | None = None
+  quote: str | None = None
+  role: str | None = "tourist"
 
-  name: Mapped[str | None]
-  lastname: Mapped[str | None]
-  imageUrl: Mapped[str | None]
-  biography: Mapped[str | None]
-  quote: Mapped[str | None]
-  role: Mapped[str | None]
+  user_id: Annotated[int, Indexed(unique=True)]
 
-  user_id: Mapped[int] = mapped_column(nullable=False, unique=True)
-
-  def __init__(self, user_id: int, name: str, lastname: str | None = None, imageUrl: str | None = None, biography: str | None = None, quote: str | None = None, role: str | None = 'tourist'):
-    self.user_id = user_id
-    self.name = name
-    self.lastname = lastname
-    self.imageUrl = imageUrl
-    self.biography = biography
-    self.quote = quote
-    self.role = role
+  class Settings:
+    name = "profiles"  # collection name
 
   def __repr__(self) -> str:
     return f"Profile:\nname={self.name}\nlastname={self.lastname}\nimageUrl={self.imageUrl}\nbiography={self.biography}\nquote={self.quote}\nrole={self.role}"
 
-  def update(self, name: str | None = None, lastname: str | None = None, imageUrl: str | None = None, biography: str | None = None, quote: str | None = None) -> Self:
+  def update_fields(self, name: str | None = None, lastname: str | None = None, imageUrl: str | None = None, biography: str | None = None, quote: str | None = None) -> Self:
     self.name = name if name is not None else self.name
     self.lastname = lastname if lastname is not None else self.lastname
     self.imageUrl = imageUrl if imageUrl is not None else self.imageUrl
     self.biography = biography if biography is not None else self.biography
     self.quote = quote if quote is not None else self.quote
-
     return self
