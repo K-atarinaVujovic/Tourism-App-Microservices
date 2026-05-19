@@ -40,7 +40,7 @@ export default function BlogPage() {
 
   return (
     <div className="max-w-lg mx-auto mt-10 p-6 space-y-4">
-      <BlogHeader title={blog.title} description={blog.description} />
+      <BlogHeader title={blog.title} description={blog.description} authorId={blog.authorId}/>
       <BlogImages imageUrls={blog.imageUrls} />
       <BlogActions
         liked={liked ?? false}

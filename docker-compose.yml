@@ -15,7 +15,8 @@ services:
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: root
     depends_on:
-      - blog-db
+      blog-db:
+        condition: service_healthy
     networks:
       - blog-network
       - service-network
@@ -29,6 +30,13 @@ services:
       POSTGRES_PASSWORD: root
     volumes:
       - blog-db-data:/var/lib/postgresql/data
+      - ./seed/blog_schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./seed/blog_seed.sql:/docker-entrypoint-initdb.d/02-seed.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "psql -U postgres -d blogdb -c 'SELECT 1'"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
     networks:
       - blog-network
 
@@ -53,9 +61,10 @@ services:
     volumes:
       - auth_db_data:/var/lib/postgresql/data
       - ./Authorization/db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
-      - ./Authorization/db/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql:ro
+      - ./seed/auth_seed.sql:/docker-entrypoint-initdb.d/02-seed.sql:ro
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U tourism-app -d tourism-auth" ]
+#      test: [ "CMD-SHELL", "pg_isready -U tourism-app -d tourism-auth" ]
+      test: ["CMD-SHELL", "psql -U tourism-app -d tourism-auth -c 'SELECT 1'"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -98,26 +107,11 @@ services:
       - stakeholders-network
       - service-network
 
-  # stakeholders_db:
-  #   image: postgres:16
-  #   user: postgres
-  #   volumes:
-  #     - stakeholders_db_data:/var/lib/postgresql/data
-  #   environment:
-  #     - POSTGRES_DB=stakeholders
-  #     - POSTGRES_USER=postgres
-  #     - POSTGRES_PASSWORD=root 
-  #   healthcheck:
-  #     test: [ "CMD", "pg_isready" ]
-  #     interval: 10s
-  #     timeout: 5s
-  #     retries: 5
-  #   networks:
-  #     - stakeholders-network
   stakeholders_db:
     image: mongo:7
     volumes:
        - stakeholders_db_data:/data/db
+       - ./seed/stakeholders_seed.js:/docker-entrypoint-initdb.d/seed.js:ro
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: example
@@ -145,7 +139,8 @@ services:
       JWT_SECRET: super-secret-change-me
       STAKEHOLDERS_URL: http://stakeholders:8082
     depends_on:
-      - tours-db
+      tours-db:
+        condition: service_healthy
     networks:
       - tours-network
       - service-network
@@ -158,8 +153,15 @@ services:
       POSTGRES_DB: toursdb
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: root
+    healthcheck:
+      test: ["CMD-SHELL", "psql -U postgres -d toursdb -c 'SELECT 1'"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
     volumes:
       - tours-db-data:/var/lib/postgresql/data
+      - ./seed/tours_schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./seed/tours_seed.sql:/docker-entrypoint-initdb.d/02-seed.sql:ro
     networks:
       - tours-network
 

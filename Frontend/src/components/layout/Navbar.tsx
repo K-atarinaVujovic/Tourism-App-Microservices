@@ -28,7 +28,7 @@ export default function Navbar() {
       { path: "/tours/create", label: "Create Tour", icon: PlusCircle, requiresAuth: true, requiresAdmin: false },
       { path: "/map", label: "Map", icon: Map, requiresAuth: true, requiresAdmin: false },
       { path: "/tours", label: "Tours", icon: Route, requiresAuth: true, requiresAdmin: false },
-      { path: "/blogs", label: "Blogs", icon: BookOpen, requiresAuth: null },
+      { path: "/blogs", label: "Blogs", icon: BookOpen, requiresAuth: true },
       { path: "/blogs/create", label: "Create Blog", icon: PenLine, requiresAuth: true },
 ];
 

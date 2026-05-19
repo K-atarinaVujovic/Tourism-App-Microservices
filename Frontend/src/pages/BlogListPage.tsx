@@ -14,6 +14,7 @@ export default function BlogListPage() {
           <Link to={`/blogs/${blog.id}`} className="text-sm font-medium hover:underline">
             {blog.title}
           </Link>
+          <p className="text-xs text-muted-foreground">Author ID: {blog.authorId}</p>
         </div>
       ))}
     </div>

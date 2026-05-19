@@ -1,5 +1,9 @@
 import apiClient from "@/lib/api-client";
-import type { Profile, UpdateProfile } from "@/types/stakeholders";
+import type { CreateProfile, Profile, UpdateProfile } from "@/types/stakeholders";
+
+export async function createProfile(data: CreateProfile): Promise<void> {
+    await apiClient.post("/stakeholders/profiles/create", data);
+}
 
 export async function getProfile(userId: number): Promise<Profile> {
   const response = await apiClient.get<Profile>(`/stakeholders/profiles/${userId}`);

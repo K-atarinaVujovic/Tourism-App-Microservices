@@ -91,9 +91,10 @@ public class FollowerService {
     public List<BlogDTO> getFollowingUsersBlogs(Long userId) {
         log.info("Fetching all blogs for user {}", userId);
 
-        List<Long> followedIds = userRepository.findFollowingIds(userId);
+        List<Long> blogAuthorIds = userRepository.findFollowingIds(userId); // blogs posted by followings
+        blogAuthorIds.add(userId); // blogs posted by current user
 
-        return followedIds.stream()
+        return blogAuthorIds.stream()
                 .flatMap(authorId -> fetchBlogsByAuthor(authorId).stream())
                 .collect(Collectors.toList());
     }
