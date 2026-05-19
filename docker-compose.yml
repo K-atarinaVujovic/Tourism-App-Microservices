@@ -98,17 +98,31 @@ services:
       - stakeholders-network
       - service-network
 
+  # stakeholders_db:
+  #   image: postgres:16
+  #   user: postgres
+  #   volumes:
+  #     - stakeholders_db_data:/var/lib/postgresql/data
+  #   environment:
+  #     - POSTGRES_DB=stakeholders
+  #     - POSTGRES_USER=postgres
+  #     - POSTGRES_PASSWORD=root 
+  #   healthcheck:
+  #     test: [ "CMD", "pg_isready" ]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+  #   networks:
+  #     - stakeholders-network
   stakeholders_db:
-    image: postgres:16
-    user: postgres
+    image: mongo:7
     volumes:
-      - stakeholders_db_data:/var/lib/postgresql/data
+       - stakeholders_db_data:/data/db
     environment:
-      - POSTGRES_DB=stakeholders
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=root 
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
     healthcheck:
-      test: [ "CMD", "pg_isready" ]
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
       interval: 10s
       timeout: 5s
       retries: 5
