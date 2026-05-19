@@ -10,7 +10,7 @@ export default function BlogHeader({ title, description }: BlogHeaderProps) {
     <div className="space-y-2">
       <h1 className="text-xl font-semibold text-center">Blog</h1>
       <h2 className="text-lg font-medium">{title}</h2>
-      <div className="text-sm prose prose-sm max-w-none prose-headings:whitespace-normal prose-pre:overflow-visible">
+      <div className="text-sm prose prose-sm max-w-none prose-headings:whitespace-normal prose-pre:overflow-visible prose-p:text-white prose-headings:text-white prose-strong:text-white">
         <ReactMarkdown>{description}</ReactMarkdown>
       </div>
     </div>
