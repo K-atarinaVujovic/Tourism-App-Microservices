@@ -94,10 +94,13 @@ export default function ProfilePage() {
             <p className="text-xl font-semibold">{profile.name} {profile.lastname}</p>
             <p className="text-sm text-gray-500 capitalize">{profile.role}</p>
           </div>
-          <div className="flex justify-center gap-8 text-sm">
-            <Link to={`/followers?tab=followers`} className="hover:underline">Followers</Link>
-            <Link to={`/followers?tab=following`} className="hover:underline">Following</Link>
-          </div>
+          {
+            isOwner && 
+            <div className="flex justify-center gap-8 text-sm">
+              <Link to={`/followers?tab=followers`} className="hover:underline">Followers</Link>
+              <Link to={`/followers?tab=following`} className="hover:underline">Following</Link>
+            </div>
+          }
           <div className="space-y-2 text-sm">
             <p><span className="font-medium">Bio:</span> {profile.biography}</p>
             <p><span className="font-medium">Quote:</span> "{profile.quote}"</p>
