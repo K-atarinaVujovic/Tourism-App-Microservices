@@ -23,7 +23,6 @@ services:
   blog-db:
     image: postgres:16
     container_name: blog-db
-    restart: always
     environment:
       POSTGRES_DB: blogdb
       POSTGRES_USER: postgres
@@ -99,7 +98,6 @@ services:
 
   stakeholders_db:
     image: postgres:16
-    restart: always
     user: postgres
     volumes:
       - stakeholders_db_data:/var/lib/postgresql/data
@@ -139,7 +137,7 @@ services:
   tours-db:
     image: postgres:16
     container_name: tours-db
-    restart: always
+    restart: on-failure
     environment:
       POSTGRES_DB: toursdb
       POSTGRES_USER: postgres
