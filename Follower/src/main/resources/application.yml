@@ -1,0 +1,43 @@
+spring:
+  application:
+    name: follower-microservice
+
+  neo4j:
+    uri: ${SPRING_NEO4J_URI:bolt://localhost:7687}
+    authentication:
+      username: ${SPRING_NEO4J_AUTHENTICATION_USERNAME:neo4j}
+      password: ${SPRING_NEO4J_AUTHENTICATION_PASSWORD:password}
+
+  data:
+    neo4j:
+      auto-index: validate
+      repositories:
+        enabled: true
+
+services:
+  stakeholders-url: ${SERVICES_STAKEHOLDERS_URL:http://localhost:8082}
+  blog-url: ${SERVICES_BLOG_URL:http://localhost:8080}
+
+jwt:
+  secret: ${JWT_SECRET:super-secret-change-me}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: mappings
+
+server:
+  port: ${SERVER_PORT:8084}
+
+logging:
+  level:
+    root: INFO
+    com.follower: DEBUG
+
+springdoc:
+  api-docs:
+    path: /v1/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
