@@ -231,6 +231,30 @@ func FindProxy(proxies []ProxyRegistry, r *http.Request) ProxyRegistry {
 	return ProxyRegistry{}
 }
 
+// CORSMiddleware Middleware to handle CORS
+func CORSMiddleware(next http.Handler) http.Handler {
+    allowed := map[string]bool{
+        "http://localhost:5173": true,
+        "http://localhost:8080": true,
+    }
+
+    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        origin := r.Header.Get("Origin")
+        if allowed[origin] {
+            w.Header().Set("Access-Control-Allow-Origin", origin)
+        }
+        w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+        w.Header().Set("Access-Control-Allow-Headers", "Authorization, Content-Type")
+
+        if r.Method == http.MethodOptions {
+            w.WriteHeader(http.StatusNoContent)
+            return
+        }
+
+        next.ServeHTTP(w, r)
+    })
+}
+
 func main() {
 	// Load config
 	config, err := LoadConfig("CONFIG.yaml")
@@ -250,8 +274,11 @@ func main() {
 	// Wrap with JWT authentication middleware
 	authHandler := JWTAuthMiddleware(config.ExcludedPaths, proxyHandler)
 
+	// Handle cors
+    corsHandler := CORSMiddleware(authHandler)
+
 	// Handle all requests to the server using the authenticated proxy
-	http.Handle("/", authHandler)
+	http.Handle("/", corsHandler)
 
 	log.Printf("Starting gateway on port %s", config.Port)
 	log.Fatal(http.ListenAndServe(":"+config.Port, nil))

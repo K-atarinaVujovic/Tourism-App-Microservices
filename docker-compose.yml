@@ -15,7 +15,8 @@ services:
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: root
     depends_on:
-      - blog-db
+      blog-db:
+        condition: service_healthy
     networks:
       - blog-network
       - service-network
@@ -23,13 +24,19 @@ services:
   blog-db:
     image: postgres:16
     container_name: blog-db
-    restart: always
     environment:
       POSTGRES_DB: blogdb
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: root
     volumes:
       - blog-db-data:/var/lib/postgresql/data
+      - ./seed/blog_schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./seed/blog_seed.sql:/docker-entrypoint-initdb.d/02-seed.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "psql -U postgres -d blogdb -c 'SELECT 1'"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
     networks:
       - blog-network
 
@@ -54,9 +61,10 @@ services:
     volumes:
       - auth_db_data:/var/lib/postgresql/data
       - ./Authorization/db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
-      - ./Authorization/db/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql:ro
+      - ./seed/auth_seed.sql:/docker-entrypoint-initdb.d/02-seed.sql:ro
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U tourism-app -d tourism-auth" ]
+#      test: [ "CMD-SHELL", "pg_isready -U tourism-app -d tourism-auth" ]
+      test: ["CMD-SHELL", "psql -U tourism-app -d tourism-auth -c 'SELECT 1'"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -93,33 +101,114 @@ services:
         condition: service_healthy
     volumes:
       - stakeholders_images_data:/app/images
+    ports:
+      - "8082:8082"
     networks:
       - stakeholders-network
       - service-network
 
   stakeholders_db:
-    image: postgres:16
-    restart: always
-    user: postgres
+    image: mongo:7
     volumes:
-      - stakeholders_db_data:/var/lib/postgresql/data
+       - stakeholders_db_data:/data/db
+       - ./seed/stakeholders_seed.js:/docker-entrypoint-initdb.d/seed.js:ro
     environment:
-      - POSTGRES_DB=stakeholders
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=root 
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
     healthcheck:
-      test: [ "CMD", "pg_isready" ]
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
       interval: 10s
       timeout: 5s
       retries: 5
     networks:
       - stakeholders-network
 
+  tours:
+    build:
+      context: ./Tours
+      dockerfile: Dockerfile
+    image: tours:latest
+    container_name: tours
+    restart: on-failure
+    ports:
+      - "8083:8083"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://tours-db:5432/toursdb
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: root
+      JWT_SECRET: super-secret-change-me
+      STAKEHOLDERS_URL: http://stakeholders:8082
+    depends_on:
+      tours-db:
+        condition: service_healthy
+    networks:
+      - tours-network
+      - service-network
+
+  tours-db:
+    image: postgres:16
+    container_name: tours-db
+    restart: on-failure
+    environment:
+      POSTGRES_DB: toursdb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: root
+    healthcheck:
+      test: ["CMD-SHELL", "psql -U postgres -d toursdb -c 'SELECT 1'"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - tours-db-data:/var/lib/postgresql/data
+      - ./seed/tours_schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./seed/tours_seed.sql:/docker-entrypoint-initdb.d/02-seed.sql:ro
+    networks:
+      - tours-network
+
+  follower:
+    build:
+      context: ./Follower
+      dockerfile: Dockerfile
+    container_name: follower
+    restart: on-failure
+    ports:
+      - "8084:8084"
+    environment:
+      SPRING_NEO4J_URI: bolt://follower-neo4j:7687
+      SPRING_NEO4J_AUTHENTICATION_USERNAME: neo4j
+      SPRING_NEO4J_AUTHENTICATION_PASSWORD: password
+      SERVICES_STAKEHOLDERS_URL: http://stakeholders:8082
+      SERVICES_BLOG_URL: http://blog:8080
+      SERVER_PORT: 8084
+    depends_on:
+      - follower-neo4j
+      - blog
+      - stakeholders
+    networks:
+      - follower-network
+      - service-network
+
+  follower-neo4j:
+    image: neo4j:5.13.0
+    container_name: follower-neo4j
+    environment:
+      NEO4J_AUTH: neo4j/password
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    volumes:
+      - neo4j_data:/var/lib/neo4j/data
+    restart: unless-stopped
+    networks:
+      - follower-network
+
 volumes:
   blog-db-data:
   auth_db_data:
   stakeholders_db_data:
   stakeholders_images_data:
+  tours-db-data:
+  neo4j_data:
 
 networks:
   blog-network:
@@ -129,4 +218,8 @@ networks:
   service-network:
     driver: bridge
   stakeholders-network:
+    driver: bridge
+  tours-network:
+    driver: bridge
+  follower-network:
     driver: bridge

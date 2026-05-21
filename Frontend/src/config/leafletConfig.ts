@@ -1,0 +1,13 @@
+/**
+ * Vite bundles assets differently than webpack, which breaks Leaflet's
+ * default marker icon resolution. This file patches the icon URLs once
+ * at startup. Import it in main.tsx before anything else.
+ */
+import L from 'leaflet';
+import iconUrl from 'leaflet/dist/images/marker-icon.png';
+import iconRetinaUrl from 'leaflet/dist/images/marker-icon-2x.png';
+import shadowUrl from 'leaflet/dist/images/marker-shadow.png';
+
+delete (L.Icon.Default.prototype as unknown as Record<string, unknown>)['_getIconUrl'];
+
+L.Icon.Default.mergeOptions({ iconUrl, iconRetinaUrl, shadowUrl });

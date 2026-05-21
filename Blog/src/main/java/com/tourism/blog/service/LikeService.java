@@ -49,4 +49,8 @@ public class LikeService {
     public int countLikes(Long blogId){
         return likeRepository.countByBlogId(blogId);
     }
+
+    public boolean hasLiked(Long userId, Long blogId){
+        return likeRepository.existsByBlogIdAndUserId(blogId, userId);
+    }
 }
