@@ -16,12 +16,14 @@ import (
 	"gopkg.in/yaml.v3"
 
 	servicepb "gateway/proto/service"
+	tourspb "gateway/proto/tours"
 	"jwtreader"
 )
 
 // MicroserviceRegistry Should contain all generated API handlers
 var MicroserviceRegistry = map[string]func(context.Context, *runtime.ServeMux, string, []grpc.DialOption) error{
 	"service": servicepb.RegisterAlbumServiceHandlerFromEndpoint,
+	"tours":   tourspb.RegisterTourGrpcServiceHandlerFromEndpoint,
 	// add more services here
 }
 

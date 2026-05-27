@@ -1,0 +1,84 @@
+package com.tourism.tours.grpc;
+
+import com.tourism.tours.dto.CreateTourRequest;
+import com.tourism.tours.dto.TourResponse;
+import com.tourism.tours.enums.TourDifficulty;
+import com.tourism.tours.grpc.generated.*;
+import com.tourism.tours.security.AuthService;
+import com.tourism.tours.security.CurrentUser;
+import com.tourism.tours.service.TourService;
+import io.grpc.Status;
+import io.grpc.stub.StreamObserver;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+
+@Service
+@RequiredArgsConstructor
+public class TourGrpcServiceImpl extends TourGrpcServiceGrpc.TourGrpcServiceImplBase {
+
+    private final TourService tourService;
+    private final AuthService authService;
+
+    @Override
+    public void getAllTours(GetAllToursRequest request, StreamObserver<TourListResponse> responseObserver) {
+        TourListResponse.Builder response = TourListResponse.newBuilder();
+
+        tourService.getAllTours()
+                .forEach(tour -> response.addTours(mapToGrpcResponse(tour)));
+
+        responseObserver.onNext(response.build());
+        responseObserver.onCompleted();
+    }
+
+    @Override
+    public void createTour(CreateTourGrpcRequest request, StreamObserver<TourGrpcResponse> responseObserver) {
+        try {
+            CurrentUser user = authService.getCurrentUser(request.getAuthorization());
+
+            CreateTourRequest createRequest = new CreateTourRequest();
+            createRequest.setName(request.getName());
+            createRequest.setDescription(request.getDescription());
+            createRequest.setDifficulty(TourDifficulty.valueOf(request.getDifficulty()));
+            createRequest.setTags(request.getTagsList());
+
+            TourResponse created = tourService.createTour(
+                    createRequest,
+                    user,
+                    request.getAuthorization()
+            );
+
+            responseObserver.onNext(mapToGrpcResponse(created));
+            responseObserver.onCompleted();
+        } catch (IllegalArgumentException e) {
+            responseObserver.onError(
+                    Status.INVALID_ARGUMENT
+                            .withDescription(e.getMessage())
+                            .asRuntimeException()
+            );
+        } catch (RuntimeException e) {
+            responseObserver.onError(
+                    Status.PERMISSION_DENIED
+                            .withDescription(e.getMessage())
+                            .asRuntimeException()
+            );
+        }
+    }
+
+    private TourGrpcResponse mapToGrpcResponse(TourResponse tour) {
+        TourGrpcResponse.Builder builder = TourGrpcResponse.newBuilder()
+                .setId(tour.getId() == null ? 0 : tour.getId())
+                .setAuthorId(tour.getAuthorId() == null ? 0 : tour.getAuthorId())
+                .setAuthorUsername(tour.getAuthorUsername() == null ? "" : tour.getAuthorUsername())
+                .setName(tour.getName() == null ? "" : tour.getName())
+                .setDescription(tour.getDescription() == null ? "" : tour.getDescription())
+                .setDifficulty(tour.getDifficulty() == null ? "" : tour.getDifficulty().name())
+                .setStatus(tour.getStatus() == null ? "" : tour.getStatus().name())
+                .setPrice(tour.getPrice());
+
+        if (tour.getTags() != null) {
+            builder.addAllTags(tour.getTags());
+        }
+
+        return builder.build();
+    }
+}

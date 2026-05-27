@@ -1,0 +1,49 @@
+syntax = "proto3";
+
+package tours;
+
+import "google/api/annotations.proto";
+
+option go_package = "gateway/proto/tours;tourspb";
+
+service TourGrpcService {
+  rpc GetAllTours(GetAllToursRequest) returns (TourListResponse) {
+    option (google.api.http) = {
+      get: "/tours"
+    };
+  }
+
+  rpc CreateTour(CreateTourGrpcRequest) returns (TourGrpcResponse) {
+    option (google.api.http) = {
+      post: "/tours"
+      body: "*"
+    };
+  }
+}
+
+message GetAllToursRequest {
+}
+
+message CreateTourGrpcRequest {
+  string authorization = 1;
+  string name = 2;
+  string description = 3;
+  string difficulty = 4;
+  repeated string tags = 5;
+}
+
+message TourListResponse {
+  repeated TourGrpcResponse tours = 1;
+}
+
+message TourGrpcResponse {
+  int64 id = 1;
+  int64 authorId = 2;
+  string authorUsername = 3;
+  string name = 4;
+  string description = 5;
+  string difficulty = 6;
+  repeated string tags = 7;
+  string status = 8;
+  double price = 9;
+}
