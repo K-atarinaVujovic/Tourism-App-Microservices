@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
 import { tourService } from '../services/tourService';
 
 export const tourKeys = {
@@ -27,5 +27,17 @@ export function useTour(id: number) {
         queryKey: tourKeys.detail(id),
         queryFn: () => tourService.getById(id),
         enabled: id > 0,
+    });
+}
+
+export function useUpdateTourLength() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: ({ id, lengthInKm }: { id: number; lengthInKm: number }) =>
+            tourService.updateLength(id, lengthInKm),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: tourKeys.all });
+        },
     });
 }

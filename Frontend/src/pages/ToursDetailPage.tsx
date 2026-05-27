@@ -1,5 +1,5 @@
 import { useParams, Link } from 'react-router';
-import { ArrowLeft, DollarSign, MapPin, Star, Tag } from 'lucide-react';
+import { ArrowLeft, DollarSign, MapPin, Star, Tag, Route } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTour } from '@/features/tours/hooks/useTours';
 import { useKeypoints } from '@/features/tours/hooks/useKeypoints';
@@ -115,6 +115,12 @@ export default function TourDetailPage() {
                             <DollarSign className="h-4 w-4" />
                             <span className="font-semibold text-(--text-h)">
                                 ${tour.price.toFixed(2)}
+                            </span>
+                        </span>
+                        <span className="flex items-center gap-1.5">
+                            <Route className="h-4 w-4" />
+                            <span className="font-semibold text-(--text-h)">
+                                {(tour.lengthInKm ?? 0).toFixed(2)} km
                             </span>
                         </span>
                         <span className="flex items-center gap-1.5">

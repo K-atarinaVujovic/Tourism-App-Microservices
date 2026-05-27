@@ -31,6 +31,13 @@ export const tourService = {
         return data;
     },
 
+    updateLength: async (id: number, lengthInKm: number): Promise<Tour> => {
+        const { data } = await apiClient.put<Tour>(`/tours/tours/${id}/length`, {
+            lengthInKm,
+        });
+        return data;
+    },
+
     update: async (id: number, payload: Partial<CreateTourPayload>): Promise<Tour> => {
         const { data } = await apiClient.put<Tour>(`/tours/tours/${id}`, payload);
         return data;

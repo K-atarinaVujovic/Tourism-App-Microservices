@@ -48,6 +48,9 @@ export interface Tour {
     tags: string[];
     status: 'DRAFT' | 'PUBLISHED';
     price: number;
+    lengthInKm?: number;
+    publishedAt?: string;
+    archivedAt?: string;
     keypoints?: Keypoint[];
 }
 

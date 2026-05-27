@@ -3,6 +3,7 @@ import { MapPin, Globe, ArrowLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import TourMap from '@/features/tours/components/TourMap';
 import { useKeypoints } from '@/features/tours/hooks/useKeypoints';
+import { useTour } from '@/features/tours/hooks/useTours';
 
 export default function TourKeypointsPage() {
     const { id } = useParams<{ id: string }>();
@@ -10,6 +11,7 @@ export default function TourKeypointsPage() {
     const tourId = Number(id);
 
     const { data: keypoints = [] } = useKeypoints(tourId);
+    const { data: tour } = useTour(tourId);
 
     const handlePublish = () => {
         // TODO: call tourService.publish(tourId) when endpoint is ready
@@ -38,6 +40,9 @@ export default function TourKeypointsPage() {
                     <div className="flex items-center gap-1.5 px-3 py-1 rounded-md bg-(--accent-bg) text-xs text-(--accent) font-medium">
                         <MapPin className="h-3.5 w-3.5" />
                         {keypoints.length} {keypoints.length === 1 ? 'keypoint' : 'keypoints'}
+                    </div>
+                    <div className="flex items-center gap-1.5 px-3 py-1 rounded-md bg-(--accent-bg) text-xs text-(--accent) font-medium">
+                        Distance: {tour?.lengthInKm ?? 0} km
                     </div>
 
                     {/* Spacer */}
