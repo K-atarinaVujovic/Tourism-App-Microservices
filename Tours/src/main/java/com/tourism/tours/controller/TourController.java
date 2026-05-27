@@ -2,6 +2,7 @@ package com.tourism.tours.controller;
 
 import com.tourism.tours.dto.CreateTourRequest;
 import com.tourism.tours.dto.TourResponse;
+import com.tourism.tours.dto.UpdateTourLengthRequest;
 import com.tourism.tours.security.AuthService;
 import com.tourism.tours.security.CurrentUser;
 import com.tourism.tours.service.TourService;
@@ -38,5 +39,13 @@ public class TourController {
     @GetMapping("/{id}")
     public TourResponse getTourById(@RequestHeader("Authorization") String authorization, @PathVariable Long id){
         return tourService.getTourById(id);
+    }
+
+    @PutMapping("/{id}/length")
+    public TourResponse updateTourLength(@PathVariable Long id,
+                                         @RequestHeader("Authorization") String authorization,
+                                         @Valid @RequestBody UpdateTourLengthRequest request) {
+        CurrentUser user = authService.getCurrentUser(authorization);
+        return tourService.updateTourLength(id, request, user);
     }
 }

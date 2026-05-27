@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
@@ -42,4 +43,10 @@ public class Tour {
     private TourStatus status;
 
     private double price;
+
+    private Double lengthInKm;
+
+    private LocalDateTime publishedAt;
+
+    private LocalDateTime archivedAt;
 }

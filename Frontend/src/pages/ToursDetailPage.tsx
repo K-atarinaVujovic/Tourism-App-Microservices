@@ -75,6 +75,8 @@ export default function TourDetailPage() {
     const avgRating = reviews.length
         ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
         : null;
+    const currentUserId = Number(localStorage.getItem('user_id'));
+    const isAuthor = currentUserId === tour.authorId;
 
     // ── Render ────────────────────────────────────────────────────────────────
 
@@ -197,14 +199,16 @@ export default function TourDetailPage() {
                 </section>
 
                 {/* ── Review form ─────────────────────────────────────────── */}
-                <section className="rounded-xl border border-(--border) bg-(--bg) p-6">
-                    <SectionHeading>Write a Review</SectionHeading>
-                    <ReviewForm
-                        onSubmit={handleReviewSubmit}
-                        isSubmitting={isPending}
-                        submitSuccess={isSuccess}
-                    />
-                </section>
+                {!isAuthor && (
+                    <section className="rounded-xl border border-(--border) bg-(--bg) p-6">
+                        <SectionHeading>Write a Review</SectionHeading>
+                        <ReviewForm
+                            onSubmit={handleReviewSubmit}
+                            isSubmitting={isPending}
+                            submitSuccess={isSuccess}
+                        />
+                    </section>
+                )}
 
             </div>
         </div>

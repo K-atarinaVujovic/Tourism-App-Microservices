@@ -2,6 +2,7 @@ package com.tourism.tours.service;
 
 import com.tourism.tours.dto.CreateTourRequest;
 import com.tourism.tours.dto.TourResponse;
+import com.tourism.tours.dto.UpdateTourLengthRequest;
 import com.tourism.tours.entity.Tour;
 import com.tourism.tours.enums.TourStatus;
 import com.tourism.tours.repository.TourRepository;
@@ -74,5 +75,18 @@ public class TourService {
                 tour.getPublishedAt(),
                 tour.getArchivedAt()
         );
+    }
+
+    public TourResponse updateTourLength(Long tourId, UpdateTourLengthRequest request, CurrentUser user) {
+        Tour tour = tourRepository.findById(tourId)
+                .orElseThrow(() -> new RuntimeException("Tour not found"));
+
+        if (!tour.getAuthorId().equals(user.getId())) {
+            throw new RuntimeException("Only tour author can update tour length");
+        }
+
+        tour.setLengthInKm(request.getLengthInKm());
+
+        return mapToResponse(tourRepository.save(tour));
     }
 }
