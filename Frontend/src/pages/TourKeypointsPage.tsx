@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils';
 import TourMap from '@/features/tours/components/TourMap';
 import { useKeypoints } from '@/features/tours/hooks/useKeypoints';
 import { useTour } from '@/features/tours/hooks/useTours';
+import TransportTimesPanel from '@/features/tours/components/TransportTimesPanel';
 
 export default function TourKeypointsPage() {
     const { id } = useParams<{ id: string }>();
@@ -62,6 +63,7 @@ export default function TourKeypointsPage() {
                 </div>
             </div>
 
+            <TransportTimesPanel tourId={tourId} />
             {/* ── Map ── */}
             <div className="flex-1 relative overflow-hidden">
                 <TourMap

@@ -1,5 +1,5 @@
 import apiClient from '@/lib/api-client';
-import type { Tour } from '@/types/tour';
+import type {CreateTourTransportTimePayload, Tour, TourTransportTime} from '@/types/tour';
 
 export type TourDifficulty = 'EASY' | 'MEDIUM' | 'HARD';
 
@@ -45,5 +45,23 @@ export const tourService = {
 
     delete: async (id: number): Promise<void> => {
         await apiClient.delete(`/tours/tours/${id}`);
+    },
+
+    createTransportTime: async (
+        tourId: number,
+        payload: CreateTourTransportTimePayload
+    ): Promise<TourTransportTime> => {
+        const { data } = await apiClient.post<TourTransportTime>(
+            `/tours/tours/${tourId}/transport-times`,
+            payload
+        );
+        return data;
+    },
+
+    getTransportTimes: async (tourId: number): Promise<TourTransportTime[]> => {
+        const { data } = await apiClient.get<TourTransportTime[]>(
+            `/tours/tours/${tourId}/transport-times`
+        );
+        return data;
     },
 };

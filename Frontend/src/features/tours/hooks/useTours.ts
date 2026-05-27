@@ -41,3 +41,23 @@ export function useUpdateTourLength() {
         },
     });
 }
+
+export function useTransportTimes(tourId: number) {
+    return useQuery({
+        queryKey: ['tours', tourId, 'transport-times'],
+        queryFn: () => tourService.getTransportTimes(tourId),
+        enabled: !!tourId,
+    });
+}
+
+export function useCreateTransportTime(tourId: number) {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: tourService.createTransportTime.bind(null, tourId),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['tours', tourId, 'transport-times'] });
+            queryClient.invalidateQueries({ queryKey: ['tours'] });
+        },
+    });
+}

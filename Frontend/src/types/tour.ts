@@ -74,3 +74,19 @@ export interface CreateReviewPayload {
     visitedAt: string;    // "YYYY-MM-DD"
     imageUrls?: string[];
 }
+
+// ── Tour Transport ───────────────────────────────────────────────────────────────
+
+export type TransportType = 'WALKING' | 'BIKE' | 'CAR';
+
+export type TourTransportTime = {
+    id: number;
+    tourId: number;
+    transportType: TransportType;
+    durationInMinutes: number;
+};
+
+export type CreateTourTransportTimePayload = {
+    transportType: TransportType;
+    durationInMinutes: number;
+};
