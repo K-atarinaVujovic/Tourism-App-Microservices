@@ -69,7 +69,10 @@ public class TourService {
                 tour.getDifficulty(),
                 tour.getTags(),
                 tour.getStatus(),
-                tour.getPrice()
+                tour.getPrice(),
+                tour.getLengthInKm(),
+                tour.getPublishedAt(),
+                tour.getArchivedAt()
         );
     }
 }
