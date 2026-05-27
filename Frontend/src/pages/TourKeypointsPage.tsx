@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils';
 import TourMap from '@/features/tours/components/TourMap';
 import { useKeypoints } from '@/features/tours/hooks/useKeypoints';
 import { useTour } from '@/features/tours/hooks/useTours';
+import { useTransportTimes } from '@/features/tours/hooks/useTours';
 import TransportTimesPanel from '@/features/tours/components/TransportTimesPanel';
 
 export default function TourKeypointsPage() {
@@ -13,10 +14,16 @@ export default function TourKeypointsPage() {
 
     const { data: keypoints = [] } = useKeypoints(tourId);
     const { data: tour } = useTour(tourId);
+    const { data: transportTimes = [] } = useTransportTimes(tourId);
 
-    const handlePublish = () => {
-        // TODO: call tourService.publish(tourId) when endpoint is ready
-        console.log('Publish tour', tourId);
+    const canFinishCreating = keypoints.length >= 2 && transportTimes.length >= 1;
+
+    const handleFinishCreating = () => {
+        if (!canFinishCreating) {
+            return;
+        }
+
+        navigate(`/tours/${tourId}`);
     };
 
     return (
@@ -46,22 +53,31 @@ export default function TourKeypointsPage() {
                         Distance: {tour?.lengthInKm ?? 0} km
                     </div>
 
+                    {tour && (
+                        <span className="rounded-md bg-(--accent-bg) px-3 py-1 text-xs font-medium text-(--accent)">
+                        {tour.status}
+                      </span>
+                    )}
+
                     {/* Spacer */}
                     <div className="flex-1" />
 
-                    {/* Publish button */}
+                    {/* Finish Creating Tour button */}
                     <button
-                        onClick={handlePublish}
-                        className={cn(
-                            'flex items-center gap-2 rounded-md px-4 py-1.5 text-sm font-medium',
-                            'bg-(--accent) text-white hover:opacity-90 transition-opacity'
-                        )}
+                        onClick={handleFinishCreating}
+                        disabled={!canFinishCreating}
+                        className="rounded-md bg-(--accent) px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
                     >
-                        <Globe className="h-4 w-4" />
-                        Publish Tour
+                        Finish Creating Tour
                     </button>
                 </div>
             </div>
+
+            {!canFinishCreating && (
+                <p className="px-6 py-2 text-xs text-(--text)/50 border-b border-(--border)">
+                    To finish creating the tour, add at least 2 keypoints and 1 transport time.
+                </p>
+            )}
 
             <TransportTimesPanel tourId={tourId} />
             {/* ── Map ── */}

@@ -64,4 +64,19 @@ export const tourService = {
         );
         return data;
     },
+
+    publish: async (id: number): Promise<Tour> => {
+        const { data } = await apiClient.put<Tour>(`/tours/tours/${id}/publish`);
+        return data;
+    },
+
+    archive: async (id: number): Promise<Tour> => {
+        const { data } = await apiClient.put<Tour>(`/tours/tours/${id}/archive`);
+        return data;
+    },
+
+    reactivate: async (id: number): Promise<Tour> => {
+        const { data } = await apiClient.put<Tour>(`/tours/tours/${id}/reactivate`);
+        return data;
+    },
 };

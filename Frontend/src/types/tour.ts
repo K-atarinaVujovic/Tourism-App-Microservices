@@ -46,7 +46,7 @@ export interface Tour {
     description: string;
     difficulty: TourDifficulty;
     tags: string[];
-    status: 'DRAFT' | 'PUBLISHED';
+    status: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
     price: number;
     lengthInKm?: number;
     publishedAt?: string;

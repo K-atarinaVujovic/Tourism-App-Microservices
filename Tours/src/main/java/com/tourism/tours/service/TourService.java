@@ -5,11 +5,14 @@ import com.tourism.tours.dto.TourResponse;
 import com.tourism.tours.dto.UpdateTourLengthRequest;
 import com.tourism.tours.entity.Tour;
 import com.tourism.tours.enums.TourStatus;
+import com.tourism.tours.repository.KeyPointRepository;
 import com.tourism.tours.repository.TourRepository;
+import com.tourism.tours.repository.TourTransportTimeRepository;
 import com.tourism.tours.security.CurrentUser;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -17,6 +20,8 @@ import java.util.List;
 public class TourService {
     private final TourRepository tourRepository;
     private final StakeholdersClient stakeholdersClient;
+    private final KeyPointRepository keyPointRepository;
+    private final TourTransportTimeRepository transportTimeRepository;
 
     public TourResponse createTour(CreateTourRequest request, CurrentUser user, String authorization){
         String role = stakeholdersClient.getUserRole(user.getId(), authorization);
@@ -88,5 +93,82 @@ public class TourService {
         tour.setLengthInKm(request.getLengthInKm());
 
         return mapToResponse(tourRepository.save(tour));
+    }
+
+    public TourResponse publishTour(Long tourId, CurrentUser user) {
+        Tour tour = getTourAndCheckAuthor(tourId, user);
+
+        if (tour.getStatus() != TourStatus.DRAFT) {
+            throw new RuntimeException("Only draft tours can be published");
+        }
+
+        validatePublishConditions(tour);
+
+        tour.setStatus(TourStatus.PUBLISHED);
+        tour.setPublishedAt(LocalDateTime.now());
+        tour.setArchivedAt(null);
+
+        return mapToResponse(tourRepository.save(tour));
+    }
+
+    public TourResponse archiveTour(Long tourId, CurrentUser user) {
+        Tour tour = getTourAndCheckAuthor(tourId, user);
+
+        if (tour.getStatus() != TourStatus.PUBLISHED) {
+            throw new RuntimeException("Only published tours can be archived");
+        }
+
+        tour.setStatus(TourStatus.ARCHIVED);
+        tour.setArchivedAt(LocalDateTime.now());
+
+        return mapToResponse(tourRepository.save(tour));
+    }
+
+    public TourResponse reactivateTour(Long tourId, CurrentUser user) {
+        Tour tour = getTourAndCheckAuthor(tourId, user);
+
+        if (tour.getStatus() != TourStatus.ARCHIVED) {
+            throw new RuntimeException("Only archived tours can be reactivated");
+        }
+
+        tour.setStatus(TourStatus.PUBLISHED);
+        tour.setArchivedAt(null);
+
+        return mapToResponse(tourRepository.save(tour));
+    }
+
+    private Tour getTourAndCheckAuthor(Long tourId, CurrentUser user) {
+        Tour tour = tourRepository.findById(tourId)
+                .orElseThrow(() -> new RuntimeException("Tour not found"));
+
+        if (!tour.getAuthorId().equals(user.getId())) {
+            throw new RuntimeException("Only tour author can manage this tour");
+        }
+
+        return tour;
+    }
+
+    private void validatePublishConditions(Tour tour) {
+        if (isBlank(tour.getName()) || isBlank(tour.getDescription()) || tour.getDifficulty() == null) {
+            throw new RuntimeException("Tour must contain name, description and difficulty");
+        }
+
+        if (tour.getTags() == null || tour.getTags().isEmpty()) {
+            throw new RuntimeException("Tour must contain at least one tag");
+        }
+
+        int keyPointCount = keyPointRepository.findByTourId(tour.getId()).size();
+
+        if (keyPointCount < 2) {
+            throw new RuntimeException("Tour must contain at least two key points");
+        }
+
+        if (!transportTimeRepository.existsByTourId(tour.getId())) {
+            throw new RuntimeException("Tour must contain at least one transport time");
+        }
+    }
+
+    private boolean isBlank(String value) {
+        return value == null || value.trim().isEmpty();
     }
 }

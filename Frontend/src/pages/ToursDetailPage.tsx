@@ -1,7 +1,7 @@
 import { useParams, Link } from 'react-router';
 import { ArrowLeft, DollarSign, MapPin, Star, Tag, Route } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useTour } from '@/features/tours/hooks/useTours';
+import { useTour, usePublishTour, useArchiveTour, useReactivateTour, } from '@/features/tours/hooks/useTours';
 import { useKeypoints } from '@/features/tours/hooks/useKeypoints';
 import { useReviews, useCreateReview } from '@/features/tours/hooks/useReviews';
 import TourReviewList from '@/features/tours/components/TourReviewList';
@@ -48,6 +48,10 @@ export default function TourDetailPage() {
     const { user } = useAuthStore();
     const { data: currentProfile } = useProfile(user?.id ?? 0);
 
+    const publishTour = usePublishTour();
+    const archiveTour = useArchiveTour();
+    const reactivateTour = useReactivateTour();
+
     const handleReviewSubmit = (values: ReviewFormValues) => {
         submitReview({
             rating: values.rating,
@@ -81,6 +85,30 @@ export default function TourDetailPage() {
         : null;
 
     const isAuthor = currentProfile?.role?.toLowerCase() === 'author';
+
+    const isOwner = user?.id === tour.authorId;
+    const canManageTour = isAuthor && isOwner;
+
+    const handleStatusAction = () => {
+        if (tour.status === 'DRAFT') {
+            publishTour.mutate(tourId);
+        }
+
+        if (tour.status === 'PUBLISHED') {
+            archiveTour.mutate(tourId);
+        }
+
+        if (tour.status === 'ARCHIVED') {
+            reactivateTour.mutate(tourId);
+        }
+    };
+
+    const statusActionLabel =
+        tour.status === 'DRAFT'
+            ? 'Publish Tour'
+            : tour.status === 'PUBLISHED'
+                ? 'Archive Tour'
+                : 'Reactivate Tour';
 
     // ── Render ────────────────────────────────────────────────────────────────
 
@@ -145,6 +173,41 @@ export default function TourDetailPage() {
                             </span>
                         )}
                     </div>
+
+                    {canManageTour && (
+                        <div className="mt-4 flex flex-wrap items-center gap-3 rounded-lg border border-(--border) bg-(--accent-bg)/30 p-3">
+                            <span className="text-sm">
+                                Status:
+                                <span className="ml-2 font-semibold text-(--accent)">
+                                    {tour.status}
+                                </span>
+                            </span>
+
+                            {tour.publishedAt && (
+                                <span className="text-xs text-(--text)/55">
+                                    Published at: {new Date(tour.publishedAt).toLocaleString()}
+                                </span>
+                            )}
+
+                            {tour.archivedAt && (
+                                <span className="text-xs text-(--text)/55">
+                                    Archived at: {new Date(tour.archivedAt).toLocaleString()}
+                                </span>
+                            )}
+
+                            <button
+                                onClick={handleStatusAction}
+                                disabled={
+                                    publishTour.isPending ||
+                                    archiveTour.isPending ||
+                                    reactivateTour.isPending
+                                }
+                                className="ml-auto rounded-md bg-(--accent) px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+                            >
+                                {statusActionLabel}
+                            </button>
+                        </div>
+                    )}
 
                     {/* Tags */}
                     {tour.tags.length > 0 && (

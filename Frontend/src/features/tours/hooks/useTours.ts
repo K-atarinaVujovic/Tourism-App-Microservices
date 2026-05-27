@@ -61,3 +61,51 @@ export function useCreateTransportTime(tourId: number) {
         },
     });
 }
+
+export function usePublishTour() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: (id: number) => tourService.publish(id),
+        onSuccess: (updatedTour) => {
+            queryClient.setQueryData(tourKeys.detail(updatedTour.id), updatedTour);
+            queryClient.invalidateQueries({ queryKey: tourKeys.all });
+            queryClient.invalidateQueries({ queryKey: tourKeys.myList() });
+        },
+        onError: (error: any) => {
+            alert(error?.response?.data?.message ?? error?.message ?? 'Publish failed');
+        },
+    });
+}
+
+export function useArchiveTour() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: (id: number) => tourService.archive(id),
+        onSuccess: (updatedTour) => {
+            queryClient.setQueryData(tourKeys.detail(updatedTour.id), updatedTour);
+            queryClient.invalidateQueries({ queryKey: tourKeys.all });
+            queryClient.invalidateQueries({ queryKey: tourKeys.myList() });
+        },
+        onError: (error: any) => {
+            alert(error?.response?.data?.message ?? error?.message ?? 'Archive failed');
+        },
+    });
+}
+
+export function useReactivateTour() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: (id: number) => tourService.reactivate(id),
+        onSuccess: (updatedTour) => {
+            queryClient.setQueryData(tourKeys.detail(updatedTour.id), updatedTour);
+            queryClient.invalidateQueries({ queryKey: tourKeys.all });
+            queryClient.invalidateQueries({ queryKey: tourKeys.myList() });
+        },
+        onError: (error: any) => {
+            alert(error?.response?.data?.message ?? error?.message ?? 'Reactivation failed');
+        },
+    });
+}

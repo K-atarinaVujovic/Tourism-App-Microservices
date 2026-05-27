@@ -48,4 +48,25 @@ public class TourController {
         CurrentUser user = authService.getCurrentUser(authorization);
         return tourService.updateTourLength(id, request, user);
     }
+
+    @PutMapping("/{id}/publish")
+    public TourResponse publishTour(@PathVariable Long id,
+                                    @RequestHeader("Authorization") String authorization) {
+        CurrentUser user = authService.getCurrentUser(authorization);
+        return tourService.publishTour(id, user);
+    }
+
+    @PutMapping("/{id}/archive")
+    public TourResponse archiveTour(@PathVariable Long id,
+                                    @RequestHeader("Authorization") String authorization) {
+        CurrentUser user = authService.getCurrentUser(authorization);
+        return tourService.archiveTour(id, user);
+    }
+
+    @PutMapping("/{id}/reactivate")
+    public TourResponse reactivateTour(@PathVariable Long id,
+                                       @RequestHeader("Authorization") String authorization) {
+        CurrentUser user = authService.getCurrentUser(authorization);
+        return tourService.reactivateTour(id, user);
+    }
 }
