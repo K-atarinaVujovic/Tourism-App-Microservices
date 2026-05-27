@@ -8,6 +8,8 @@ import TourReviewList from '@/features/tours/components/TourReviewList';
 import ReviewForm from '@/features/tours/components/ReviewForm';
 import type { TourDifficulty } from '@/features/tours/services/tourService';
 import type { ReviewFormValues } from '@/features/tours/components/ReviewForm';
+import { useAuthStore } from '@/store/authStore';
+import { useProfile } from '@/features/stakeholders/hooks/useProfile';
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
@@ -43,6 +45,8 @@ export default function TourDetailPage() {
     const { data: keypoints = [] } = useKeypoints(tourId);
     const { data: reviews = [] } = useReviews(tourId);
     const { mutate: submitReview, isPending, isSuccess } = useCreateReview(tourId);
+    const { user } = useAuthStore();
+    const { data: currentProfile } = useProfile(user?.id ?? 0);
 
     const handleReviewSubmit = (values: ReviewFormValues) => {
         submitReview({
@@ -75,8 +79,8 @@ export default function TourDetailPage() {
     const avgRating = reviews.length
         ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
         : null;
-    const currentUserId = Number(localStorage.getItem('user_id'));
-    const isAuthor = currentUserId === tour.authorId;
+
+    const isAuthor = currentProfile?.role?.toLowerCase() === 'author';
 
     // ── Render ────────────────────────────────────────────────────────────────
 
@@ -199,7 +203,13 @@ export default function TourDetailPage() {
                 </section>
 
                 {/* ── Review form ─────────────────────────────────────────── */}
-                {!isAuthor && (
+                {isAuthor ? (
+                    <section className="rounded-xl border border-(--border) bg-(--bg) p-6">
+                        <p className="text-sm text-(--text)/60 text-center">
+                            Authors cannot review their own tours.
+                        </p>
+                    </section>
+                ) : (
                     <section className="rounded-xl border border-(--border) bg-(--bg) p-6">
                         <SectionHeading>Write a Review</SectionHeading>
                         <ReviewForm
