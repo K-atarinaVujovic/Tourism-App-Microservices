@@ -1,11 +1,14 @@
 syntax = "proto3";
 package stakeholders;
 
+enum Role {
+  TOURIST = 0;
+  AUTHOR = 1;
+}
+
 service ProfileService {
   rpc CreateProfile(ProfileCreate) returns (ProfileResponse);
   rpc GetProfile(GetProfileRequest) returns (ProfileResponse);
-  rpc UpdateProfile(ProfileUpdate) returns (ProfileResponse);
-  rpc UploadImage(ImageUploadRequest) returns (ImageUploadResponse);
 }
 
 message GetProfileRequest {
@@ -13,13 +16,14 @@ message GetProfileRequest {
 }
 
 message ProfileResponse {
-  int32 id = 1;
+  string id = 1;
   string name = 2;
   string lastname = 3;
   string imageUrl = 4;
   string biography = 5;
   string quote = 6;
   int32 user_id = 7;
+  Role role = 8;
 }
 
 message ProfileCreate {
@@ -29,22 +33,5 @@ message ProfileCreate {
   optional string biography = 4;
   optional string quote = 5;
   int32 user_id = 6;
-}
-
-message ProfileUpdate {
-  optional string name = 1;
-  optional string lastname = 2;
-  optional string imageUrl = 3;
-  optional string biography = 4;
-  optional string quote = 5;
-  int32 user_id = 6;
-}
-
-message ImageUploadRequest {
-  bytes file_data = 1;
-  string filename = 2;
-}
-
-message ImageUploadResponse {
-  string imageUrl = 1;
+  Role role = 7;
 }
