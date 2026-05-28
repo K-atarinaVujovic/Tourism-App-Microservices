@@ -26,7 +26,7 @@ export default function Navbar() {
   const profileRole = profile?.role?.toLowerCase();
   const isAdmin = authRole === "admin";
   const isAuthor = profileRole === "author";
-  const isTourist = profileRole === "tourist";
+  const isTourist = !isAdmin && profileRole === "tourist";
 
 
 
