@@ -90,3 +90,17 @@ export type CreateTourTransportTimePayload = {
     transportType: TransportType;
     durationInMinutes: number;
 };
+
+// ── Tour Preview for Tourist ───────────────────────────────────────────────────────────────
+
+export type PublishedTourPreview = {
+    id: number;
+    name: string;
+    description: string;
+    difficulty: TourDifficulty;
+    tags: string[];
+    price: number;
+    lengthInKm?: number;
+    firstKeyPoint?: Keypoint | null;
+    transportTimes: TourTransportTime[];
+};

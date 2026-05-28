@@ -1,5 +1,5 @@
 import apiClient from '@/lib/api-client';
-import type {CreateTourTransportTimePayload, Tour, TourTransportTime} from '@/types/tour';
+import type {CreateTourTransportTimePayload, PublishedTourPreview, Tour, TourTransportTime} from '@/types/tour';
 
 export type TourDifficulty = 'EASY' | 'MEDIUM' | 'HARD';
 
@@ -77,6 +77,11 @@ export const tourService = {
 
     reactivate: async (id: number): Promise<Tour> => {
         const { data } = await apiClient.put<Tour>(`/tours/tours/${id}/reactivate`);
+        return data;
+    },
+
+    getPublishedPreviews: async (): Promise<PublishedTourPreview[]> => {
+        const { data } = await apiClient.get<PublishedTourPreview[]>('/tours/tours/published');
         return data;
     },
 };

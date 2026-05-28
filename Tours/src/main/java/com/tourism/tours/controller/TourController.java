@@ -1,6 +1,7 @@
 package com.tourism.tours.controller;
 
 import com.tourism.tours.dto.CreateTourRequest;
+import com.tourism.tours.dto.PublishedTourPreviewResponse;
 import com.tourism.tours.dto.TourResponse;
 import com.tourism.tours.dto.UpdateTourLengthRequest;
 import com.tourism.tours.security.AuthService;
@@ -29,6 +30,11 @@ public class TourController {
     public List<TourResponse> getMyTours(@RequestHeader("Authorization") String authorization){
         CurrentUser user = authService.getCurrentUser(authorization);
         return tourService.getMyTours(user);
+    }
+
+    @GetMapping("/published")
+    public List<PublishedTourPreviewResponse> getPublishedTours() {
+        return tourService.getPublishedToursPreview();
     }
 
     @GetMapping

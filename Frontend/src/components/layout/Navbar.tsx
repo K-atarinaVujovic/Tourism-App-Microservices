@@ -37,7 +37,8 @@ export default function Navbar() {
       { path: `/profile/${user?.id}`, label: "My Profile", icon: Wheat, show: isAuthenticated && !isAdmin },
       { path: "/tours/create", label: "Create Tour", icon: PlusCircle, show: isAuthenticated && isAuthor },
       { path: "/map", label: "Map", icon: Map, show: isAuthenticated && !isAdmin },
-      { path: "/tours", label: "Tours", icon: Route, show: isAuthenticated && !isAdmin },
+      { path: "/tours", label: "My Tours", icon: Route, show: isAuthenticated && isAuthor },
+      { path: "/tourist/tours", label: "Tours", icon: Route, show: isAuthenticated && isTourist },
       { path: "/blogs", label: "Blogs", icon: BookOpen, show: isAuthenticated && !isAdmin },
       { path: "/blogs/create", label: "Create Blog", icon: PenLine, show: isAuthenticated && !isAdmin },
   ];

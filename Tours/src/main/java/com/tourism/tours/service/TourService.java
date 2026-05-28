@@ -1,8 +1,7 @@
 package com.tourism.tours.service;
 
-import com.tourism.tours.dto.CreateTourRequest;
-import com.tourism.tours.dto.TourResponse;
-import com.tourism.tours.dto.UpdateTourLengthRequest;
+import com.tourism.tours.dto.*;
+import com.tourism.tours.entity.KeyPoint;
 import com.tourism.tours.entity.Tour;
 import com.tourism.tours.enums.TourStatus;
 import com.tourism.tours.repository.KeyPointRepository;
@@ -170,5 +169,57 @@ public class TourService {
 
     private boolean isBlank(String value) {
         return value == null || value.trim().isEmpty();
+    }
+
+    public List<PublishedTourPreviewResponse> getPublishedToursPreview() {
+        return tourRepository.findByStatus(TourStatus.PUBLISHED)
+                .stream()
+                .map(this::mapToPublishedPreview)
+                .toList();
+    }
+
+    private PublishedTourPreviewResponse mapToPublishedPreview(Tour tour) {
+        KeyPointResponse firstKeyPoint = keyPointRepository.findFirstByTourIdOrderByIdAsc(tour.getId())
+                .map(this::mapKeyPointToResponse)
+                .orElse(null);
+
+        List<TourTransportTimeResponse> transportTimes = transportTimeRepository.findByTourId(tour.getId())
+                .stream()
+                .map(this::mapTransportTimeToResponse)
+                .toList();
+
+        return new PublishedTourPreviewResponse(
+                tour.getId(),
+                tour.getName(),
+                tour.getDescription(),
+                tour.getDifficulty(),
+                tour.getTags(),
+                tour.getPrice(),
+                tour.getLengthInKm(),
+                firstKeyPoint,
+                transportTimes
+        );
+    }
+
+    private KeyPointResponse mapKeyPointToResponse(KeyPoint keyPoint) {
+        return new KeyPointResponse(
+                keyPoint.getId(),
+                keyPoint.getTourId(),
+                keyPoint.getName(),
+                keyPoint.getDescription(),
+                keyPoint.getType(),
+                keyPoint.getImageUrl(),
+                keyPoint.getLatitude(),
+                keyPoint.getLongitude()
+        );
+    }
+
+    private TourTransportTimeResponse mapTransportTimeToResponse(TourTransportTime time) {
+        return new TourTransportTimeResponse(
+                time.getId(),
+                time.getTourId(),
+                time.getTransportType(),
+                time.getDurationInMinutes()
+        );
     }
 }

@@ -3,6 +3,7 @@ import { tourService } from '../services/tourService';
 
 export const tourKeys = {
     all: ['tours'] as const,
+    published: ['tours', 'published'] as const,
     lists: () => [...tourKeys.all, 'list'] as const,
     myList: () => [...tourKeys.all, 'my'] as const,
     detail: (id: number) => [...tourKeys.all, id] as const,
@@ -107,5 +108,12 @@ export function useReactivateTour() {
         onError: (error: any) => {
             alert(error?.response?.data?.message ?? error?.message ?? 'Reactivation failed');
         },
+    });
+}
+
+export function usePublishedTourPreviews() {
+    return useQuery({
+        queryKey: tourKeys.published,
+        queryFn: tourService.getPublishedPreviews,
     });
 }
