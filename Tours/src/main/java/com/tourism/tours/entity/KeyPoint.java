@@ -16,7 +16,9 @@ public class KeyPoint {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Long tourId;
+    @ManyToOne
+    @JoinColumn(name="tour_id")
+    private Tour tour;
 
     private String name;
 
