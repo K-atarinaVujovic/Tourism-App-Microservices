@@ -10,6 +10,8 @@ import type { TourDifficulty } from '@/features/tours/services/tourService';
 import type { ReviewFormValues } from '@/features/tours/components/ReviewForm';
 import { useAuthStore } from '@/store/authStore';
 import { useProfile } from '@/features/stakeholders/hooks/useProfile';
+import { useNavigate } from 'react-router';
+import { useActiveTourExecution, useStartTourExecution } from '@/features/tours/hooks/useTourExecutions';
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
@@ -59,6 +61,17 @@ export default function TourDetailPage() {
             visitedAt: values.visitedAt,
         });
     };
+
+    const navigate = useNavigate();
+    const startExecution = useStartTourExecution();
+
+    const handleStart = () => {
+        startExecution.mutate(tourId, {
+            onSuccess: () => navigate('/tours/active'),
+        });
+    };
+
+    const { data: activeExecution } = useActiveTourExecution();
 
     // ── Loading ───────────────────────────────────────────────────────────────
 
@@ -256,6 +269,21 @@ export default function TourDetailPage() {
                         </div>
                     </section>
                 )}
+
+                {/* ── Start tour ───────────────────────────────────────────────  */}
+                <section className="mb-5">
+                     <button
+                        onClick={handleStart}
+                        disabled={startExecution.isPending || !!activeExecution}
+                        className={cn(
+                            'w-full rounded-md px-4 py-2.5 text-sm font-medium',
+                            'bg-(--accent) text-white hover:opacity-90 transition-opacity',
+                            'disabled:opacity-50 disabled:cursor-not-allowed',
+                        )}
+                    >
+                        {startExecution.isPending ? 'Starting…' : !!activeExecution ? 'Tour already active' : 'Start!'}
+                    </button>
+                </section>
 
                 {/* ── Reviews ─────────────────────────────────────────────── */}
                 <section className="mb-5">

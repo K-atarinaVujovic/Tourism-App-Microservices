@@ -89,4 +89,6 @@ export const tourService = {
         const { data } = await apiClient.get<PublishedTourPreview[]>('/tours/tours/published');
         return data;
     },
+
+    
 };
