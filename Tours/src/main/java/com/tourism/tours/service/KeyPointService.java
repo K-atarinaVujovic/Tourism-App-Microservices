@@ -9,10 +9,12 @@ import com.tourism.tours.repository.KeyPointRepository;
 import com.tourism.tours.repository.TourRepository;
 import com.tourism.tours.security.CurrentUser;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class KeyPointService {
@@ -37,6 +39,7 @@ public class KeyPointService {
         keyPoint.setLongitude(request.getLongitude());
 
         KeyPoint saved = keyPointRepository.save(keyPoint);
+        log.info("Keypoint {} created", saved.getId());
         return mapToResponse(saved);
     }
 
@@ -70,6 +73,7 @@ public class KeyPointService {
         keyPoint.setLongitude(request.getLongitude());
 
         KeyPoint saved = keyPointRepository.save(keyPoint);
+        log.info("Keypoint {} updated", saved.getId());
         return mapToResponse(saved);
     }
 
@@ -89,6 +93,9 @@ public class KeyPointService {
         }
 
         keyPointRepository.delete(keyPoint);
+
+        log.info("Keypoint {} deleted", keyPointId);
+
     }
 
     private KeyPointResponse mapToResponse(KeyPoint keyPoint) {

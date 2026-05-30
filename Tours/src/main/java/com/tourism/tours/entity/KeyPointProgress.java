@@ -1,13 +1,12 @@
-package com.tourism.tours.enums;
+package com.tourism.tours.entity;
 
-import com.tourism.tours.entity.KeyPoint;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "keyPointProgresses")
@@ -23,10 +22,22 @@ public class KeyPointProgress {
     @JoinColumn(name = "key_point_id")
     private KeyPoint keyPoint;
 
-    LocalDate timeReached;
+    LocalDateTime timeReached;
 
     public KeyPointProgress(KeyPoint keyPoint){
         this.keyPoint = keyPoint;
+        timeReached = null;
+    }
+
+    public boolean wasReached(){
+        return timeReached != null;
+    }
+
+    public void reach(){
+        timeReached = LocalDateTime.now();
+    }
+
+    public void reset(){
         timeReached = null;
     }
 }

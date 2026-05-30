@@ -7,10 +7,12 @@ import com.tourism.tours.enums.TourStatus;
 import com.tourism.tours.repository.TourRepository;
 import com.tourism.tours.security.CurrentUser;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class TourService {
@@ -36,6 +38,8 @@ public class TourService {
         tour.setPrice(0);
 
         Tour saved = tourRepository.save(tour);
+
+        log.info("Tour {} created", saved.getId());
         return mapToResponse(saved);
     }
 
