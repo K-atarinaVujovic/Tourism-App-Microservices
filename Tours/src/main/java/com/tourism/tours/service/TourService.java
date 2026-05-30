@@ -10,6 +10,7 @@ import com.tourism.tours.repository.TourTransportTimeRepository;
 import com.tourism.tours.security.CurrentUser;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import com.tourism.tours.entity.TourTransportTime;
 
 import java.time.LocalDateTime;
 import java.util.List;
