@@ -46,12 +46,6 @@ async def serve_grpc():
     await grpc_server.wait_for_termination()
     return grpc_server
 
-async def shutdown(sig, frame):
-    print("Shutting down...")
-    if grpc_server:
-        await grpc_server.stop(grace=0)
-    sys.exit(0)
-
 async def main():
     grpc_task = asyncio.create_task(serve_grpc())
     await serve_fastapi()
