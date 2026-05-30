@@ -75,4 +75,10 @@ public class TourController {
         CurrentUser user = authService.getCurrentUser(authorization);
         return tourService.reactivateTour(id, user);
     }
+
+    @GetMapping("/purchased")
+    public List<TourResponse> getPurchasedTours(@RequestHeader("Authorization") String authorization){
+        CurrentUser user = authService.getCurrentUser(authorization);
+        return tourService.getPurchasedTours(user.getId());
+    }
 }

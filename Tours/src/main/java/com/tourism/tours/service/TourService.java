@@ -69,6 +69,14 @@ public class TourService {
                 .orElseThrow(() -> new RuntimeException("Tour not found"));
     }
 
+    public List<TourResponse> getPurchasedTours(Long userId){
+        // TODO PURCHASE: return purchased tours using a PurchasesClient, not all published!!!!
+        return tourRepository.findByStatus(TourStatus.PUBLISHED)
+                .stream()
+                .map(this::mapToResponse)
+                .toList();
+    }
+
     private TourResponse mapToResponse(Tour tour){
         return new TourResponse(
                 tour.getId(),
