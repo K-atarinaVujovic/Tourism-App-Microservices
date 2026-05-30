@@ -10,6 +10,7 @@ import ProfilePage from '@/pages/ProfilePage.tsx';
 import AdminPage from '@/pages/AdminPage.tsx';
 import ToursPage from "@/pages/ToursPage.tsx";
 import TourDetailPage from "@/pages/ToursDetailPage.tsx";
+import TouristToursPage from '@/pages/TouristToursPage.tsx';
 import BlogListPage from '@/pages/BlogListPage.tsx';
 import CreateBlogPage from '@/pages/CreateBlogPage.tsx';
 import BlogPage from '@/pages/BlogPage.tsx';
@@ -59,6 +60,10 @@ export const router = createBrowserRouter([
       {
         path: 'tours/',
         element: <ToursPage />,
+      },
+      {
+        path: 'tourist/tours',
+        element: <TouristToursPage />,
       },
       {
         path: 'tours/:id',

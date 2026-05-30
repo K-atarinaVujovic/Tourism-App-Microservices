@@ -46,8 +46,11 @@ export interface Tour {
     description: string;
     difficulty: TourDifficulty;
     tags: string[];
-    status: 'DRAFT' | 'PUBLISHED';
+    status: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
     price: number;
+    lengthInKm?: number;
+    publishedAt?: string;
+    archivedAt?: string;
     keypoints?: Keypoint[];
 }
 
@@ -71,3 +74,33 @@ export interface CreateReviewPayload {
     visitedAt: string;    // "YYYY-MM-DD"
     imageUrls?: string[];
 }
+
+// ── Tour Transport ───────────────────────────────────────────────────────────────
+
+export type TransportType = 'WALKING' | 'BIKE' | 'CAR';
+
+export type TourTransportTime = {
+    id: number;
+    tourId: number;
+    transportType: TransportType;
+    durationInMinutes: number;
+};
+
+export type CreateTourTransportTimePayload = {
+    transportType: TransportType;
+    durationInMinutes: number;
+};
+
+// ── Tour Preview for Tourist ───────────────────────────────────────────────────────────────
+
+export type PublishedTourPreview = {
+    id: number;
+    name: string;
+    description: string;
+    difficulty: TourDifficulty;
+    tags: string[];
+    price: number;
+    lengthInKm?: number;
+    firstKeyPoint?: Keypoint | null;
+    transportTimes: TourTransportTime[];
+};

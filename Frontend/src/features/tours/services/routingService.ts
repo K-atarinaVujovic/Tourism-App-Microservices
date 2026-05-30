@@ -6,8 +6,18 @@ import type { LatLng } from '@/store/positionStore';
 // Docs: http://project-osrm.org/docs/v5.24.0/api/
 const OSRM_BASE = 'https://router.project-osrm.org/route/v1/driving';
 
-export async function fetchRoute(waypoints: LatLng[]): Promise<[number, number][]> {
-    if (waypoints.length < 2) return [];
+export type RouteResult = {
+    lengthInKm: number;
+    routeCoordinates: [number, number][];
+};
+
+export async function fetchRoute(waypoints: LatLng[]): Promise<RouteResult> {
+    if (waypoints.length < 2){
+        return {
+            lengthInKm: 0,
+            routeCoordinates: [],
+        };
+    }
 
     // OSRM expects coordinates as a semicolon-separated list of "lng,lat" pairs
     const coords = waypoints.map(({ lat, lng }) => `${lng},${lat}`).join(';');
@@ -23,7 +33,15 @@ export async function fetchRoute(waypoints: LatLng[]): Promise<[number, number][
         throw new Error(`OSRM returned no route: ${data.code}`);
     }
 
+    const distanceInMeters = data.routes[0].distance;
+    const lengthInKm = Math.round((distanceInMeters / 1000) * 100) / 100;
+
     // GeoJSON geometry coordinates are [lng, lat] — flip to [lat, lng] for Leaflet
     const coords2d = data.routes[0].geometry.coordinates as [number, number][];
-    return coords2d.map(([lng, lat]) => [lat, lng]);
+    const routeCoordinates = coords2d.map(([lng, lat]) => [lat, lng] as [number, number]);
+
+    return {
+        lengthInKm,
+        routeCoordinates,
+    };
 }

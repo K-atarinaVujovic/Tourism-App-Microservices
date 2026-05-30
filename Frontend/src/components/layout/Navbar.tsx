@@ -10,6 +10,7 @@ import {
 } from '../molecules/navigation-menu.tsx';
 import { logoutUser } from '../../features/auth/services/authService';
 import { useAuthStore } from '../../store/authStore';
+import { useProfile } from "@/features/stakeholders/hooks/useProfile";
 
 // ---------------------------------------------------------------------------
 // Navbar
@@ -20,26 +21,28 @@ export default function Navbar() {
   // const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const { user, isAuthenticated } = useAuthStore();
 
- const navItems = [
-      { path: "/home", label: "Home", icon: LayoutDashboard, requiresAuth: null, requiresAdmin: false },
-      { path: "/admin/users", label: "Users", icon: PersonStanding, requiresAuth: true, requiresAdmin: true },
-      { path: "/login", label: "Log in", icon: Shield, requiresAuth: false, requiresAdmin: false },
-      { path: `/profile/${user?.id}`, label: "My Profile", icon: Wheat, requiresAuth: true, requiresAdmin: false },
-      { path: "/tours/create", label: "Create Tour", icon: PlusCircle, requiresAuth: true, requiresAdmin: false },
-      { path: "/map", label: "Map", icon: Map, requiresAuth: true, requiresAdmin: false },
-      { path: "/tours", label: "Tours", icon: Route, requiresAuth: true, requiresAdmin: false },
-      { path: "/blogs", label: "Blogs", icon: BookOpen, requiresAuth: true },
-      { path: "/blogs/create", label: "Create Blog", icon: PenLine, requiresAuth: true },
-];
+  const { data: profile } = useProfile(user?.id ?? 0);
+  const authRole = user?.role?.toLowerCase();
+  const profileRole = profile?.role?.toLowerCase();
+  const isAdmin = authRole === "admin";
+  const isAuthor = profileRole === "author";
+  const isTourist = !isAdmin && profileRole === "tourist";
 
 
-  // Decides which navbar items are visible depending on whether the user is logged in or not
-  const visibleItems = navItems.filter(({ requiresAuth, requiresAdmin }) => {
-    if (requiresAdmin && user?.role !== "admin") return false;
-    if (requiresAuth === null) return true;
-    if (requiresAuth === true) return isAuthenticated && !!user?.id;
-    if (requiresAuth === false) return !isAuthenticated;
-  });
+
+  const navItems = [
+      { path: "/home", label: "Home", icon: LayoutDashboard, show: true },
+      { path: "/admin/users", label: "Users", icon: PersonStanding, show: isAuthenticated && isAdmin },
+      { path: "/login", label: "Log in", icon: Shield, show: !isAuthenticated },
+      { path: `/profile/${user?.id}`, label: "My Profile", icon: Wheat, show: isAuthenticated && !isAdmin },
+      { path: "/tours/create", label: "Create Tour", icon: PlusCircle, show: isAuthenticated && isAuthor },
+      { path: "/map", label: "Map", icon: Map, show: isAuthenticated && !isAdmin },
+      { path: "/tours", label: "My Tours", icon: Route, show: isAuthenticated && isAuthor },
+      { path: "/tourist/tours", label: "Tours", icon: Route, show: isAuthenticated && isTourist },
+      { path: "/blogs", label: "Blogs", icon: BookOpen, show: isAuthenticated && !isAdmin },
+      { path: "/blogs/create", label: "Create Blog", icon: PenLine, show: isAuthenticated && !isAdmin },
+  ];
+  const visibleItems = navItems.filter((item) => item.show);
 
   const handleLogout = () => {
     logoutUser();

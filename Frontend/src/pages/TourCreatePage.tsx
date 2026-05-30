@@ -15,7 +15,9 @@ const tourSchema = z.object({
     name: z.string().min(1, 'Tour name is required').max(100, 'Max 100 characters'),
     description: z.string().min(1, 'Description is required').max(500, 'Max 500 characters'),
     difficulty: z.enum(['EASY', 'MEDIUM', 'HARD']),
-    tags: z.string(),
+    tags: z.string()
+        .trim()
+        .min(1, 'At least one tag is required'),
 });
 
 type TourFormValues = z.infer<typeof tourSchema>;
@@ -38,10 +40,16 @@ export default function TourCreatePage() {
     const {
         register,
         handleSubmit,
-        formState: { errors },
+        formState: { errors, isValid },
     } = useForm<TourFormValues>({
         resolver: zodResolver(tourSchema),
-        defaultValues: { difficulty: 'EASY', tags: '' },
+        mode: 'onChange',
+        defaultValues: {
+            name: '',
+            description: '',
+            difficulty: 'EASY',
+            tags: '',
+        },
     });
 
     const onSubmit = async (values: TourFormValues) => {
@@ -149,6 +157,9 @@ export default function TourCreatePage() {
                                 'transition-colors'
                             )}
                         />
+                        {errors.tags && (
+                            <p className="text-xs text-red-500">{errors.tags.message}</p>
+                        )}
                     </div>
 
                     {/* Error */}
@@ -163,7 +174,7 @@ export default function TourCreatePage() {
                     <div className="flex gap-3 pt-1">
                         <button
                             type="submit"
-                            disabled={isSaving}
+                            disabled={isSaving || !isValid}
                             className={cn(
                                 'flex items-center gap-2 rounded-md px-5 py-2 text-sm font-medium',
                                 'bg-(--accent) text-white hover:opacity-90 transition-opacity',
