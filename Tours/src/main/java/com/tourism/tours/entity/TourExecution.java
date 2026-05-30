@@ -3,6 +3,7 @@ package com.tourism.tours.entity;
 import com.tourism.tours.dto.CheckLocationResult;
 import com.tourism.tours.dto.KeyPointCoordinates;
 import com.tourism.tours.enums.TourExecutionStatus;
+import com.tourism.tours.enums.TourStatus;
 import com.tourism.tours.exception.BadRequestException;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -41,6 +42,10 @@ public class TourExecution {
     private List<KeyPointProgress> keyPointProgresses = new ArrayList<>();
 
     public TourExecution(Long touristId, Tour tour){
+        if(tour.getStatus() == TourStatus.DRAFT){
+            throw new BadRequestException("Can't start a tour that's in draft!! No cheating!!!");
+        }
+        // TODO: add purchase check
         this.tour = tour;
         this.touristId = touristId;
         lastActivity = LocalDateTime.now();
