@@ -4,6 +4,7 @@ import { tourService } from '../services/tourService';
 export const tourKeys = {
     all: ['tours'] as const,
     published: ['tours', 'published'] as const,
+    purchased: ['tours', 'purchased'] as const,
     lists: () => [...tourKeys.all, 'list'] as const,
     myList: () => [...tourKeys.all, 'my'] as const,
     detail: (id: number) => [...tourKeys.all, id] as const,
@@ -115,5 +116,12 @@ export function usePublishedTourPreviews() {
     return useQuery({
         queryKey: tourKeys.published,
         queryFn: tourService.getPublishedPreviews,
+    });
+}
+
+export function usePurchasedTours() {
+    return useQuery({
+        queryKey: tourKeys.purchased,
+        queryFn: tourService.getPurchasedTours,
     });
 }

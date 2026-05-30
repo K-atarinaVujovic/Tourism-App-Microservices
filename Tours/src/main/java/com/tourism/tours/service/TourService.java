@@ -9,12 +9,14 @@ import com.tourism.tours.repository.TourRepository;
 import com.tourism.tours.repository.TourTransportTimeRepository;
 import com.tourism.tours.security.CurrentUser;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import com.tourism.tours.entity.TourTransportTime;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class TourService {
@@ -42,6 +44,8 @@ public class TourService {
         tour.setPrice(0);
 
         Tour saved = tourRepository.save(tour);
+
+        log.info("Tour {} created", saved.getId());
         return mapToResponse(saved);
     }
 
@@ -63,6 +67,14 @@ public class TourService {
         return tourRepository.findById(id)
                 .map(this::mapToResponse)
                 .orElseThrow(() -> new RuntimeException("Tour not found"));
+    }
+
+    public List<TourResponse> getPurchasedTours(Long userId){
+        // TODO PURCHASE: return purchased tours using a PurchasesClient, not all published!!!!
+        return tourRepository.findByStatus(TourStatus.PUBLISHED)
+                .stream()
+                .map(this::mapToResponse)
+                .toList();
     }
 
     private TourResponse mapToResponse(Tour tour){
@@ -205,7 +217,7 @@ public class TourService {
     private KeyPointResponse mapKeyPointToResponse(KeyPoint keyPoint) {
         return new KeyPointResponse(
                 keyPoint.getId(),
-                keyPoint.getTourId(),
+                keyPoint.getTour().getId(),
                 keyPoint.getName(),
                 keyPoint.getDescription(),
                 keyPoint.getType(),

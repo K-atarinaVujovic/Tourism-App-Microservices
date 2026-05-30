@@ -15,6 +15,8 @@ import BlogListPage from '@/pages/BlogListPage.tsx';
 import CreateBlogPage from '@/pages/CreateBlogPage.tsx';
 import BlogPage from '@/pages/BlogPage.tsx';
 import FollowersPage from '@/pages/FollowersPage.tsx';
+import PurchasedToursPage from '@/pages/PurchasedToursPage.tsx';
+import ActiveTourPage from '@/pages/ActiveTourPage.tsx';
 
 export const router = createBrowserRouter([
   {
@@ -79,7 +81,13 @@ export const router = createBrowserRouter([
         element: <BlogPage /> 
       },
       { path: "followers", 
-        element: <FollowersPage /> }
+        element: <FollowersPage /> },
+      { path: "tours/purchased", 
+        element: <PurchasedToursPage /> 
+      },
+      { path: "tours/active", 
+        element: <ActiveTourPage /> 
+      },
     ],
   },
 ]);

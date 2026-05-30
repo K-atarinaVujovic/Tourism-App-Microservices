@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from "react-router";
-import { LogOut } from 'lucide-react';
+import { BadgeDollarSign, LogOut, MapIcon } from 'lucide-react';
 import { cn } from "../../lib/utils.ts";
 import { BookOpen, Map, PlusCircle, LayoutDashboard, PenLine, PersonStanding, Shield, Wheat, Route } from "lucide-react";
 import {
@@ -36,11 +36,12 @@ export default function Navbar() {
       { path: "/login", label: "Log in", icon: Shield, show: !isAuthenticated },
       { path: `/profile/${user?.id}`, label: "My Profile", icon: Wheat, show: isAuthenticated && !isAdmin },
       { path: "/tours/create", label: "Create Tour", icon: PlusCircle, show: isAuthenticated && isAuthor },
-      { path: "/map", label: "Map", icon: Map, show: isAuthenticated && !isAdmin },
       { path: "/tours", label: "My Tours", icon: Route, show: isAuthenticated && isAuthor },
       { path: "/tourist/tours", label: "Tours", icon: Route, show: isAuthenticated && isTourist },
       { path: "/blogs", label: "Blogs", icon: BookOpen, show: isAuthenticated && !isAdmin },
       { path: "/blogs/create", label: "Create Blog", icon: PenLine, show: isAuthenticated && !isAdmin },
+      { path: "/tours/purchased", label: "Purchased Tours", icon: BadgeDollarSign, show: isAuthenticated && isTourist },
+      { path: "/tours/active", label: "Active Tour", icon: MapIcon, show: isAuthenticated && isTourist },
   ];
   const visibleItems = navItems.filter((item) => item.show);
 
