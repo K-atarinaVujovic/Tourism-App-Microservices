@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -26,6 +27,17 @@ type OrchestratorServer struct {
 	sagas      *SagaStore
 }
 
+type StakeholderRole string
+
+const (
+	RoleTourist StakeholderRole = "tourist"
+	RoleGuide   StakeholderRole = "guide"
+)
+
+func (r StakeholderRole) isValid() bool {
+	return r == RoleTourist || r == RoleGuide
+}
+
 // RegistrationRequest is what the client sends to the orchestrator.
 // It combines the fields needed by both downstream services.
 type RegistrationRequest struct {
@@ -34,9 +46,10 @@ type RegistrationRequest struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
 	// Stakeholder service fields
-	Name     string  `json:"name"`
-	Lastname *string `json:"lastname,omitempty"`
-	ImageURL *string `json:"image_url,omitempty"`
+	Name     string          `json:"name"`
+	Lastname *string         `json:"lastname,omitempty"`
+	ImageURL *string         `json:"image_url,omitempty"`
+	Role     StakeholderRole `json:"role"`
 }
 
 // RegistrationResponse is returned to the client on full success.
@@ -94,6 +107,12 @@ func (s *OrchestratorServer) registerHandler(w http.ResponseWriter, r *http.Requ
 
 	if req.Username == "" || req.Email == "" || req.Password == "" || req.Name == "" {
 		writeError(w, http.StatusBadRequest, "username, email, password and name are required")
+		return
+	}
+
+	if !req.Role.isValid() {
+		writeError(w, http.StatusBadRequest,
+			fmt.Sprintf("role must be one of: %q, %q", RoleTourist, RoleGuide))
 		return
 	}
 

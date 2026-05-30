@@ -133,11 +133,11 @@ type authRegisterResponse struct {
 
 // stakeholderCreateRequest matches profile.py ProfileCreate schema
 type stakeholderCreateRequest struct {
-	UserID   int64   `json:"user_id"`
-	Name     string  `json:"name"`
-	Lastname *string `json:"lastname,omitempty"`
-	ImageURL *string `json:"imageUrl,omitempty"`
-	Role     string  `json:"role"`
+	UserID   int64           `json:"user_id"`
+	Name     string          `json:"name"`
+	Lastname *string         `json:"lastname,omitempty"`
+	ImageURL *string         `json:"imageUrl,omitempty"`
+	Role     StakeholderRole `json:"role"`
 }
 
 // stakeholderCreateResponse matches profile.py ProfileResponse schema
@@ -305,7 +305,7 @@ func (s *OrchestratorServer) callStakeholderCreate(
 		Name:     payload.Name,
 		Lastname: payload.Lastname,
 		ImageURL: payload.ImageURL,
-		Role:     authResp.Role,
+		Role:     payload.Role,
 	})
 
 	resp, err := s.doPost(ctx, s.config.StakeholderServiceURL+"/profiles/create", body, false)
