@@ -1,0 +1,135 @@
+package main
+
+import (
+	"encoding/json"
+	"log"
+	"net/http"
+	"os"
+	"time"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/joho/godotenv"
+)
+
+// Config holds all service URLs and secrets loaded from environment variables.
+// In Docker, set these via the `environment:` block in docker-compose.yml.
+type Config struct {
+	AuthServiceURL        string // e.g. http://auth-service:8080
+	StakeholderServiceURL string // e.g. http://stakeholder-service:8081
+	InternalSecret        string // Shared secret for internal compensation calls
+	Port                  string
+}
+
+type OrchestratorServer struct {
+	config     Config
+	httpClient *http.Client
+	sagas      *SagaStore
+}
+
+// RegistrationRequest is what the client sends to the orchestrator.
+// It combines the fields needed by both downstream services.
+type RegistrationRequest struct {
+	// Auth service fields
+	Username string `json:"username"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
+	// Stakeholder service fields
+	Name     string  `json:"name"`
+	Lastname *string `json:"lastname,omitempty"`
+	ImageURL *string `json:"image_url,omitempty"`
+}
+
+// RegistrationResponse is returned to the client on full success.
+type RegistrationResponse struct {
+	UserID    int64  `json:"user_id"`
+	Username  string `json:"username"`
+	Email     string `json:"email"`
+	Role      string `json:"role"`
+	Token     string `json:"token"`
+	ProfileID string `json:"profile_id"`
+	SagaID    string `json:"saga_id"`
+}
+
+func main() {
+	if os.Getenv("USE_CONFIG_FILE") == "true" {
+		log.Println("Loading config from .env file")
+		if err := godotenv.Load(); err != nil {
+			log.Println("No .env file found, falling back to environment variables")
+		}
+	}
+
+	cfg := Config{
+		AuthServiceURL:        mustEnv("AUTH_SERVICE_URL"),
+		StakeholderServiceURL: mustEnv("STAKEHOLDER_SERVICE_URL"),
+		InternalSecret:        mustEnv("INTERNAL_SECRET"),
+		Port:                  getEnv("PORT", "8082"),
+	}
+
+	srv := &OrchestratorServer{
+		config: cfg,
+		httpClient: &http.Client{
+			Timeout: 10 * time.Second,
+		},
+		sagas: NewSagaStore(),
+	}
+
+	router := chi.NewRouter()
+	router.Get("/health", srv.healthHandler)
+	router.Post("/register", srv.registerHandler)
+
+	log.Printf("Saga orchestrator listening on :%s", cfg.Port)
+	log.Fatal(http.ListenAndServe(":"+cfg.Port, router))
+}
+
+func (s *OrchestratorServer) healthHandler(w http.ResponseWriter, r *http.Request) {
+	writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
+}
+
+func (s *OrchestratorServer) registerHandler(w http.ResponseWriter, r *http.Request) {
+	var req RegistrationRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid json body")
+		return
+	}
+
+	if req.Username == "" || req.Email == "" || req.Password == "" || req.Name == "" {
+		writeError(w, http.StatusBadRequest, "username, email, password and name are required")
+		return
+	}
+
+	result, sagaErr := s.runRegistrationSaga(r.Context(), req)
+	if sagaErr != nil {
+		log.Printf("[SAGA] Registration failed: %v (saga_id=%s)", sagaErr.err, sagaErr.sagaID)
+		writeError(w, sagaErr.statusCode, sagaErr.err.Error())
+		return
+	}
+
+	writeJSON(w, http.StatusCreated, result)
+}
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
+func mustEnv(key string) string {
+	v := os.Getenv(key)
+	if v == "" {
+		log.Fatalf("Environment variable %s is required", key)
+	}
+	return v
+}
+
+func getEnv(key, fallback string) string {
+	if v := os.Getenv(key); v != "" {
+		return v
+	}
+	return fallback
+}
+
+func writeJSON(w http.ResponseWriter, status int, payload any) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	_ = json.NewEncoder(w).Encode(payload)
+}
+
+func writeError(w http.ResponseWriter, status int, message string) {
+	writeJSON(w, status, map[string]string{"error": message})
+}

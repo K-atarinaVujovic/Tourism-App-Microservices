@@ -21,9 +21,10 @@ import (
 )
 
 type Server struct {
-	db        *pgx.Conn
-	jwtSecret []byte
-	tokenTTL  time.Duration
+	db             *pgx.Conn
+	jwtSecret      []byte
+	tokenTTL       time.Duration
+	internalSecret string
 }
 
 type LoginRequest struct {
@@ -98,6 +99,11 @@ func main() {
 		log.Fatal("JWT_SECRET is required")
 	}
 
+	internalSecret := os.Getenv("INTERNAL_SECRET")
+	if internalSecret == "" {
+		log.Fatal("INTERNAL_SECRET is required")
+	}
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
@@ -117,9 +123,10 @@ func main() {
 	log.Printf("Database ping successful!")
 
 	srv := &Server{
-		db:        conn,
-		jwtSecret: []byte(jwtSecret),
-		tokenTTL:  24 * time.Hour,
+		db:             conn,
+		jwtSecret:      []byte(jwtSecret),
+		tokenTTL:       24 * time.Hour,
+		internalSecret: internalSecret,
 	}
 
 	router := chi.NewRouter()
@@ -133,6 +140,9 @@ func main() {
 	router.Get("/admin/users", srv.requireAuth(srv.requireAdmin(srv.getAllUsersHandler)))
 	router.Post("/admin/users/block", srv.requireAuth(srv.requireAdmin(srv.blockUserHandler)))
 	router.Post("/admin/users/unblock", srv.requireAuth(srv.requireAdmin(srv.unblockUserHandler)))
+
+	// SAGA routes (require internal secret)
+	router.Delete("/internal/users/{id}", srv.requireInternalSecret(srv.deleteUserHandler))
 
 	log.Printf("Auth server listening on :%s", port)
 	log.Fatal(http.ListenAndServe(":"+port, router))
@@ -417,6 +427,19 @@ func (s *Server) requireAdmin(next http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
+// Middleware for internal service calls
+
+func (s *Server) requireInternalSecret(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		secret := r.Header.Get("X-Internal-Secret")
+		if secret == "" || secret != s.internalSecret {
+			writeError(w, http.StatusUnauthorized, "unauthorized")
+			return
+		}
+		next.ServeHTTP(w, r)
+	}
+}
+
 func (s *Server) blockUserHandler(w http.ResponseWriter, r *http.Request) {
 	claims := r.Context().Value("claims").(*Claims)
 
@@ -538,6 +561,38 @@ func (s *Server) getAllUsersHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusOK, users)
+}
+
+// function only for SAGA compensation
+func (s *Server) deleteUserHandler(w http.ResponseWriter, r *http.Request) {
+	idStr := chi.URLParam(r, "id")
+	userID, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil || userID == 0 {
+		writeError(w, http.StatusBadRequest, "invalid user id")
+		return
+	}
+
+	result, err := s.db.Exec(r.Context(),
+		`DELETE FROM users WHERE id = $1`,
+		userID,
+	)
+	if err != nil {
+		log.Printf("[COMPENSATION] Failed to delete user %d: %v", userID, err)
+		writeError(w, http.StatusInternalServerError, "failed to delete user")
+		return
+	}
+
+	// Idempotent: if already deleted, that's fine, the goal is already achieved.
+	if result.RowsAffected() == 0 {
+		log.Printf("[COMPENSATION] User %d already absent — idempotent success", userID)
+	} else {
+		log.Printf("[COMPENSATION] Deleted auth account for user_id=%d", userID)
+	}
+
+	writeJSON(w, http.StatusOK, map[string]any{
+		"message": "user deleted",
+		"user_id": userID,
+	})
 }
 
 func writeJSON(w http.ResponseWriter, status int, payload any) {
