@@ -84,6 +84,7 @@ services:
       PORT: 8081
       DATABASE_URL: postgres://tourism-app:admin123@auth-db:5432/tourism-auth?sslmode=disable
       JWT_SECRET: super-secret-change-me
+      INTERNAL_SECRET: super-internal-secret-change-me
     ports:
       - "8081:8081"
     networks:
@@ -201,6 +202,28 @@ services:
     restart: unless-stopped
     networks:
       - follower-network
+
+  saga-orchestrator:
+    build:
+      context: ./Orchestrator
+      dockerfile: Dockerfile
+    container_name: saga-orchestrator
+    restart: on-failure
+    ports:
+      - "8085:8085"
+    environment:
+      USE_CONFIG_FILE: "false"
+      PORT: 8085
+      AUTH_SERVICE_URL: http://auth:8081
+      STAKEHOLDER_SERVICE_URL: http://stakeholders:8082
+      # Must match INTERNAL_SECRET in the auth service
+      INTERNAL_SECRET: super-internal-secret-change-me
+    depends_on:
+      - auth
+      - stakeholders
+    networks:
+      - service-network
+
 
 volumes:
   blog-db-data:
