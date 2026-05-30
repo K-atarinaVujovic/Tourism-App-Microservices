@@ -7,9 +7,9 @@ import "google/api/annotations.proto";
 option go_package = "gateway/proto/tours;tourspb";
 
 service TourGrpcService {
-  rpc GetAllTours(GetAllToursRequest) returns (TourListResponse) {
+  rpc GetMyTours(GetMyToursRequest) returns (TourListResponse) {
     option (google.api.http) = {
-      get: "/tours"
+      get: "/tours/my"
     };
   }
 
@@ -21,7 +21,8 @@ service TourGrpcService {
   }
 }
 
-message GetAllToursRequest {
+message GetMyToursRequest {
+  string authorization = 1;
 }
 
 message CreateTourGrpcRequest {

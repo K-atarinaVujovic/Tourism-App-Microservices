@@ -7,11 +7,13 @@ option java_package = "com.tourism.tours.grpc.generated";
 option java_outer_classname = "ToursProto";
 
 service TourGrpcService{
-  rpc GetAllTours(GetAllToursRequest) returns (TourListResponse);
+  rpc GetMyTours(GetMyToursRequest) returns (TourListResponse);
   rpc CreateTour(CreateTourGrpcRequest) returns (TourGrpcResponse);
 }
 
-message GetAllToursRequest{}
+message GetMyToursRequest {
+  string authorization = 1;
+}
 
 message CreateTourGrpcRequest{
   string authorization = 1;

@@ -19,15 +19,15 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	TourGrpcService_GetAllTours_FullMethodName = "/tours.TourGrpcService/GetAllTours"
-	TourGrpcService_CreateTour_FullMethodName  = "/tours.TourGrpcService/CreateTour"
+	TourGrpcService_GetMyTours_FullMethodName = "/tours.TourGrpcService/GetMyTours"
+	TourGrpcService_CreateTour_FullMethodName = "/tours.TourGrpcService/CreateTour"
 )
 
 // TourGrpcServiceClient is the client API for TourGrpcService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type TourGrpcServiceClient interface {
-	GetAllTours(ctx context.Context, in *GetAllToursRequest, opts ...grpc.CallOption) (*TourListResponse, error)
+	GetMyTours(ctx context.Context, in *GetMyToursRequest, opts ...grpc.CallOption) (*TourListResponse, error)
 	CreateTour(ctx context.Context, in *CreateTourGrpcRequest, opts ...grpc.CallOption) (*TourGrpcResponse, error)
 }
 
@@ -39,10 +39,10 @@ func NewTourGrpcServiceClient(cc grpc.ClientConnInterface) TourGrpcServiceClient
 	return &tourGrpcServiceClient{cc}
 }
 
-func (c *tourGrpcServiceClient) GetAllTours(ctx context.Context, in *GetAllToursRequest, opts ...grpc.CallOption) (*TourListResponse, error) {
+func (c *tourGrpcServiceClient) GetMyTours(ctx context.Context, in *GetMyToursRequest, opts ...grpc.CallOption) (*TourListResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(TourListResponse)
-	err := c.cc.Invoke(ctx, TourGrpcService_GetAllTours_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, TourGrpcService_GetMyTours_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -63,7 +63,7 @@ func (c *tourGrpcServiceClient) CreateTour(ctx context.Context, in *CreateTourGr
 // All implementations must embed UnimplementedTourGrpcServiceServer
 // for forward compatibility.
 type TourGrpcServiceServer interface {
-	GetAllTours(context.Context, *GetAllToursRequest) (*TourListResponse, error)
+	GetMyTours(context.Context, *GetMyToursRequest) (*TourListResponse, error)
 	CreateTour(context.Context, *CreateTourGrpcRequest) (*TourGrpcResponse, error)
 	mustEmbedUnimplementedTourGrpcServiceServer()
 }
@@ -75,8 +75,8 @@ type TourGrpcServiceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedTourGrpcServiceServer struct{}
 
-func (UnimplementedTourGrpcServiceServer) GetAllTours(context.Context, *GetAllToursRequest) (*TourListResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method GetAllTours not implemented")
+func (UnimplementedTourGrpcServiceServer) GetMyTours(context.Context, *GetMyToursRequest) (*TourListResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetMyTours not implemented")
 }
 func (UnimplementedTourGrpcServiceServer) CreateTour(context.Context, *CreateTourGrpcRequest) (*TourGrpcResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method CreateTour not implemented")
@@ -102,20 +102,20 @@ func RegisterTourGrpcServiceServer(s grpc.ServiceRegistrar, srv TourGrpcServiceS
 	s.RegisterService(&TourGrpcService_ServiceDesc, srv)
 }
 
-func _TourGrpcService_GetAllTours_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetAllToursRequest)
+func _TourGrpcService_GetMyTours_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetMyToursRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(TourGrpcServiceServer).GetAllTours(ctx, in)
+		return srv.(TourGrpcServiceServer).GetMyTours(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: TourGrpcService_GetAllTours_FullMethodName,
+		FullMethod: TourGrpcService_GetMyTours_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TourGrpcServiceServer).GetAllTours(ctx, req.(*GetAllToursRequest))
+		return srv.(TourGrpcServiceServer).GetMyTours(ctx, req.(*GetMyToursRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -146,8 +146,8 @@ var TourGrpcService_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*TourGrpcServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "GetAllTours",
-			Handler:    _TourGrpcService_GetAllTours_Handler,
+			MethodName: "GetMyTours",
+			Handler:    _TourGrpcService_GetMyTours_Handler,
 		},
 		{
 			MethodName: "CreateTour",

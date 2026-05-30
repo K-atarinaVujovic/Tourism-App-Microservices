@@ -20,14 +20,24 @@ public class TourGrpcServiceImpl extends TourGrpcServiceGrpc.TourGrpcServiceImpl
     private final AuthService authService;
 
     @Override
-    public void getAllTours(GetAllToursRequest request, StreamObserver<TourListResponse> responseObserver) {
-        TourListResponse.Builder response = TourListResponse.newBuilder();
+    public void getMyTours(GetMyToursRequest request, StreamObserver<TourListResponse> responseObserver) {
+        try {
+            CurrentUser user = authService.getCurrentUser(request.getAuthorization());
 
-        tourService.getAllTours()
-                .forEach(tour -> response.addTours(mapToGrpcResponse(tour)));
+            TourListResponse.Builder response = TourListResponse.newBuilder();
 
-        responseObserver.onNext(response.build());
-        responseObserver.onCompleted();
+            tourService.getMyTours(user)
+                    .forEach(tour -> response.addTours(mapToGrpcResponse(tour)));
+
+            responseObserver.onNext(response.build());
+            responseObserver.onCompleted();
+        } catch (RuntimeException e) {
+            responseObserver.onError(
+                    Status.PERMISSION_DENIED
+                            .withDescription(e.getMessage())
+                            .asRuntimeException()
+            );
+        }
     }
 
     @Override

@@ -22,26 +22,27 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-type GetAllToursRequest struct {
+type GetMyToursRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
+	Authorization string                 `protobuf:"bytes,1,opt,name=authorization,proto3" json:"authorization,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *GetAllToursRequest) Reset() {
-	*x = GetAllToursRequest{}
+func (x *GetMyToursRequest) Reset() {
+	*x = GetMyToursRequest{}
 	mi := &file_tours_tours_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *GetAllToursRequest) String() string {
+func (x *GetMyToursRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetAllToursRequest) ProtoMessage() {}
+func (*GetMyToursRequest) ProtoMessage() {}
 
-func (x *GetAllToursRequest) ProtoReflect() protoreflect.Message {
+func (x *GetMyToursRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_tours_tours_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -53,9 +54,16 @@ func (x *GetAllToursRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetAllToursRequest.ProtoReflect.Descriptor instead.
-func (*GetAllToursRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use GetMyToursRequest.ProtoReflect.Descriptor instead.
+func (*GetMyToursRequest) Descriptor() ([]byte, []int) {
 	return file_tours_tours_proto_rawDescGZIP(), []int{0}
+}
+
+func (x *GetMyToursRequest) GetAuthorization() string {
+	if x != nil {
+		return x.Authorization
+	}
+	return ""
 }
 
 type CreateTourGrpcRequest struct {
@@ -290,8 +298,9 @@ var File_tours_tours_proto protoreflect.FileDescriptor
 
 const file_tours_tours_proto_rawDesc = "" +
 	"\n" +
-	"\x11tours/tours.proto\x12\x05tours\x1a\x1cgoogle/api/annotations.proto\"\x14\n" +
-	"\x12GetAllToursRequest\"\xa7\x01\n" +
+	"\x11tours/tours.proto\x12\x05tours\x1a\x1cgoogle/api/annotations.proto\"9\n" +
+	"\x11GetMyToursRequest\x12$\n" +
+	"\rauthorization\x18\x01 \x01(\tR\rauthorization\"\xa7\x01\n" +
 	"\x15CreateTourGrpcRequest\x12$\n" +
 	"\rauthorization\x18\x01 \x01(\tR\rauthorization\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12 \n" +
@@ -313,9 +322,10 @@ const file_tours_tours_proto_rawDesc = "" +
 	"difficulty\x12\x12\n" +
 	"\x04tags\x18\a \x03(\tR\x04tags\x12\x16\n" +
 	"\x06status\x18\b \x01(\tR\x06status\x12\x14\n" +
-	"\x05price\x18\t \x01(\x01R\x05price2\xbc\x01\n" +
-	"\x0fTourGrpcService\x12Q\n" +
-	"\vGetAllTours\x12\x19.tours.GetAllToursRequest\x1a\x17.tours.TourListResponse\"\x0e\x82\xd3\xe4\x93\x02\b\x12\x06/tours\x12V\n" +
+	"\x05price\x18\t \x01(\x01R\x05price2\xbd\x01\n" +
+	"\x0fTourGrpcService\x12R\n" +
+	"\n" +
+	"GetMyTours\x12\x18.tours.GetMyToursRequest\x1a\x17.tours.TourListResponse\"\x11\x82\xd3\xe4\x93\x02\v\x12\t/tours/my\x12V\n" +
 	"\n" +
 	"CreateTour\x12\x1c.tours.CreateTourGrpcRequest\x1a\x17.tours.TourGrpcResponse\"\x11\x82\xd3\xe4\x93\x02\v:\x01*\"\x06/toursB\x1dZ\x1bgateway/proto/tours;tourspbb\x06proto3"
 
@@ -333,16 +343,16 @@ func file_tours_tours_proto_rawDescGZIP() []byte {
 
 var file_tours_tours_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
 var file_tours_tours_proto_goTypes = []any{
-	(*GetAllToursRequest)(nil),    // 0: tours.GetAllToursRequest
+	(*GetMyToursRequest)(nil),     // 0: tours.GetMyToursRequest
 	(*CreateTourGrpcRequest)(nil), // 1: tours.CreateTourGrpcRequest
 	(*TourListResponse)(nil),      // 2: tours.TourListResponse
 	(*TourGrpcResponse)(nil),      // 3: tours.TourGrpcResponse
 }
 var file_tours_tours_proto_depIdxs = []int32{
 	3, // 0: tours.TourListResponse.tours:type_name -> tours.TourGrpcResponse
-	0, // 1: tours.TourGrpcService.GetAllTours:input_type -> tours.GetAllToursRequest
+	0, // 1: tours.TourGrpcService.GetMyTours:input_type -> tours.GetMyToursRequest
 	1, // 2: tours.TourGrpcService.CreateTour:input_type -> tours.CreateTourGrpcRequest
-	2, // 3: tours.TourGrpcService.GetAllTours:output_type -> tours.TourListResponse
+	2, // 3: tours.TourGrpcService.GetMyTours:output_type -> tours.TourListResponse
 	3, // 4: tours.TourGrpcService.CreateTour:output_type -> tours.TourGrpcResponse
 	3, // [3:5] is the sub-list for method output_type
 	1, // [1:3] is the sub-list for method input_type
