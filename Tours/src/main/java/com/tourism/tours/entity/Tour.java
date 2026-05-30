@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.ArrayList;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
@@ -46,4 +47,10 @@ public class Tour {
 
     @OneToMany(mappedBy = "tour", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<KeyPoint> keypoints = new ArrayList<>();
+
+    private Double lengthInKm;
+
+    private LocalDateTime publishedAt;
+
+    private LocalDateTime archivedAt;
 }
