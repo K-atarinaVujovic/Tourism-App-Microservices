@@ -1,5 +1,6 @@
 package com.tourism.tours.dto;
 
+import com.tourism.tours.entity.Tour;
 import com.tourism.tours.enums.TourExecutionStatus;
 
 import java.time.LocalDateTime;
@@ -11,5 +12,6 @@ public record TourExecutionResponse(
         Long touristId,
         TourExecutionStatus status,
         LocalDateTime lastActivity,
-        List<KeyPointProgressResponse> keyPointProgresses
+        List<KeyPointProgressResponse> keyPointProgresses,
+        TourExecutionTourInfo tour
 ) {}

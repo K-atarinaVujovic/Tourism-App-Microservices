@@ -1,8 +1,7 @@
 package com.tourism.tours.service;
 
-import com.tourism.tours.dto.CheckLocationResult;
-import com.tourism.tours.dto.KeyPointProgressResponse;
-import com.tourism.tours.dto.TourExecutionResponse;
+import com.tourism.tours.dto.*;
+import com.tourism.tours.entity.KeyPoint;
 import com.tourism.tours.entity.Tour;
 import com.tourism.tours.entity.TourExecution;
 import com.tourism.tours.enums.TourExecutionStatus;
@@ -79,13 +78,24 @@ public class TourExecutionService {
                 ))
                 .toList();
 
+        List<KeyPointResponse> keypoints = execution.getTour().getKeypoints().stream()
+                .map(this::mapToKeyPointResponse)
+                .toList();
+
+        TourExecutionTourInfo tourInfo = new TourExecutionTourInfo(
+                execution.getTour().getId(),
+                execution.getTour().getName(),
+                keypoints
+        );
+
         return new TourExecutionResponse(
                 execution.getId(),
                 execution.getTour().getId(),
                 execution.getTouristId(),
                 execution.getStatus(),
                 execution.getLastActivity(),
-                progresses
+                progresses,
+                tourInfo
         );
     }
 
@@ -100,5 +110,18 @@ public class TourExecutionService {
         return tourExecutionRepository
                 .findByTouristIdAndStatus(touristId, TourExecutionStatus.STARTED)
                 .orElseThrow(() -> new BadRequestException("No active tour execution found"));
+    }
+
+    private KeyPointResponse mapToKeyPointResponse(KeyPoint keyPoint) {
+        return new KeyPointResponse(
+                keyPoint.getId(),
+                keyPoint.getTour().getId(),
+                keyPoint.getName(),
+                keyPoint.getDescription(),
+                keyPoint.getType(),
+                keyPoint.getImageUrl(),
+                keyPoint.getLatitude(),
+                keyPoint.getLongitude()
+        );
     }
 }
