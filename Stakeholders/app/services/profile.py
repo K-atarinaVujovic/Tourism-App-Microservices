@@ -3,6 +3,8 @@ from app.repositories.profile import ProfileRepository
 from app.schemas.profile import ProfileCreate, ProfileResponse, ProfileUpdate, BalanceResponse
 from app.core.exceptions import NotFoundException, AlreadyExistsException
 
+from fastapi import HTTPException
+
 
 class ProfileService:
   repo: ProfileRepository = ProfileRepository()
@@ -70,6 +72,8 @@ class ProfileService:
     profile = await self.repo.get_by_user_id(user_id)
     if profile is None:
       raise NotFoundException("Profile not found")
-    profile.balance = balance.balance  # extract the float
+    profile.balance += balance.balance
+    if profile.balance < 0:
+      raise HTTPException(status_code=400, detail="Balance cannot be negative")
     await profile.save()              # save directly via Beanie
     return BalanceResponse(balance=profile.balance)
