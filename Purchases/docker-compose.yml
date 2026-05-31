@@ -1,0 +1,10 @@
+services:
+  purchase-db:
+    image: mariadb:11
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: purchase
+      MYSQL_USER: purchase
+      MYSQL_PASSWORD: purchase
+    ports:
+      - "3306:3306"

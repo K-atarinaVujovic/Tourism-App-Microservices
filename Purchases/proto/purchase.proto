@@ -1,0 +1,63 @@
+syntax = "proto3";
+
+package purchase;
+option go_package = "purchase-service/pb";
+
+message OrderItemRequest {
+  string tour_id   = 1;
+  string tour_name = 2;
+  double price     = 3;
+}
+
+message OrderItemResponse {
+  string tour_id   = 1;
+  string tour_name = 2;
+  double price     = 3;
+}
+
+message AddToCartRequest {
+  string tourist_id    = 1;
+  OrderItemRequest item = 2;
+}
+
+message RemoveFromCartRequest {
+  string tourist_id = 1;
+  string tour_id    = 2;
+}
+
+message CartResponse {
+  string tourist_id            = 1;
+  repeated OrderItemResponse items = 2;
+  double total_price           = 3;
+}
+
+message CheckoutRequest {
+  string tourist_id = 1;
+}
+
+message TokenResponse {
+  string id         = 1;
+  string tourist_id = 2;
+  string tour_id    = 3;
+  string issued_at  = 4;
+}
+
+message CheckoutResponse {
+  repeated TokenResponse tokens = 1;
+}
+
+message HasPurchasedRequest {
+  string tourist_id = 1;
+  string tour_id    = 2;
+}
+
+message HasPurchasedResponse {
+  bool purchased = 1;
+}
+
+service PurchaseService {
+  rpc AddToCart(AddToCartRequest)           returns (CartResponse);
+  rpc RemoveFromCart(RemoveFromCartRequest) returns (CartResponse);
+  rpc Checkout(CheckoutRequest)             returns (CheckoutResponse);
+  rpc HasPurchased(HasPurchasedRequest)     returns (HasPurchasedResponse);
+}
