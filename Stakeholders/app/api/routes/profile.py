@@ -10,7 +10,7 @@ from fastapi.staticfiles import StaticFiles
 from app.core.database import init_db
 from app.core.exceptions import AlreadyExistsException, NotFoundException
 from app.core.security import get_current_user, decode_token
-from app.schemas.profile import ProfileCreate, ProfileResponse, ProfileUpdate
+from app.schemas.profile import ProfileCreate, ProfileResponse, ProfileUpdate, BalanceResponse
 from app.services.profile import ProfileService
 from app.services.upload import Uploader
 
@@ -46,6 +46,31 @@ async def upload_image(
 ):
   result = await uploader_service.upload_image(file)
   return result
+
+# Gets balance for own account
+@protected_router.get("/profiles/balance", response_model=BalanceResponse)
+async def get_balance(
+        current_user = Depends(get_current_user)
+) -> Any:
+  try:
+    user_id = current_user["user_id"]
+    response = await service.get_balance(user_id)
+    return response
+  except NotFoundException as e:
+    raise HTTPException(status_code=404, detail=str(e))
+
+# Update balance for own account
+@protected_router.put("/profiles/balance", response_model=BalanceResponse)
+async def update_balance(
+        balance: Annotated[BalanceResponse, Body()],
+        current_user = Depends(get_current_user),
+) -> Any:
+  try:
+    user_id = current_user["user_id"]
+    response = await service.update_balance(user_id, balance)
+    return response
+  except NotFoundException as e:
+    raise HTTPException(status_code=404, detail=str(e))
 
 @protected_router.get("/profiles/{user_id}", response_model=ProfileResponse)
 async def get_profile(

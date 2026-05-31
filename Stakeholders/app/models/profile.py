@@ -14,6 +14,7 @@ class Profile(Document):
   biography: str | None = None
   quote: str | None = None
   role: str | None = "tourist"
+  balance: float | None = 500.0
 
   user_id: Annotated[int, Indexed(unique=True)]
 
@@ -21,12 +22,13 @@ class Profile(Document):
     name = "profiles"  # collection name
 
   def __repr__(self) -> str:
-    return f"Profile:\nname={self.name}\nlastname={self.lastname}\nimageUrl={self.imageUrl}\nbiography={self.biography}\nquote={self.quote}\nrole={self.role}"
+    return f"Profile:\nname={self.name}\nlastname={self.lastname}\nimageUrl={self.imageUrl}\nbiography={self.biography}\nquote={self.quote}\nrole={self.role}\nbalance={self.balance}"
 
-  def update_fields(self, name: str | None = None, lastname: str | None = None, imageUrl: str | None = None, biography: str | None = None, quote: str | None = None) -> Self:
+  def update_fields(self, name: str | None = None, lastname: str | None = None, imageUrl: str | None = None, biography: str | None = None, quote: str | None = None, balance: float | None = None) -> Self:
     self.name = name if name is not None else self.name
     self.lastname = lastname if lastname is not None else self.lastname
     self.imageUrl = imageUrl if imageUrl is not None else self.imageUrl
     self.biography = biography if biography is not None else self.biography
     self.quote = quote if quote is not None else self.quote
+    self.balance = balance if balance is not None else self.balance
     return self
