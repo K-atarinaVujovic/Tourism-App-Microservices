@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import TourCard from '@/features/tours/components/TourCard';
-import { useMyTours } from '@/features/tours/hooks/useTours';
+import { usePurchasedTours } from '@/features/tours/hooks/useTours';
 import type { TourDifficulty } from '@/features/tours/services/tourService';
 
 type DifficultyFilter = TourDifficulty | 'ALL';
@@ -31,8 +31,8 @@ function TourCardSkeleton() {
     );
 }
 
-export default function ToursPage() {
-    const { data: tours = [], isLoading, isError } = useMyTours();
+export default function PurchasedToursPage() {
+    const { data: tours = [], isLoading, isError } = usePurchasedTours(); 
     const [search, setSearch] = useState('');
     const [difficulty, setDifficulty] = useState<DifficultyFilter>('ALL');
 
@@ -54,9 +54,9 @@ export default function ToursPage() {
         <div className="min-h-screen bg-(--bg)">
             <div className="max-w-6xl mx-auto px-4 py-10">
                 <div className="mb-8">
-                    <h1 className="text-2xl font-bold text-(--text-h) mb-1">My Tours</h1>
+                    <h1 className="text-2xl font-bold text-(--text-h) mb-1">Purchased tours</h1>
                     <p className="text-sm text-(--text)/55">
-                        Manage your draft, published and archived tours
+                        Here are your purchased tours!!
                     </p>
                 </div>
 
@@ -105,7 +105,7 @@ export default function ToursPage() {
 
                 {isError && (
                     <div className="text-center py-20">
-                        <p className="text-sm text-red-400">Failed to load your tours.</p>
+                        <p className="text-sm text-red-400">Failed to load your purchased tours.</p>
                     </div>
                 )}
 
@@ -113,7 +113,7 @@ export default function ToursPage() {
                     <div className="text-center py-20">
                         <p className="text-sm text-(--text)/50">
                             {tours.length === 0
-                                ? 'You have not created any tours yet.'
+                                ? 'You have not purchased any tours yet.'
                                 : 'No tours match your search.'}
                         </p>
                     </div>

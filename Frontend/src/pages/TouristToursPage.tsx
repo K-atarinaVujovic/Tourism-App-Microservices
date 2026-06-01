@@ -1,38 +1,37 @@
 import { useState } from 'react';
 import { Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import TourCard from '@/features/tours/components/TourCard';
-import { useMyTours } from '@/features/tours/hooks/useTours';
+import PublishedTourPreviewCard from '@/features/tours/components/PublishedTourPreviewCard';
+import { usePublishedTourPreviews } from '@/features/tours/hooks/useTours';
 import type { TourDifficulty } from '@/features/tours/services/tourService';
 
 type DifficultyFilter = TourDifficulty | 'ALL';
 const DIFFICULTY_FILTERS: DifficultyFilter[] = ['ALL', 'EASY', 'MEDIUM', 'HARD'];
 
-function TourCardSkeleton() {
+function TourPreviewSkeleton() {
     return (
         <div className="rounded-xl border border-(--border) bg-(--accent-bg)/20 p-5 animate-pulse">
-            <div className="flex items-start justify-between gap-3 mb-2">
+            <div className="flex items-start justify-between gap-3 mb-3">
                 <div className="h-4 w-3/4 rounded bg-(--border)" />
                 <div className="h-5 w-14 rounded-full bg-(--border)" />
             </div>
             <div className="space-y-1.5 mb-4">
                 <div className="h-3 w-full rounded bg-(--border)" />
                 <div className="h-3 w-5/6 rounded bg-(--border)" />
+                <div className="h-3 w-2/3 rounded bg-(--border)" />
             </div>
-            <div className="flex gap-1.5 mb-4">
+            <div className="h-20 w-full rounded-lg bg-(--border) mb-4" />
+            <div className="flex gap-1.5">
                 <div className="h-5 w-16 rounded-full bg-(--border)" />
                 <div className="h-5 w-12 rounded-full bg-(--border)" />
-            </div>
-            <div className="flex justify-between">
-                <div className="h-3 w-24 rounded bg-(--border)" />
-                <div className="h-3 w-12 rounded bg-(--border)" />
             </div>
         </div>
     );
 }
 
-export default function ToursPage() {
-    const { data: tours = [], isLoading, isError } = useMyTours();
+export default function TouristToursPage() {
+    const { data: tours = [], isLoading, isError } = usePublishedTourPreviews();
+
     const [search, setSearch] = useState('');
     const [difficulty, setDifficulty] = useState<DifficultyFilter>('ALL');
 
@@ -42,7 +41,8 @@ export default function ToursPage() {
         const matchesSearch =
             tour.name.toLowerCase().includes(query) ||
             tour.description.toLowerCase().includes(query) ||
-            tour.tags.some(tag => tag.toLowerCase().includes(query));
+            tour.tags.some(tag => tag.toLowerCase().includes(query)) ||
+            tour.firstKeyPoint?.name.toLowerCase().includes(query);
 
         const matchesDifficulty =
             difficulty === 'ALL' || tour.difficulty === difficulty;
@@ -54,9 +54,9 @@ export default function ToursPage() {
         <div className="min-h-screen bg-(--bg)">
             <div className="max-w-6xl mx-auto px-4 py-10">
                 <div className="mb-8">
-                    <h1 className="text-2xl font-bold text-(--text-h) mb-1">My Tours</h1>
+                    <h1 className="text-2xl font-bold text-(--text-h) mb-1">Published Tours</h1>
                     <p className="text-sm text-(--text)/55">
-                        Manage your draft, published and archived tours
+                        Browse available tours. Full route is unlocked after purchase.
                     </p>
                 </div>
 
@@ -66,7 +66,7 @@ export default function ToursPage() {
                         <input
                             value={search}
                             onChange={e => setSearch(e.target.value)}
-                            placeholder="Search your tours…"
+                            placeholder="Search by name, description, tag or starting point…"
                             className={cn(
                                 'w-full rounded-lg border border-(--border) bg-(--bg)',
                                 'pl-9 pr-4 py-2.5 text-sm text-(--text)',
@@ -98,14 +98,14 @@ export default function ToursPage() {
                 {isLoading && (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                         {Array.from({ length: 6 }).map((_, i) => (
-                            <TourCardSkeleton key={i} />
+                            <TourPreviewSkeleton key={i} />
                         ))}
                     </div>
                 )}
 
                 {isError && (
                     <div className="text-center py-20">
-                        <p className="text-sm text-red-400">Failed to load your tours.</p>
+                        <p className="text-sm text-red-400">Failed to load published tours.</p>
                     </div>
                 )}
 
@@ -113,8 +113,8 @@ export default function ToursPage() {
                     <div className="text-center py-20">
                         <p className="text-sm text-(--text)/50">
                             {tours.length === 0
-                                ? 'You have not created any tours yet.'
-                                : 'No tours match your search.'}
+                                ? 'There are no published tours yet.'
+                                : 'No published tours match your search.'}
                         </p>
                     </div>
                 )}
@@ -122,12 +122,12 @@ export default function ToursPage() {
                 {!isLoading && !isError && filtered.length > 0 && (
                     <>
                         <p className="text-xs text-(--text)/40 mb-4">
-                            {filtered.length} tour{filtered.length !== 1 ? 's' : ''} found
+                            {filtered.length} published tour{filtered.length !== 1 ? 's' : ''} found
                         </p>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                             {filtered.map(tour => (
-                                <TourCard key={tour.id} tour={tour} />
+                                <PublishedTourPreviewCard key={tour.id} tour={tour} />
                             ))}
                         </div>
                     </>

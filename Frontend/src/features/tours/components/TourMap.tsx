@@ -5,6 +5,7 @@ import L from 'leaflet';
 import { Trash2, Edit2, MapPin } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { fetchRoute } from '../services/routingService';
+import { useUpdateTourLength } from '../hooks/useTours';
 import KeypointFormPanel, { type KeypointFormValues } from './KeypointFormPanel';
 import { useCreateKeypoint, useUpdateKeypoint, useDeleteKeypoint } from '../hooks/useKeypoints';
 import type { Keypoint } from '@/types/tour';
@@ -80,6 +81,7 @@ export default function TourMap({ tourId, keypoints, className }: TourMapProps) 
     const createKeypoint = useCreateKeypoint(tourId);
     const updateKeypoint = useUpdateKeypoint(tourId);
     const deleteKeypoint = useDeleteKeypoint(tourId);
+    const updateTourLength = useUpdateTourLength();
 
     const isSaving = createKeypoint.isPending || updateKeypoint.isPending;
 
@@ -94,9 +96,14 @@ export default function TourMap({ tourId, keypoints, className }: TourMapProps) 
         const waypoints = ordered.map((kp) => ({ lat: kp.latitude, lng: kp.longitude }));
 
         fetchRoute(waypoints)
-            .then((coords) => {
-                setRoute(coords);
+            .then((result) => {
+                setRoute(result.routeCoordinates);
                 setRouteError(null);
+                
+                updateTourLength.mutate({
+                    id: tourId,
+                    lengthInKm: result.lengthInKm,
+                });
             })
             .catch((err: unknown) => {
                 setRouteError(err instanceof Error ? err.message : String(err));
