@@ -2,6 +2,7 @@ package com.tourism.tours.grpc;
 
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
+import io.grpc.ServerInterceptors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.SmartLifecycle;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Component;
 public class ToursGrpcServer implements SmartLifecycle {
 
     private final TourGrpcServiceImpl tourGrpcService;
+    private final GrpcAuthorizationInterceptor grpcAuthorizationInterceptor;
 
     @Value("${grpc.server.port:9093}")
     private int grpcPort;
@@ -24,7 +26,7 @@ public class ToursGrpcServer implements SmartLifecycle {
         try {
             server = ServerBuilder
                     .forPort(grpcPort)
-                    .addService(tourGrpcService)
+                    .addService(ServerInterceptors.intercept(tourGrpcService, grpcAuthorizationInterceptor))
                     .build()
                     .start();
 

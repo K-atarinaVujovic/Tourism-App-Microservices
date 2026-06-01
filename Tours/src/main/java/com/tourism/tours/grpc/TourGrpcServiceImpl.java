@@ -22,7 +22,8 @@ public class TourGrpcServiceImpl extends TourGrpcServiceGrpc.TourGrpcServiceImpl
     @Override
     public void getMyTours(GetMyToursRequest request, StreamObserver<TourListResponse> responseObserver) {
         try {
-            CurrentUser user = authService.getCurrentUser(request.getAuthorization());
+            String authorization = resolveAuthorization(request.getAuthorization());
+            CurrentUser user = authService.getCurrentUser(authorization);
 
             TourListResponse.Builder response = TourListResponse.newBuilder();
 
@@ -43,6 +44,7 @@ public class TourGrpcServiceImpl extends TourGrpcServiceGrpc.TourGrpcServiceImpl
     @Override
     public void createTour(CreateTourGrpcRequest request, StreamObserver<TourGrpcResponse> responseObserver) {
         try {
+            String authorization = resolveAuthorization(request.getAuthorization());
             CurrentUser user = authService.getCurrentUser(request.getAuthorization());
 
             CreateTourRequest createRequest = new CreateTourRequest();
@@ -54,7 +56,7 @@ public class TourGrpcServiceImpl extends TourGrpcServiceGrpc.TourGrpcServiceImpl
             TourResponse created = tourService.createTour(
                     createRequest,
                     user,
-                    request.getAuthorization()
+                    authorization
             );
 
             responseObserver.onNext(mapToGrpcResponse(created));
@@ -90,5 +92,19 @@ public class TourGrpcServiceImpl extends TourGrpcServiceGrpc.TourGrpcServiceImpl
         }
 
         return builder.build();
+    }
+
+    private String resolveAuthorization(String requestAuthorization) {
+        if (requestAuthorization != null && !requestAuthorization.isBlank()) {
+            return requestAuthorization;
+        }
+
+        String metadataAuthorization = GrpcAuthContext.getAuthorization();
+
+        if (metadataAuthorization == null || metadataAuthorization.isBlank()) {
+            throw new RuntimeException("Missing Authorization header");
+        }
+
+        return metadataAuthorization;
     }
 }
