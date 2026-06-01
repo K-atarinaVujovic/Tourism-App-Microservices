@@ -45,7 +45,7 @@ public class TourGrpcServiceImpl extends TourGrpcServiceGrpc.TourGrpcServiceImpl
     public void createTour(CreateTourGrpcRequest request, StreamObserver<TourGrpcResponse> responseObserver) {
         try {
             String authorization = resolveAuthorization(request.getAuthorization());
-            CurrentUser user = authService.getCurrentUser(request.getAuthorization());
+            CurrentUser user = authService.getCurrentUser(authorization);
 
             CreateTourRequest createRequest = new CreateTourRequest();
             createRequest.setName(request.getName());
