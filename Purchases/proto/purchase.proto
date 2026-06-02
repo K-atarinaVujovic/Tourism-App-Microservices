@@ -16,8 +16,8 @@ message OrderItemResponse {
 }
 
 message AddToCartRequest {
-  string tourist_id    = 1;
-  OrderItemRequest item = 2;
+  string tourist_id = 1;
+  string tour_id = 2;
 }
 
 message RemoveFromCartRequest {

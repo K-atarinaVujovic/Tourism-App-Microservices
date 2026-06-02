@@ -8,3 +8,16 @@ services:
       MYSQL_PASSWORD: purchase
     ports:
       - "3306:3306"
+
+  purchases:
+    build:
+      context: ..
+      dockerfile: Purchases/Dockerfile
+    ports:
+      - "50051:50051"
+    environment:
+      TOURS_SERVICE_URL: http://localhost:8000/tours
+      STAKEHOLDERS_SERVICE_URL: http://localhost:8000/stakeholders
+      JWT_SECRET: super-secret-change-me
+    depends_on:
+      - purchase-db

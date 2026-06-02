@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+
 	"purchase-service/internal/domain"
 	"purchase-service/internal/service"
 	pb "purchase-service/pb"
@@ -16,13 +17,10 @@ func NewPurchaseHandler(svc *service.PurchaseService) *PurchaseHandler {
 	return &PurchaseHandler{svc: svc}
 }
 
+// AddToCart expects AddToCartRequest to have a flat tour_id field (not a nested OrderItem).
+// Update your proto: replace the OrderItem field with `string tour_id = 2;`
 func (h *PurchaseHandler) AddToCart(ctx context.Context, req *pb.AddToCartRequest) (*pb.CartResponse, error) {
-	item := domain.OrderItem{
-		TourID:   req.Item.TourId,
-		TourName: req.Item.TourName,
-		Price:    req.Item.Price,
-	}
-	cart, err := h.svc.AddToCart(req.TouristId, item)
+	cart, err := h.svc.AddToCart(ctx, req.TouristId, req.TourId)
 	if err != nil {
 		return nil, err
 	}
@@ -38,7 +36,7 @@ func (h *PurchaseHandler) RemoveFromCart(ctx context.Context, req *pb.RemoveFrom
 }
 
 func (h *PurchaseHandler) Checkout(ctx context.Context, req *pb.CheckoutRequest) (*pb.CheckoutResponse, error) {
-	tokens, err := h.svc.Checkout(req.TouristId)
+	tokens, err := h.svc.Checkout(ctx, req.TouristId)
 	if err != nil {
 		return nil, err
 	}
