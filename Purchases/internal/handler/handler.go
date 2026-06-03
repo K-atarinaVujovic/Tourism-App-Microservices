@@ -94,6 +94,14 @@ func (h *PurchaseHandler) RefundPurchase(ctx context.Context, req *pb.RefundPurc
 	return &pb.RefundPurchaseResponse{Success: true}, nil
 }
 
+func (h *PurchaseHandler) GetMyCartItems(ctx context.Context, _ *pb.GetMyCartItemsRequest) (*pb.CartResponse, error) {
+	cart, err := h.svc.GetMyCartItems(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return toCartResponse(cart), nil
+}
+
 // --- mappers ---
 
 func toCartResponse(cart *domain.ShoppingCart) *pb.CartResponse {

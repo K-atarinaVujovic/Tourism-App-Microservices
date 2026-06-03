@@ -205,3 +205,13 @@ func (s *PurchaseService) RefundPurchase(ctx context.Context, tokenID string) er
 
 	return s.tokens.DeleteToken(tokenID)
 }
+
+func (s *PurchaseService) GetMyCartItems(ctx context.Context) (*domain.ShoppingCart, error) {
+	touristID, err := grpcauth.TouristIDFromContext(ctx)
+
+	cart, err := s.carts.FindCartByTouristID(touristID)
+	if err != nil {
+		return nil, errors.New("cart not found")
+	}
+	return cart, nil
+}

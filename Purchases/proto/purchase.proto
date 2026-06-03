@@ -33,6 +33,8 @@ message CartResponse {
   double total_price           = 3;
 }
 
+message GetMyCartItemsRequest {}
+
 // --- checkout / tokens ---
 message CheckoutRequest {
   string tourist_id = 1;
@@ -96,4 +98,5 @@ service PurchaseService {
   rpc GetMyPurchases(GetMyPurchasesRequest)  returns (GetMyPurchasesResponse);
   rpc GetAllPurchases(GetAllPurchasesRequest) returns (GetAllPurchasesResponse);
   rpc RefundPurchase(RefundPurchaseRequest)  returns (RefundPurchaseResponse);
+  rpc GetMyCartItems(GetMyCartItemsRequest)  returns (CartResponse);
 }
