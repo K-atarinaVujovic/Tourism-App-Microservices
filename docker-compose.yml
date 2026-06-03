@@ -125,6 +125,9 @@ services:
       context: ./Stakeholders
     env_file:
       - ./Stakeholders/.env.docker
+    environment:
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:4318"
+      OTEL_SERVICE_NAME: "stakeholders"
     depends_on:
       stakeholders_db:
         condition: service_healthy
