@@ -22,8 +22,13 @@ export const tourService = {
     },
 
     getMyTours: async (): Promise<Tour[]> => {
-        const { data } = await apiClient.get<Tour[]>('/tours/tours/my');
-        return data;
+        const { data } = await apiClient.get<Tour[] | { tours: Tour[] }>('/tours/tours/my');
+
+        if (Array.isArray(data)) {
+            return data;
+        }
+
+        return data.tours;
     },
 
     getById: async (id: number): Promise<Tour> => {
