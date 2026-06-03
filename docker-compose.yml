@@ -50,6 +50,7 @@ services:
       - service-network
     environment:
       JWT_SECRET: super-secret-change-me
+      OTEL_EXPORTER_OTLP_ENDPOINT: jaeger:4318
 
   auth-db:
     image: postgres:16-alpine
@@ -202,6 +203,17 @@ services:
     restart: unless-stopped
     networks:
       - follower-network
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.57
+    container_name: jaeger
+    ports:
+      - "16686:16686"
+      - "4318:4318"
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+    networks:
+      - service-network
 
 volumes:
   blog-db-data:
