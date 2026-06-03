@@ -46,7 +46,7 @@ go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
 
 Then generate:
 ```bash
-protoc --go_out=. --go-grpc_out=. proto/purchase.proto
+ protoc --go_out=. --go-grpc_out=. purchase.proto
 ```
 
 This creates `pb/purchase.pb.go` and `pb/purchase_grpc.pb.go`.

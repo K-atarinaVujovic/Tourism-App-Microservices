@@ -43,12 +43,7 @@ func (h *PurchaseHandler) Checkout(ctx context.Context, req *pb.CheckoutRequest)
 
 	var pbTokens []*pb.TokenResponse
 	for _, t := range tokens {
-		pbTokens = append(pbTokens, &pb.TokenResponse{
-			Id:        t.ID,
-			TouristId: t.TouristID,
-			TourId:    t.TourID,
-			IssuedAt:  t.IssuedAt.String(),
-		})
+		pbTokens = append(pbTokens, toTokenResponse(t))
 	}
 	return &pb.CheckoutResponse{Tokens: pbTokens}, nil
 }
@@ -59,6 +54,44 @@ func (h *PurchaseHandler) HasPurchased(ctx context.Context, req *pb.HasPurchased
 		return nil, err
 	}
 	return &pb.HasPurchasedResponse{Purchased: purchased}, nil
+}
+
+func (h *PurchaseHandler) GetMyPurchases(ctx context.Context, _ *pb.GetMyPurchasesRequest) (*pb.GetMyPurchasesResponse, error) {
+	tokens, err := h.svc.GetMyPurchases(ctx)
+	if err != nil {
+		return nil, err
+	}
+	var pbTokens []*pb.TokenResponse
+	for _, t := range tokens {
+		pbTokens = append(pbTokens, toTokenResponse(t))
+	}
+	return &pb.GetMyPurchasesResponse{Tokens: pbTokens}, nil
+}
+
+func (h *PurchaseHandler) GetAllPurchases(ctx context.Context, _ *pb.GetAllPurchasesRequest) (*pb.GetAllPurchasesResponse, error) {
+	grouped, err := h.svc.GetAllPurchases(ctx)
+	if err != nil {
+		return nil, err
+	}
+	var purchases []*pb.PurchasesByTourist
+	for touristID, tokens := range grouped {
+		var pbTokens []*pb.TokenResponse
+		for _, t := range tokens {
+			pbTokens = append(pbTokens, toTokenResponse(t))
+		}
+		purchases = append(purchases, &pb.PurchasesByTourist{
+			TouristId: touristID,
+			Tokens:    pbTokens,
+		})
+	}
+	return &pb.GetAllPurchasesResponse{Purchases: purchases}, nil
+}
+
+func (h *PurchaseHandler) RefundPurchase(ctx context.Context, req *pb.RefundPurchaseRequest) (*pb.RefundPurchaseResponse, error) {
+	if err := h.svc.RefundPurchase(ctx, req.TokenId); err != nil {
+		return nil, err
+	}
+	return &pb.RefundPurchaseResponse{Success: true}, nil
 }
 
 // --- mappers ---
@@ -76,5 +109,15 @@ func toCartResponse(cart *domain.ShoppingCart) *pb.CartResponse {
 		TouristId:  cart.TouristID,
 		Items:      items,
 		TotalPrice: cart.TotalPrice,
+	}
+}
+
+func toTokenResponse(t domain.TourPurchaseToken) *pb.TokenResponse {
+	return &pb.TokenResponse{
+		Id:        t.ID,
+		TouristId: t.TouristID,
+		TourId:    t.TourID,
+		Price:     t.Price,
+		IssuedAt:  t.IssuedAt.String(),
 	}
 }

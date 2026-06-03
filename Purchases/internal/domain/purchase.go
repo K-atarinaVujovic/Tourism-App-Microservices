@@ -22,6 +22,7 @@ type TourPurchaseToken struct {
 	ID        string
 	TouristID string
 	TourID    string
+	Price     float64
 	IssuedAt  time.Time
 }
 

@@ -72,6 +72,21 @@ async def update_balance(
   except NotFoundException as e:
     raise HTTPException(status_code=404, detail=str(e))
 
+# Admin update balance for other user
+@protected_router.put("/profiles/balance/{user_id}", response_model=BalanceResponse)
+async def update_balance_for_user(
+        user_id: Annotated[int, Path()],
+        balance: Annotated[BalanceResponse, Body()],
+        current_user = Depends(get_current_user),
+) -> Any:
+  try:
+    if current_user["role"] != "admin":
+      raise HTTPException(status_code=403, detail="Unauthorized")
+    response = await service.update_balance(user_id, balance)
+    return response
+  except NotFoundException as e:
+    raise HTTPException(status_code=404, detail=str(e))
+
 @protected_router.get("/profiles/{user_id}", response_model=ProfileResponse)
 async def get_profile(
   user_id: Annotated[int, Path()]

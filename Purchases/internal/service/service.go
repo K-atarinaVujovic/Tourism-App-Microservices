@@ -3,11 +3,13 @@ package service
 import (
 	"context"
 	"errors"
+	"fmt"
+	"strconv"
 	"time"
 
 	"purchase-service/internal/clients"
 	"purchase-service/internal/domain"
-	"purchase-service/internal/grpc-auth"
+	grpcauth "purchase-service/internal/grpc-auth"
 
 	"github.com/google/uuid"
 )
@@ -22,6 +24,9 @@ type CartRepository interface {
 type TokenRepository interface {
 	SaveToken(token *domain.TourPurchaseToken) error
 	FindTokensByTouristID(touristID string) ([]domain.TourPurchaseToken, error)
+	FindAllTokens() ([]domain.TourPurchaseToken, error)
+	FindTokenByID(tokenID string) (*domain.TourPurchaseToken, error)
+	DeleteToken(tokenID string) error
 }
 
 type PurchaseService struct {
@@ -118,6 +123,7 @@ func (s *PurchaseService) Checkout(ctx context.Context, touristID string) ([]dom
 			ID:        uuid.New().String(),
 			TouristID: touristID,
 			TourID:    item.TourID,
+			Price:     item.Price,
 			IssuedAt:  time.Now(),
 		}
 		if err := s.tokens.SaveToken(&token); err != nil {
@@ -126,7 +132,7 @@ func (s *PurchaseService) Checkout(ctx context.Context, touristID string) ([]dom
 		tokens = append(tokens, token)
 	}
 
-	if err := s.stakeholders.UpdateBalance(ctx, authHeader, balance-cart.TotalPrice); err != nil {
+	if err := s.stakeholders.UpdateBalance(ctx, authHeader, -cart.TotalPrice); err != nil {
 		return nil, err
 	}
 
@@ -149,4 +155,53 @@ func (s *PurchaseService) HasPurchased(touristID, tourID string) (bool, error) {
 		}
 	}
 	return false, nil
+}
+
+func (s *PurchaseService) GetMyPurchases(ctx context.Context) ([]domain.TourPurchaseToken, error) {
+	touristID, err := grpcauth.TouristIDFromContext(ctx)
+	if err != nil {
+		return nil, errors.New("unauthorized")
+	}
+	return s.tokens.FindTokensByTouristID(touristID)
+}
+
+func (s *PurchaseService) GetAllPurchases(ctx context.Context) (map[string][]domain.TourPurchaseToken, error) {
+	isAdmin, err := grpcauth.IsAdminFromContext(ctx)
+	if err != nil || !isAdmin {
+		return nil, errors.New("unauthorized: admin only")
+	}
+
+	tokens, err := s.tokens.FindAllTokens()
+	if err != nil {
+		return nil, err
+	}
+
+	grouped := make(map[string][]domain.TourPurchaseToken)
+	for _, t := range tokens {
+		grouped[t.TouristID] = append(grouped[t.TouristID], t)
+	}
+	return grouped, nil
+}
+
+func (s *PurchaseService) RefundPurchase(ctx context.Context, tokenID string) error {
+	isAdmin, err := grpcauth.IsAdminFromContext(ctx)
+	if err != nil || !isAdmin {
+		return errors.New("unauthorized: admin only")
+	}
+
+	token, err := s.tokens.FindTokenByID(tokenID)
+	if err != nil {
+		return errors.New("token not found")
+	}
+
+	authHeader := grpcauth.AuthFromContext(ctx)
+	id, err := strconv.ParseInt(token.TouristID, 10, 64)
+	if err != nil {
+		return fmt.Errorf("invalid TouristID %q: %w", token.TouristID, err)
+	}
+	if err := s.stakeholders.UpdateBalanceForUser(ctx, authHeader, id, token.Price); err != nil {
+		return err
+	}
+
+	return s.tokens.DeleteToken(tokenID)
 }

@@ -65,6 +65,7 @@ func (r *PurchaseRepository) SaveToken(token *domain.TourPurchaseToken) error {
 		ID:        token.ID,
 		TouristID: token.TouristID,
 		TourID:    token.TourID,
+		Price:     token.Price,
 		IssuedAt:  token.IssuedAt,
 	}
 	return r.db.Save(&model).Error
@@ -77,14 +78,34 @@ func (r *PurchaseRepository) FindTokensByTouristID(touristID string) ([]domain.T
 	}
 	var tokens []domain.TourPurchaseToken
 	for _, m := range models {
-		tokens = append(tokens, domain.TourPurchaseToken{
-			ID:        m.ID,
-			TouristID: m.TouristID,
-			TourID:    m.TourID,
-			IssuedAt:  m.IssuedAt,
-		})
+		tokens = append(tokens, tokenToDomain(m))
 	}
 	return tokens, nil
+}
+
+func (r *PurchaseRepository) FindAllTokens() ([]domain.TourPurchaseToken, error) {
+	var models []TokenModel
+	if err := r.db.Find(&models).Error; err != nil {
+		return nil, err
+	}
+	var tokens []domain.TourPurchaseToken
+	for _, m := range models {
+		tokens = append(tokens, tokenToDomain(m))
+	}
+	return tokens, nil
+}
+
+func (r *PurchaseRepository) FindTokenByID(tokenID string) (*domain.TourPurchaseToken, error) {
+	var model TokenModel
+	if err := r.db.Where("id = ?", tokenID).First(&model).Error; err != nil {
+		return nil, err
+	}
+	t := tokenToDomain(model)
+	return &t, nil
+}
+
+func (r *PurchaseRepository) DeleteToken(tokenID string) error {
+	return r.db.Where("id = ?", tokenID).Delete(&TokenModel{}).Error
 }
 
 // --- mappers ---
@@ -103,4 +124,14 @@ func cartToDomain(m CartModel) *domain.ShoppingCart {
 		})
 	}
 	return cart
+}
+
+func tokenToDomain(m TokenModel) domain.TourPurchaseToken {
+	return domain.TourPurchaseToken{
+		ID:        m.ID,
+		TouristID: m.TouristID,
+		TourID:    m.TourID,
+		Price:     m.Price,
+		IssuedAt:  m.IssuedAt,
+	}
 }

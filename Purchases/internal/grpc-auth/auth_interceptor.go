@@ -22,6 +22,25 @@ func AuthFromContext(ctx context.Context) string {
 	return v
 }
 
+// TouristIDFromContext extracts the user's ID from the JWT in context.
+// Returns Claims.Sub, which is the string representation of the int64 UserID.
+func TouristIDFromContext(ctx context.Context) (string, error) {
+	token, err := jwtreader.ReadFromAuthorizationHeader(AuthFromContext(ctx))
+	if err != nil {
+		return "", err
+	}
+	return token.Claims.Sub, nil
+}
+
+// IsAdminFromContext returns true if the JWT role claim equals "admin".
+func IsAdminFromContext(ctx context.Context) (bool, error) {
+	token, err := jwtreader.ReadFromAuthorizationHeader(AuthFromContext(ctx))
+	if err != nil {
+		return false, err
+	}
+	return token.Claims.Role == "admin", nil
+}
+
 // UnaryAuthInterceptor validates the JWT carried in the gRPC "authorization"
 // metadata key and forwards the raw header value via context so downstream
 // callers can attach it to outbound HTTP requests.
