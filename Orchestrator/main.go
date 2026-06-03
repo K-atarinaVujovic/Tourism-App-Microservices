@@ -38,31 +38,6 @@ func (r StakeholderRole) isValid() bool {
 	return r == RoleTourist || r == RoleGuide
 }
 
-// RegistrationRequest is what the client sends to the orchestrator.
-// It combines the fields needed by both downstream services.
-type RegistrationRequest struct {
-	// Auth service fields
-	Username string `json:"username"`
-	Email    string `json:"email"`
-	Password string `json:"password"`
-	// Stakeholder service fields
-	Name     string          `json:"name"`
-	Lastname *string         `json:"lastname,omitempty"`
-	ImageURL *string         `json:"image_url,omitempty"`
-	Role     StakeholderRole `json:"role"`
-}
-
-// RegistrationResponse is returned to the client on full success.
-type RegistrationResponse struct {
-	UserID    int64  `json:"user_id"`
-	Username  string `json:"username"`
-	Email     string `json:"email"`
-	Role      string `json:"role"`
-	Token     string `json:"token"`
-	ProfileID string `json:"profile_id"`
-	SagaID    string `json:"saga_id"`
-}
-
 func main() {
 	if os.Getenv("USE_CONFIG_FILE") == "true" {
 		log.Println("Loading config from .env file")
