@@ -20,6 +20,7 @@ message ProfileResponse {
   string biography = 5;
   string quote = 6;
   int32 user_id = 7;
+  float balance = 8;
 }
 
 message ProfileCreate {
@@ -38,6 +39,7 @@ message ProfileUpdate {
   optional string biography = 4;
   optional string quote = 5;
   int32 user_id = 6;
+  optional float balance = 7;
 }
 
 message ImageUploadRequest {

@@ -17,7 +17,8 @@ class ProfileServicer(ProfileServiceServicer):
         imageUrl=result.imageUrl,
         biography=result.biography,
         quote=result.quote,
-        user_id=result.user_id
+        user_id=result.user_id,
+        balance=result.balance
     )
   
   def __get_profile_update_from_request(self, request):
@@ -27,6 +28,7 @@ class ProfileServicer(ProfileServiceServicer):
       imageUrl=request.imageUrl if request.HasField("imageUrl") else None,
       biography=request.biography if request.HasField("biography") else None,
       quote=request.quote if request.HasField("quote") else None,
+      balance=request.balance if request.HasField("balance") else None,
     )
   
   def __get_profile_create_from_request(self, request):
@@ -37,6 +39,7 @@ class ProfileServicer(ProfileServiceServicer):
       imageUrl=request.imageUrl if request.HasField("imageUrl") else None,
       biography=request.biography if request.HasField("biography") else None,
       quote=request.quote if request.HasField("quote") else None,
+      balance=request.balance if request.HasField("balance") else None,
     )
 
   def CreateProfile(self, request, context):
@@ -59,3 +62,16 @@ class ProfileServicer(ProfileServiceServicer):
   def UploadImage(self, request, context):
     result = self.upload_service.upload_image_bytes(request.file_data, request.filename)
     return ImageUploadResponse(imageUrl = result["imageUrl"])
+
+  # Gets balance by user id
+  def GetBalance(self, request, context):
+    user_id = request.user_id
+    result = self.profile_service.getBalance(user_id)
+    return self.__get_balance_response_from_result(result)
+
+  # Update balance by id
+  def UpdateBalance(self, request, context):
+    user_id = request.user_id
+    balance = request.balance
+    result = self.profile_service.update_balance(user_id, balance)
+    return self.__get_balance_response_from_result(result)

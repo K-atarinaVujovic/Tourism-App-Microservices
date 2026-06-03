@@ -1,0 +1,99 @@
+syntax = "proto3";
+
+package purchase;
+option go_package = "../pb";
+
+// --- order items ---
+message OrderItemRequest {
+  string tour_id   = 1;
+  string tour_name = 2;
+  double price     = 3;
+}
+
+message OrderItemResponse {
+  string tour_id   = 1;
+  string tour_name = 2;
+  double price     = 3;
+}
+
+// --- cart operations ---
+message AddToCartRequest {
+  string tourist_id = 1;
+  string tour_id    = 2;
+}
+
+message RemoveFromCartRequest {
+  string tourist_id = 1;
+  string tour_id    = 2;
+}
+
+message CartResponse {
+  string tourist_id            = 1;
+  repeated OrderItemResponse items = 2;
+  double total_price           = 3;
+}
+
+// --- checkout / tokens ---
+message CheckoutRequest {
+  string tourist_id = 1;
+}
+
+message TokenResponse {
+  string id         = 1;
+  string tourist_id = 2;
+  string tour_id    = 3;
+  double price      = 4;
+  string issued_at  = 5;
+}
+
+message CheckoutResponse {
+  repeated TokenResponse tokens = 1;
+}
+
+// --- purchase checks ---
+message HasPurchasedRequest {
+  string tourist_id = 1;
+  string tour_id    = 2;
+}
+
+message HasPurchasedResponse {
+  bool purchased = 1;
+}
+
+// --- listing / grouping purchases ---
+message GetMyPurchasesRequest {}
+
+message GetMyPurchasesResponse {
+  repeated TokenResponse tokens = 1;
+}
+
+message PurchasesByTourist {
+  string tourist_id = 1;
+  repeated TokenResponse tokens = 2;
+}
+
+message GetAllPurchasesRequest {}
+
+message GetAllPurchasesResponse {
+  repeated PurchasesByTourist purchases = 1;
+}
+
+// --- refunds ---
+message RefundPurchaseRequest {
+  string token_id = 1;
+}
+
+message RefundPurchaseResponse {
+  bool success = 1;
+}
+
+// --- service ---
+service PurchaseService {
+  rpc AddToCart(AddToCartRequest)            returns (CartResponse);
+  rpc RemoveFromCart(RemoveFromCartRequest)  returns (CartResponse);
+  rpc Checkout(CheckoutRequest)              returns (CheckoutResponse);
+  rpc HasPurchased(HasPurchasedRequest)      returns (HasPurchasedResponse);
+  rpc GetMyPurchases(GetMyPurchasesRequest)  returns (GetMyPurchasesResponse);
+  rpc GetAllPurchases(GetAllPurchasesRequest) returns (GetAllPurchasesResponse);
+  rpc RefundPurchase(RefundPurchaseRequest)  returns (RefundPurchaseResponse);
+}
