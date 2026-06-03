@@ -1,0 +1,48 @@
+# https://oneuptime.com/blog/post/2026-02-06-opentelemetry-logs-grafana-loki-collector/view
+
+
+auth_enabled: false
+
+server:
+  http_listen_port: 3100 #important?
+
+common:
+  path_prefix: /loki
+  storage:
+    filesystem:
+      chunks_directory: /loki/chunks
+      rules_directory: /loki/rules
+  replication_factor: 1
+  ring:
+    kvstore:
+      store: inmemory
+
+limits_config:
+  # Allow OTLP log ingestion
+  allow_structured_metadata: true
+  # Maximum log line size in bytes
+  max_line_size: 256000
+  # Retention period for logs
+  retention_period: 720h
+
+schema_config:
+  configs:
+    - from: 2024-01-01
+      store: tsdb
+      object_store: filesystem
+      schema: v13
+      index:
+        prefix: index_
+        period: 24h
+
+storage_config:
+  tsdb_shipper:
+    active_index_directory: /loki/tsdb-index
+    cache_location: /loki/tsdb-cache
+
+query_range:
+  results_cache:
+    cache:
+      embedded_cache:
+        enabled: true
+        max_size_mb: 100
