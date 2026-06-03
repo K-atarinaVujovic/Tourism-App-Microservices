@@ -24,7 +24,6 @@ const (
 
 type GetMyToursRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Authorization string                 `protobuf:"bytes,1,opt,name=authorization,proto3" json:"authorization,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -59,16 +58,8 @@ func (*GetMyToursRequest) Descriptor() ([]byte, []int) {
 	return file_tours_tours_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *GetMyToursRequest) GetAuthorization() string {
-	if x != nil {
-		return x.Authorization
-	}
-	return ""
-}
-
 type CreateTourGrpcRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Authorization string                 `protobuf:"bytes,1,opt,name=authorization,proto3" json:"authorization,omitempty"`
 	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
 	Description   string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
 	Difficulty    string                 `protobuf:"bytes,4,opt,name=difficulty,proto3" json:"difficulty,omitempty"`
@@ -105,13 +96,6 @@ func (x *CreateTourGrpcRequest) ProtoReflect() protoreflect.Message {
 // Deprecated: Use CreateTourGrpcRequest.ProtoReflect.Descriptor instead.
 func (*CreateTourGrpcRequest) Descriptor() ([]byte, []int) {
 	return file_tours_tours_proto_rawDescGZIP(), []int{1}
-}
-
-func (x *CreateTourGrpcRequest) GetAuthorization() string {
-	if x != nil {
-		return x.Authorization
-	}
-	return ""
 }
 
 func (x *CreateTourGrpcRequest) GetName() string {
@@ -298,11 +282,9 @@ var File_tours_tours_proto protoreflect.FileDescriptor
 
 const file_tours_tours_proto_rawDesc = "" +
 	"\n" +
-	"\x11tours/tours.proto\x12\x05tours\x1a\x1cgoogle/api/annotations.proto\"9\n" +
-	"\x11GetMyToursRequest\x12$\n" +
-	"\rauthorization\x18\x01 \x01(\tR\rauthorization\"\xa7\x01\n" +
-	"\x15CreateTourGrpcRequest\x12$\n" +
-	"\rauthorization\x18\x01 \x01(\tR\rauthorization\x12\x12\n" +
+	"\x11tours/tours.proto\x12\x05tours\x1a\x1cgoogle/api/annotations.proto\"\x13\n" +
+	"\x11GetMyToursRequest\"\x81\x01\n" +
+	"\x15CreateTourGrpcRequest\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12 \n" +
 	"\vdescription\x18\x03 \x01(\tR\vdescription\x12\x1e\n" +
 	"\n" +

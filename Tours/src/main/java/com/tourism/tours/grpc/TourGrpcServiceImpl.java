@@ -22,7 +22,7 @@ public class TourGrpcServiceImpl extends TourGrpcServiceGrpc.TourGrpcServiceImpl
     @Override
     public void getMyTours(GetMyToursRequest request, StreamObserver<TourListResponse> responseObserver) {
         try {
-            String authorization = resolveAuthorization(request.getAuthorization());
+            String authorization = resolveAuthorization();
             CurrentUser user = authService.getCurrentUser(authorization);
 
             TourListResponse.Builder response = TourListResponse.newBuilder();
@@ -44,7 +44,7 @@ public class TourGrpcServiceImpl extends TourGrpcServiceGrpc.TourGrpcServiceImpl
     @Override
     public void createTour(CreateTourGrpcRequest request, StreamObserver<TourGrpcResponse> responseObserver) {
         try {
-            String authorization = resolveAuthorization(request.getAuthorization());
+            String authorization = resolveAuthorization();
             CurrentUser user = authService.getCurrentUser(authorization);
 
             CreateTourRequest createRequest = new CreateTourRequest();
@@ -94,11 +94,7 @@ public class TourGrpcServiceImpl extends TourGrpcServiceGrpc.TourGrpcServiceImpl
         return builder.build();
     }
 
-    private String resolveAuthorization(String requestAuthorization) {
-        if (requestAuthorization != null && !requestAuthorization.isBlank()) {
-            return requestAuthorization;
-        }
-
+    private String resolveAuthorization() {
         String metadataAuthorization = GrpcAuthContext.getAuthorization();
 
         if (metadataAuthorization == null || metadataAuthorization.isBlank()) {

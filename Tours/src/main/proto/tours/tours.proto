@@ -12,11 +12,9 @@ service TourGrpcService{
 }
 
 message GetMyToursRequest {
-  string authorization = 1;
 }
 
 message CreateTourGrpcRequest{
-  string authorization = 1;
   string name = 2;
   string description = 3;
   string difficulty = 4;
