@@ -79,6 +79,7 @@ services:
       - service-network
     environment:
       JWT_SECRET: super-secret-change-me
+      OTEL_EXPORTER_OTLP_ENDPOINT: jaeger:4318
 
   auth-db:
     image: postgres:16-alpine
@@ -135,6 +136,7 @@ services:
       - stakeholders_images_data:/app/images
     ports:
       - "8082:8082"
+      - "50051:50051"
     networks:
       - stakeholders-network
       - service-network
@@ -169,6 +171,7 @@ services:
       SPRING_DATASOURCE_PASSWORD: root
       JWT_SECRET: super-secret-change-me
       STAKEHOLDERS_URL: http://stakeholders:8082
+      GRPC_SERVER_PORT: 9093
       OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:4318"
       OTEL_SERVICE_NAME: "tours"
     depends_on:
@@ -232,6 +235,17 @@ services:
     restart: unless-stopped
     networks:
       - follower-network
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.57
+    container_name: jaeger
+    ports:
+      - "16686:16686"
+      - "4319:4318" # remapped host port from 4318 -> was clashing with otel ports setup
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+    networks:
+      - service-network
 
 volumes:
   blog-db-data:
