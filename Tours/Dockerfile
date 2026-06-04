@@ -13,7 +13,7 @@ WORKDIR /app
 
 COPY --from=build /app/target/*.jar app.jar
 
-COPY opentelemetry-javaagent.jar /app/opentelemetry-javaagent.jar
+ADD https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/latest/download/opentelemetry-javaagent.jar /app/opentelemetry-javaagent.jar
 
 EXPOSE 8083
 
