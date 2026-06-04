@@ -14,10 +14,34 @@ from app.schemas.profile import ProfileCreate, ProfileResponse, ProfileUpdate, B
 from app.services.profile import ProfileService
 from app.services.upload import Uploader
 
+from opentelemetry import trace
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
+from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
+from opentelemetry._logs import set_logger_provider
+from opentelemetry.sdk._logs import LoggerProvider, LoggingHandler
+from opentelemetry.sdk._logs.export import BatchLogRecordProcessor
+from opentelemetry.exporter.otlp.proto.http._log_exporter import OTLPLogExporter
+import logging
+
+import logging
+
+
+def setup_otel():
+    logger_provider = LoggerProvider()
+    logger_provider.add_log_record_processor(BatchLogRecordProcessor(OTLPLogExporter()))
+    set_logger_provider(logger_provider)
+    handler = LoggingHandler(logger_provider=logger_provider)
+    logging.getLogger().addHandler(handler)
+    logging.getLogger().setLevel(logging.INFO)
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await init_db()
     yield
+
+setup_otel()
+logger = logging.getLogger(__name__)
 
 app = FastAPI(lifespan=lifespan)
 
