@@ -1,13 +1,42 @@
 version: "3.8"
 
 services:
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib
+    volumes:
+      - ./Monitoring/otel-collector-config.yaml:/etc/otelcol-contrib/config.yaml
+    ports:
+      - "4317:4317" # gRPC
+      - "4318:4318" # http
+    networks:
+      - service-network
+
+  grafana:
+    image: grafana/grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-storage:/var/lib/grafana
+      - ./Monitoring/grafana/:/etc/grafana/provisioning/
+    networks:
+      - service-network
+
+  loki:
+    image: grafana/loki
+    ports:
+      - "3100:3100"
+    volumes:
+      - loki-data:/loki
+      - ./Monitoring/loki-config.yaml:/etc/loki.yaml
+    networks:
+      - service-network
+
   blog:
     build:
       context: ./Blog
       dockerfile: Dockerfile
     image: blog:latest
     container_name: blog
-    restart: on-failure
     ports:
       - "8080:8080"
     environment:
@@ -97,6 +126,9 @@ services:
       context: ./Stakeholders
     env_file:
       - ./Stakeholders/.env.docker
+    environment:
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:4318"
+      OTEL_SERVICE_NAME: "stakeholders"
     depends_on:
       stakeholders_db:
         condition: service_healthy
@@ -131,7 +163,6 @@ services:
       dockerfile: Dockerfile
     image: tours:latest
     container_name: tours
-    restart: on-failure
     ports:
       - "8083:8083"
     environment:
@@ -141,6 +172,8 @@ services:
       JWT_SECRET: super-secret-change-me
       STAKEHOLDERS_URL: http://stakeholders:8082
       GRPC_SERVER_PORT: 9093
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:4318"
+      OTEL_SERVICE_NAME: "tours"
     depends_on:
       tours-db:
         condition: service_healthy
@@ -151,7 +184,6 @@ services:
   tours-db:
     image: postgres:16
     container_name: tours-db
-    restart: on-failure
     environment:
       POSTGRES_DB: toursdb
       POSTGRES_USER: postgres
@@ -173,7 +205,6 @@ services:
       context: ./Follower
       dockerfile: Dockerfile
     container_name: follower
-    restart: on-failure
     ports:
       - "8084:8084"
     environment:
@@ -210,7 +241,7 @@ services:
     container_name: jaeger
     ports:
       - "16686:16686"
-      - "4318:4318"
+      - "4319:4318" # remapped host port from 4318 -> was clashing with otel ports setup
     environment:
       COLLECTOR_OTLP_ENABLED: "true"
     networks:
@@ -223,6 +254,8 @@ volumes:
   stakeholders_images_data:
   tours-db-data:
   neo4j_data:
+  grafana-storage:
+  loki-data: 
 
 networks:
   blog-network:
