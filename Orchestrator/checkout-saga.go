@@ -9,6 +9,11 @@ import (
 	"github.com/google/uuid"
 )
 
+type CheckoutResponse struct {
+	Balance float64                    `json:"balance"`
+	Tokens  []domain.TourPurchaseToken `json:"tokens"`
+}
+
 // ── Saga status / step enums ──────────────────────────────────────────────────
 
 // ── Orchestration ─────────────────────────────────────────────────────────────

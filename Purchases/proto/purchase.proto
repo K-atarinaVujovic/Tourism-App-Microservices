@@ -87,6 +87,17 @@ message RefundPurchaseResponse {
   bool success = 1;
 }
 
+// --- saga stuff ---
+message GetCartPriceRequest  { string tourist_id = 1; }
+message GetCartPriceResponse { double total_price = 1; bool is_empty = 2; }
+
+message FinalizeCheckoutRequest  { string tourist_id = 1; }
+message FinalizeCheckoutResponse { repeated TokenResponse tokens = 1; }
+
+message DeleteCheckoutTokensRequest  { repeated string tokenIds = 1; }
+message DeleteCheckoutTokensResponse { bool success = 1; }
+
+
 // --- service ---
 service PurchaseService {
   rpc AddToCart(AddToCartRequest)            returns (CartResponse);
@@ -96,4 +107,8 @@ service PurchaseService {
   rpc GetMyPurchases(GetMyPurchasesRequest)  returns (GetMyPurchasesResponse);
   rpc GetAllPurchases(GetAllPurchasesRequest) returns (GetAllPurchasesResponse);
   rpc RefundPurchase(RefundPurchaseRequest)  returns (RefundPurchaseResponse);
+
+  rpc GetCartPrice(GetCartPriceRequest)               returns (GetCartPriceResponse);
+  rpc FinalizeCheckout(FinalizeCheckoutRequest)       returns (FinalizeCheckoutResponse);
+  rpc DeleteCheckoutTokens(DeleteCheckoutTokensRequest) returns (DeleteCheckoutTokensResponse);
 }

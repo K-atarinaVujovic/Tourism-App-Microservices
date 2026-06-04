@@ -2,6 +2,7 @@ package grpcauth
 
 import (
 	"context"
+	"os"
 
 	jwtreader "gojwt"
 
@@ -13,7 +14,10 @@ import (
 
 type contextKey string
 
-const authHeaderKey contextKey = "authorization"
+const (
+	authHeaderKey contextKey = "authorization"
+	isInternalKey contextKey = "is_internal"
+)
 
 // AuthFromContext retrieves the raw "Authorization: Bearer ..." header
 // stored by UnaryAuthInterceptor.
@@ -41,6 +45,13 @@ func IsAdminFromContext(ctx context.Context) (bool, error) {
 	return token.Claims.Role == "admin", nil
 }
 
+// IsInternalFromContext returns true when the call was authenticated
+// with the internal secret rather than a user JWT.
+func IsInternalFromContext(ctx context.Context) bool {
+	v, _ := ctx.Value(isInternalKey).(bool)
+	return v
+}
+
 // UnaryAuthInterceptor validates the JWT carried in the gRPC "authorization"
 // metadata key and forwards the raw header value via context so downstream
 // callers can attach it to outbound HTTP requests.
@@ -55,6 +66,16 @@ func UnaryAuthInterceptor(
 		return nil, status.Error(codes.Unauthenticated, "missing metadata")
 	}
 
+	// --- internal authorization via internal secret ---
+	if secrets := md.Get("x-internal-secret"); len(secrets) > 0 {
+		if secrets[0] == os.Getenv("INTERNAL_SECRET") {
+			ctx = context.WithValue(ctx, isInternalKey, true)
+			return handler(ctx, req)
+		}
+		return nil, status.Error(codes.PermissionDenied, "invalid internal secret")
+	}
+
+	// --- jwt authorization ---
 	values := md.Get("authorization")
 	if len(values) == 0 {
 		return nil, status.Error(codes.Unauthenticated, "missing authorization header")

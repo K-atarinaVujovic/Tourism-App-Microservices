@@ -94,6 +94,35 @@ func (h *PurchaseHandler) RefundPurchase(ctx context.Context, req *pb.RefundPurc
 	return &pb.RefundPurchaseResponse{Success: true}, nil
 }
 
+// --- saga related stuff ---
+
+func (h *PurchaseHandler) GetCartPrice(ctx context.Context, req *pb.GetCartPriceRequest) (*pb.GetCartPriceResponse, error) {
+	total, isEmpty, err := h.svc.GetCartPrice(ctx, req.TouristId)
+	if err != nil {
+		return nil, err
+	}
+	return &pb.GetCartPriceResponse{TotalPrice: total, IsEmpty: isEmpty}, nil
+}
+
+func (h *PurchaseHandler) FinalizeCheckout(ctx context.Context, req *pb.FinalizeCheckoutRequest) (*pb.FinalizeCheckoutResponse, error) {
+	tokens, err := h.svc.FinalizeCheckout(ctx, req.TouristId)
+	if err != nil {
+		return nil, err
+	}
+	var pbTokens []*pb.TokenResponse
+	for _, t := range tokens {
+		pbTokens = append(pbTokens, toTokenResponse(t))
+	}
+	return &pb.FinalizeCheckoutResponse{Tokens: pbTokens}, nil
+}
+
+func (h *PurchaseHandler) DeleteCheckoutTokens(ctx context.Context, req *pb.DeleteCheckoutTokensRequest) (*pb.DeleteCheckoutTokensResponse, error) {
+	if err := h.svc.DeleteCheckoutTokens(ctx, req.TokenIds); err != nil {
+		return nil, err
+	}
+	return &pb.DeleteCheckoutTokensResponse{Success: true}, nil
+}
+
 // --- mappers ---
 
 func toCartResponse(cart *domain.ShoppingCart) *pb.CartResponse {
