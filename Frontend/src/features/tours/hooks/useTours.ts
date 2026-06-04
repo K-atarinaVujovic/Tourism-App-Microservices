@@ -1,10 +1,13 @@
-import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
+import { useMemo } from 'react';
+import { useMutation, useQuery, useQueryClient, useQueries } from '@tanstack/react-query';
+import { purchaseKeys } from '@/features/purchases/hooks/usePurchases';
+import { purchaseService } from '@/features/purchases/services/purchaseService';
+import type { Tour } from '@/types/tour';
 import { tourService } from '../services/tourService';
 
 export const tourKeys = {
     all: ['tours'] as const,
     published: ['tours', 'published'] as const,
-    purchased: ['tours', 'purchased'] as const,
     lists: () => [...tourKeys.all, 'list'] as const,
     myList: () => [...tourKeys.all, 'my'] as const,
     detail: (id: number) => [...tourKeys.all, id] as const,
@@ -119,9 +122,38 @@ export function usePublishedTourPreviews() {
     });
 }
 
-export function usePurchasedTours() {
-    return useQuery({
-        queryKey: tourKeys.purchased,
-        queryFn: tourService.getPurchasedTours,
+export function usePurchasedTours(enabled = true) {
+    const purchasesQuery = useQuery({
+        queryKey: purchaseKeys.purchases,
+        queryFn: () => purchaseService.getMyPurchases(),
+        enabled,
     });
+
+    const tourIds = useMemo(() => {
+        const ids = (purchasesQuery.data?.tokens ?? [])
+            .map(token => Number(token.tourId))
+            .filter(id => Number.isFinite(id) && id > 0);
+        return [...new Set(ids)];
+    }, [purchasesQuery.data]);
+
+    const tourQueries = useQueries({
+        queries: tourIds.map(id => ({
+            queryKey: tourKeys.detail(id),
+            queryFn: () => tourService.getById(id),
+            enabled: enabled && purchasesQuery.isSuccess,
+        })),
+    });
+
+    const tours = tourQueries
+        .map(query => query.data)
+        .filter((tour): tour is Tour => tour != null);
+
+    return {
+        data: tours,
+        isLoading:
+            purchasesQuery.isLoading ||
+            (tourIds.length > 0 && tourQueries.some(query => query.isLoading)),
+        isError: purchasesQuery.isError || tourQueries.some(query => query.isError),
+        isFetching: purchasesQuery.isFetching || tourQueries.some(query => query.isFetching),
+    };
 }

@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { Link } from 'react-router';
-import { ShoppingCart, Trash2, ArrowRight, ArrowLeft, ShieldAlert, CheckCircle, Wallet } from 'lucide-react';
+import { ShoppingCart, Trash2, ArrowRight, ArrowLeft, ShieldAlert, Wallet } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/store/authStore';
 import { useProfile } from '@/features/stakeholders/hooks/useProfile';
 import { useCart, useRemoveFromCart, useCheckout } from '@/features/purchases/hooks/usePurchases';
+import type { CartItem } from '@/types/purchase';
 
 export default function CartPage() {
     const { user, isAuthenticated } = useAuthStore();
@@ -16,8 +17,9 @@ export default function CartPage() {
     const checkout = useCheckout();
 
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
-    const [checkoutSuccess, setCheckoutSuccess] = useState<boolean>(false);
-    const [issuedTokens, setIssuedTokens] = useState<any[]>([]);
+    const [checkoutSuccess, setCheckoutSuccess] = useState(false);
+    const [purchasedItems, setPurchasedItems] = useState<CartItem[]>([]);
+    const [purchasedTotal, setPurchasedTotal] = useState(0);
 
     if (!isTourist) {
         return (
@@ -42,57 +44,68 @@ export default function CartPage() {
     const handleRemove = (tourId: string) => {
         setErrorMsg(null);
         removeFromCart.mutate(tourId, {
-                onError: (err: any) => {
-                    setErrorMsg(err.message ?? 'Failed to remove item from cart.');
-                },
-            }
-        );
+            onError: (err: Error) => {
+                setErrorMsg(err.message ?? 'Failed to remove item from cart.');
+            },
+        });
     };
 
     const handleCheckout = () => {
+        if (!items.length) return;
+
         setErrorMsg(null);
-        checkout.mutate(String(user?.id), {
-            onSuccess: (data) => {
-                setCheckoutSuccess(true);
-                setIssuedTokens(data.tokens || []);
-            },
-            onError: (err: any) => {
+        setPurchasedItems([...items]);
+        setPurchasedTotal(total);
+
+        checkout.mutate(undefined, {
+            onSuccess: () => setCheckoutSuccess(true),
+            onError: (err: Error) => {
+                setPurchasedItems([]);
+                setPurchasedTotal(0);
                 setErrorMsg(err.message ?? 'Checkout failed. Please check your balance or try again.');
             },
         });
     };
 
-    const total = cart?.total_price ?? 0;
+    const total = cart?.totalPrice ?? 0;
     const items = cart?.items ?? [];
 
     if (checkoutSuccess) {
         return (
             <div className="min-h-screen bg-(--bg)">
                 <div className="max-w-2xl mx-auto px-4 py-16">
-                    <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-8 text-center shadow-xl">
-                        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-400 mb-6 animate-bounce">
-                            <CheckCircle className="h-8 w-8" />
-                        </div>
-                        <h1 className="text-2xl font-bold text-(--text-h) mb-2">Purchase Successful!</h1>
-                        <p className="text-sm text-(--text)/75 mb-8">
-                            Thank you for your purchase. We have issued {issuedTokens.length} tour token{issuedTokens.length !== 1 ? 's' : ''}.
+                    <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-8 shadow-xl">
+                        <h1 className="text-2xl font-bold text-(--text-h) mb-2 text-center">
+                            Order complete
+                        </h1>
+                        <p className="text-sm text-(--text)/75 mb-8 text-center">
+                            Thank you for your purchase. Your tours are ready to explore.
                         </p>
 
-                        <div className="text-left border border-(--border) rounded-lg bg-(--bg) p-5 mb-8 space-y-4">
-                            <h3 className="text-xs font-semibold text-(--text)/50 uppercase tracking-widest border-b border-(--border) pb-2">
-                                Issued Tokens
-                            </h3>
-                            {issuedTokens.map((token, idx) => (
-                                <div key={token.id || idx} className="flex justify-between items-center text-sm">
-                                    <div>
-                                        <p className="font-semibold text-(--text-h)">Tour ID: {token.tour_id}</p>
-                                        <p className="text-xs text-(--text)/50 font-mono">Token ID: {token.id}</p>
+                        <div className="border border-(--border) rounded-lg bg-(--bg) p-5 mb-6 space-y-4">
+                            <h2 className="text-xs font-semibold text-(--text)/50 uppercase tracking-widest border-b border-(--border) pb-2">
+                                Order summary
+                            </h2>
+                            {purchasedItems.map(item => (
+                                <div
+                                    key={item.tourId}
+                                    className="flex justify-between items-start gap-4 text-sm"
+                                >
+                                    <div className="min-w-0">
+                                        <p className="font-semibold text-(--text-h)">{item.tourName}</p>
+                                        <p className="text-xs text-(--text)/50">Tour ID: {item.tourId}</p>
                                     </div>
-                                    <span className="font-semibold text-emerald-400">
-                                        ${token.price.toFixed(2)}
+                                    <span className="font-semibold text-(--text-h) shrink-0">
+                                        ${item.price.toFixed(2)}
                                     </span>
                                 </div>
                             ))}
+                            <div className="border-t border-(--border) pt-3 flex justify-between items-baseline">
+                                <span className="text-sm font-semibold text-(--text-h)">Total paid</span>
+                                <span className="text-lg font-bold text-(--accent)">
+                                    ${purchasedTotal.toFixed(2)}
+                                </span>
+                            </div>
                         </div>
 
                         <div className="flex flex-col sm:flex-row gap-3 justify-center">
@@ -100,13 +113,13 @@ export default function CartPage() {
                                 to="/tours/purchased"
                                 className="rounded-lg bg-(--accent) text-white px-5 py-2.5 text-sm font-semibold hover:opacity-90 transition-all flex items-center justify-center gap-1.5"
                             >
-                                View My Purchased Tours <ArrowRight className="h-4 w-4" />
+                                View my purchased tours <ArrowRight className="h-4 w-4" />
                             </Link>
                             <Link
                                 to="/tourist/tours"
                                 className="rounded-lg border border-(--border) text-(--text) px-5 py-2.5 text-sm font-semibold hover:border-(--accent)/40 hover:text-(--accent) transition-all flex items-center justify-center"
                             >
-                                Browse More Tours
+                                Browse more tours
                             </Link>
                         </div>
                     </div>
@@ -120,11 +133,8 @@ export default function CartPage() {
             <div className="max-w-6xl mx-auto px-4 py-10">
                 <div className="mb-8">
                     <h1 className="text-2xl font-bold text-(--text-h) mb-1 flex items-center gap-2">
-                        <ShoppingCart className="h-6 w-6 text-(--accent)" /> Shopping Cart
+                        Shopping Cart
                     </h1>
-                    <p className="text-sm text-(--text)/55">
-                        Manage tours in your cart and complete your order.
-                    </p>
                 </div>
 
                 {errorMsg && (
@@ -176,19 +186,18 @@ export default function CartPage() {
 
                 {!isLoading && !isError && items.length > 0 && (
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                        {/* Cart Items List */}
                         <div className="lg:col-span-2 space-y-4">
                             {items.map(item => (
                                 <div
-                                    key={item.tour_id}
+                                    key={item.tourId}
                                     className="flex justify-between items-center gap-4 rounded-xl border border-(--border) bg-(--bg) p-5 hover:border-(--accent)/30 transition-all duration-200"
                                 >
                                     <div className="min-w-0 flex-1">
                                         <h3 className="text-base font-semibold text-(--text-h) truncate mb-1">
-                                            {item.tour_name}
+                                            {item.tourName}
                                         </h3>
                                         <p className="text-xs text-(--text)/50 flex items-center gap-1">
-                                            <span>Tour ID: {item.tour_id}</span>
+                                            <span>Tour ID: {item.tourId}</span>
                                         </p>
                                     </div>
 
@@ -199,7 +208,7 @@ export default function CartPage() {
 
                                         <button
                                             type="button"
-                                            onClick={() => handleRemove(item.tour_id)}
+                                            onClick={() => handleRemove(item.tourId)}
                                             disabled={removeFromCart.isPending}
                                             className="rounded-lg p-2 text-(--text)/55 hover:text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-50"
                                             title="Remove item"
@@ -211,7 +220,6 @@ export default function CartPage() {
                             ))}
                         </div>
 
-                        {/* Order Summary */}
                         <div className="rounded-xl border border-(--border) bg-(--bg) p-6 shadow-md h-fit">
                             <h2 className="text-base font-semibold text-(--text-h) border-b border-(--border) pb-3 mb-4">
                                 Order Summary

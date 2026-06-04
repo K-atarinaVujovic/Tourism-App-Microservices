@@ -7,6 +7,18 @@ import type {
   RefundResponse,
 } from '@/types/purchase';
 
+/**
+ * purchaseService works via the Gateway.
+ * The Gateway expects:
+ *  - /purchases/cart (for AddToCart, GetMyCartItems)
+ *  - /purchases/cart/{tour_id} (for RemoveFromCart)
+ *  - /purchases/checkout (for Checkout)
+ *  - /purchases/purchases/my (for GetMyPurchases)
+ *  - /purchases/purchases/{tourist_id}/tours/{tour_id} (for HasPurchased)
+ *  - /purchases/purchases (for GetAllPurchases - Admin)
+ *  - /purchases/purchases/{token_id} (for RefundPurchase - Admin)
+ */
+
 export const purchaseService = {
   getCart: async (): Promise<CartResponse> => {
     const { data } = await apiClient.get<CartResponse>('/purchases/cart');
@@ -14,6 +26,7 @@ export const purchaseService = {
   },
 
   addToCart: async (touristId: string, tourId: string): Promise<CartResponse> => {
+    // The gRPC/Gateway expects AddToCartRequest which usually matches the body
     const { data } = await apiClient.post<CartResponse>('/purchases/cart', {
       tourist_id: touristId,
       tour_id: tourId,
@@ -45,7 +58,14 @@ export const purchaseService = {
     return data;
   },
 
+  getAllPurchases: async (): Promise<MyPurchasesResponse> => {
+    // Gateway maps GET /purchases to GetAllPurchases
+    const { data } = await apiClient.get<MyPurchasesResponse>('/purchases/purchases');
+    return data;
+  },
+
   refundPurchase: async (tokenId: string): Promise<RefundResponse> => {
+    // Gateway maps DELETE /purchases/{token_id} to RefundPurchase
     const { data } = await apiClient.delete<RefundResponse>(`/purchases/purchases/${tokenId}`);
     return data;
   },

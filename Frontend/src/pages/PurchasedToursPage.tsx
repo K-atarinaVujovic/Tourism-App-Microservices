@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router';
 import { Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import TourCard from '@/features/tours/components/TourCard';
@@ -56,7 +57,7 @@ export default function PurchasedToursPage() {
                 <div className="mb-8">
                     <h1 className="text-2xl font-bold text-(--text-h) mb-1">Purchased tours</h1>
                     <p className="text-sm text-(--text)/55">
-                        Here are your purchased tours!!
+                        Tours you have purchased and can explore.
                     </p>
                 </div>
 
@@ -111,11 +112,19 @@ export default function PurchasedToursPage() {
 
                 {!isLoading && !isError && filtered.length === 0 && (
                     <div className="text-center py-20">
-                        <p className="text-sm text-(--text)/50">
+                        <p className="text-sm text-(--text)/50 mb-4">
                             {tours.length === 0
                                 ? 'You have not purchased any tours yet.'
                                 : 'No tours match your search.'}
                         </p>
+                        {tours.length === 0 && (
+                            <Link
+                                to="/tourist/tours"
+                                className="inline-flex rounded-lg bg-(--accent) text-white px-5 py-2.5 text-sm font-semibold hover:opacity-90 transition-all"
+                            >
+                                Browse tours
+                            </Link>
+                        )}
                     </div>
                 )}
 

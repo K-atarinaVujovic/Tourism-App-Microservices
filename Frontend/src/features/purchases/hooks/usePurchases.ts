@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { purchaseService } from '../services/purchaseService';
+import type { CartResponse } from '@/types/purchase';
 
 export const purchaseKeys = {
   cart: ['cart'] as const,
@@ -45,11 +46,11 @@ export function useCheckout() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (touristId: string) => purchaseService.checkout(touristId),
+    mutationFn: () => purchaseService.checkout(),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: purchaseKeys.cart });
+      const emptyCart: CartResponse = { touristId: '', items: [], totalPrice: 0 };
+      queryClient.setQueryData(purchaseKeys.cart, emptyCart);
       queryClient.invalidateQueries({ queryKey: purchaseKeys.purchases });
-      // Invalidate all purchased status queries
       queryClient.invalidateQueries({ queryKey: ['purchasedStatus'] });
     },
   });
@@ -71,6 +72,14 @@ export function useMyPurchases(enabled = true) {
   });
 }
 
+export function useAllPurchases(enabled = true) {
+  return useQuery({
+    queryKey: ['allPurchases'],
+    queryFn: () => purchaseService.getAllPurchases(),
+    enabled,
+  });
+}
+
 export function useRefundPurchase() {
   const queryClient = useQueryClient();
 
@@ -78,6 +87,7 @@ export function useRefundPurchase() {
     mutationFn: (tokenId: string) => purchaseService.refundPurchase(tokenId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: purchaseKeys.purchases });
+      queryClient.invalidateQueries({ queryKey: ['allPurchases'] });
       queryClient.invalidateQueries({ queryKey: ['purchasedStatus'] });
     },
   });

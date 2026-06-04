@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from "react-router";
-import { BadgeDollarSign, LogOut, MapIcon, ShoppingCart } from 'lucide-react';
+import { BadgeDollarSign, LogOut, MapIcon, ShoppingCart, RefreshCcw, Ticket, Wallet } from 'lucide-react';
 import { cn } from "../../lib/utils.ts";
 import { BookOpen, PlusCircle, LayoutDashboard, PenLine, PersonStanding, Shield, Wheat, Route } from "lucide-react";
 import {
@@ -35,6 +35,8 @@ export default function Navbar() {
   const navItems = [
       { path: "/home", label: "Home", icon: LayoutDashboard, show: true },
       { path: "/admin/users", label: "Users", icon: PersonStanding, show: isAuthenticated && isAdmin },
+      { path: "/admin/purchases", label: "Purchases", icon: Ticket, show: isAuthenticated && isAdmin },
+      { path: "/admin/refunds", label: "Refunds", icon: RefreshCcw, show: isAuthenticated && isAdmin },
       { path: "/login", label: "Log in", icon: Shield, show: !isAuthenticated },
       { path: `/profile/${user?.id}`, label: "My Profile", icon: Wheat, show: isAuthenticated && !isAdmin },
       { path: "/tours/create", label: "Create Tour", icon: PlusCircle, show: isAuthenticated && isAuthor },
@@ -93,13 +95,21 @@ export default function Navbar() {
           </NavigationMenu>
 
           {isAuthenticated && (
-              <button
-                  onClick={handleLogout}
-                  className="flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium text-(--text) hover:text-(--accent) transition-colors duration-200"
-              >
-                <LogOut className="h-4 w-4" />
-                <span>Log out</span>
-              </button>
+              <div className="flex items-center gap-4">
+                {profile && profile.balance !== undefined && !isAdmin && (
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/10 text-emerald-600 text-xs font-bold border border-emerald-500/20">
+                    <Wallet className="h-3.5 w-3.5" />
+                    <span>${(profile.balance ?? 0).toFixed(2)}</span>
+                  </div>
+                )}
+                <button
+                    onClick={handleLogout}
+                    className="flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium text-(--text) hover:text-(--accent) transition-colors duration-200"
+                >
+                  <LogOut className="h-4 w-4" />
+                  <span>Log out</span>
+                </button>
+              </div>
           )}
         </div>
       </nav>

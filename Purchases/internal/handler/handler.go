@@ -21,9 +21,13 @@ func NewPurchaseHandler(svc *service.PurchaseService) *PurchaseHandler {
 // AddToCart expects AddToCartRequest to have a flat tour_id field (not a nested OrderItem).
 // Update your proto: replace the OrderItem field with `string tour_id = 2;`
 func (h *PurchaseHandler) AddToCart(ctx context.Context, req *pb.AddToCartRequest) (*pb.CartResponse, error) {
-	cart, err := h.svc.AddToCart(ctx, req.TouristId, req.TourId)
+	touristID, err := grpcauth.TouristIDFromContext(ctx)
 	if err != nil {
 		return nil, err
+	}
+	cart, err := h.svc.AddToCart(ctx, touristID, req.TourId)
+	if err != nil {
+		return nil, toGRPCError(err)
 	}
 	return toCartResponse(cart), nil
 }
@@ -35,15 +39,19 @@ func (h *PurchaseHandler) RemoveFromCart(ctx context.Context, req *pb.RemoveFrom
 	}
 	cart, err := h.svc.RemoveFromCart(touristID, req.TourId)
 	if err != nil {
-		return nil, err
+		return nil, toGRPCError(err)
 	}
 	return toCartResponse(cart), nil
 }
 
-func (h *PurchaseHandler) Checkout(ctx context.Context, req *pb.CheckoutRequest) (*pb.CheckoutResponse, error) {
-	tokens, err := h.svc.Checkout(ctx, req.TouristId)
+func (h *PurchaseHandler) Checkout(ctx context.Context, _ *pb.CheckoutRequest) (*pb.CheckoutResponse, error) {
+	touristID, err := grpcauth.TouristIDFromContext(ctx)
 	if err != nil {
 		return nil, err
+	}
+	tokens, err := h.svc.Checkout(ctx, touristID)
+	if err != nil {
+		return nil, toGRPCError(err)
 	}
 
 	var pbTokens []*pb.TokenResponse

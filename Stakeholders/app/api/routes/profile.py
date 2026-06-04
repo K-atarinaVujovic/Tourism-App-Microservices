@@ -1,4 +1,4 @@
-from contextlib import asynccontextmanager
+﻿from contextlib import asynccontextmanager
 from typing import Annotated, Any, Optional
 
 from fastapi import APIRouter, Body, Depends, FastAPI, File, HTTPException, Path, Request, UploadFile
@@ -80,7 +80,7 @@ async def update_balance_for_user(
         current_user = Depends(get_current_user),
 ) -> Any:
   try:
-    if current_user[user_id] != 1:
+    if current_user.get("role") != "admin":
       raise HTTPException(status_code=403, detail="Unauthorized")
     response = await service.update_balance(user_id, balance)
     return response

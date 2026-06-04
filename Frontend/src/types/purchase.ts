@@ -1,21 +1,21 @@
 export interface CartItem {
-  tour_id: string;
-  tour_name: string;
+  tourId: string;
+  tourName: string;
   price: number;
 }
 
 export interface CartResponse {
-  tourist_id: string;
+  touristId: string;
   items: CartItem[];
-  total_price: number;
+  totalPrice: number;
 }
 
 export interface PurchaseToken {
   id: string;
-  tourist_id: string;
-  tour_id: string;
+  touristId: string;
+  tourId: string;
   price: number;
-  issued_at: string;
+  issuedAt: string;
 }
 
 export interface CheckoutResponse {
@@ -31,7 +31,7 @@ export interface MyPurchasesResponse {
 }
 
 export interface PurchaseItem {
-  tourist_id: string;
+  touristId: string;
   tokens: PurchaseToken[];
 }
 

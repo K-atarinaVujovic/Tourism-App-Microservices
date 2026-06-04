@@ -1,4 +1,4 @@
-import { createBrowserRouter, Navigate } from 'react-router';
+﻿import { createBrowserRouter, Navigate } from 'react-router';
 import HomePage from '../pages/HomePage.tsx';
 import MapPage from '../pages/MapPage.tsx';
 import TourCreatePage from '../pages/TourCreatePage.tsx';
@@ -8,6 +8,8 @@ import RegistrationPage from '../pages/RegistrationPage';
 import LoginPage from '../pages/LoginPage';
 import ProfilePage from '@/pages/ProfilePage.tsx';
 import AdminPage from '@/pages/AdminPage.tsx';
+import AdminPurchasesPage from '@/pages/AdminPurchasesPage.tsx';
+import AdminRefundsPage from '@/pages/AdminRefundsPage.tsx';
 import ToursPage from "@/pages/ToursPage.tsx";
 import TourDetailPage from "@/pages/ToursDetailPage.tsx";
 import TouristToursPage from '@/pages/TouristToursPage.tsx';
@@ -59,6 +61,14 @@ export const router = createBrowserRouter([
       {
         path: 'admin/users',
         element: <AdminPage />,
+      },
+      {
+        path: 'admin/purchases',
+        element: <AdminPurchasesPage />,
+      },
+      {
+        path: 'admin/refunds',
+        element: <AdminRefundsPage />,
       },
       {
         path: 'tours/',

@@ -32,7 +32,7 @@ export default function PublishedTourPreviewCard({ tour }: Props) {
 
     // Fetch cart to check if it's already in there
     const { data: cart } = useCart(!!isTourist);
-    const isInCart = cart?.items?.some(item => String(item.tour_id) === String(tour.id));
+    const isInCart = cart?.items?.some(item => String(item.tourId) === String(tour.id));
 
     // Check if purchased
     const { data: purchaseStatus } = useHasPurchased(
