@@ -21,6 +21,16 @@ import (
 	tourspb "gateway/proto/tours"
 	stakeholderspb "gateway/proto/stakeholders"
 	"jwtreader"
+
+    "time"
+
+    "go.opentelemetry.io/otel"
+    "go.opentelemetry.io/otel/attribute"
+    "go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
+    "go.opentelemetry.io/otel/sdk/resource"
+    sdktrace "go.opentelemetry.io/otel/sdk/trace"
+    semconv "go.opentelemetry.io/otel/semconv/v1.24.0"
+    "go.opentelemetry.io/otel/trace"
 )
 
 // MicroserviceRegistry Should contain all generated API handlers
@@ -267,7 +277,69 @@ func CORSMiddleware(next http.Handler) http.Handler {
 	})
 }
 
+var tracer trace.Tracer
+
+// Initializing Tracer
+func InitTracer(ctx context.Context) (*sdktrace.TracerProvider, error) {
+	endpoint := os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT")
+	if endpoint == "" {
+		endpoint = "jaeger:4318"
+	}
+
+	exporter, err := otlptracehttp.New(
+		ctx,
+		otlptracehttp.WithEndpoint(endpoint),
+		otlptracehttp.WithInsecure(),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	tp := sdktrace.NewTracerProvider(
+		sdktrace.WithBatcher(exporter),
+		sdktrace.WithResource(resource.NewWithAttributes(
+			semconv.SchemaURL,
+			semconv.ServiceName("api-gateway"),
+		)),
+	)
+
+	otel.SetTracerProvider(tp)
+	tracer = otel.Tracer("api-gateway")
+
+	return tp, nil
+}
+
+func TracingMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx, span := tracer.Start(r.Context(), r.Method+" "+r.URL.Path)
+		defer span.End()
+
+		start := time.Now()
+
+		span.SetAttributes(
+			semconv.HTTPMethod(r.Method),
+			semconv.HTTPRoute(r.URL.Path),
+			attribute.String("http.target", r.URL.RequestURI()),
+		)
+
+		next.ServeHTTP(w, r.WithContext(ctx))   //withContext -> ako budemo propagirali tracing ka mikroservisima
+
+		span.SetAttributes(
+			attribute.String("duration", time.Since(start).String()),
+		)
+	})
+}
+
 func main() {
+    ctx := context.Background()
+    tp, err := InitTracer(ctx)
+    if err != nil {
+        log.Fatal("failed to initialize tracer: ", err)
+    }
+    defer func() {
+        _ = tp.Shutdown(ctx)
+    }()
+
 	// Load config
 	config, err := LoadConfig("CONFIG.yaml")
 	if err != nil {
@@ -286,8 +358,11 @@ func main() {
 	// Wrap with JWT authentication middleware
 	authHandler := JWTAuthMiddleware(config.ExcludedPaths, proxyHandler)
 
+	// Handle tracing
+    tracingHandler := TracingMiddleware(authHandler)
+
 	// Handle cors
-	corsHandler := CORSMiddleware(authHandler)
+    corsHandler := CORSMiddleware(tracingHandler)
 
 	// Handle all requests to the server using the authenticated proxy
 	http.Handle("/", corsHandler)
