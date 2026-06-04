@@ -17,6 +17,7 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	"gopkg.in/yaml.v3"
 
+	purchasepb "gateway/proto/purchase"
 	servicepb "gateway/proto/service"
 	tourspb "gateway/proto/tours"
 	stakeholderspb "gateway/proto/stakeholders"
@@ -38,6 +39,7 @@ var MicroserviceRegistry = map[string]func(context.Context, *runtime.ServeMux, s
 	"service":      servicepb.RegisterAlbumServiceHandlerFromEndpoint,
 	"tours":   tourspb.RegisterTourGrpcServiceHandlerFromEndpoint,
 	"stakeholders": stakeholderspb.RegisterProfileServiceHandlerFromEndpoint,
+	"purchases": purchasepb.RegisterPurchaseServiceHandlerFromEndpoint,
 	// add more services here
 }
 
@@ -188,17 +190,30 @@ func ProxyRequestHandler(proxies []ProxyRegistry) func(http.ResponseWriter, *htt
 				return
 			}
 
-			// Restore body for REST fallback
-			r.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
-			log.Printf("[%s][gRPC->REST fallback] %s %s", proxy.name, r.Method, r.URL.String())
+			// gRPC failed — fall back to REST only when a REST proxy exists
+			if proxy.restHandler != nil {
+				r.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
+				log.Printf("[%s][gRPC->REST fallback] %s %s (gRPC %d)", proxy.name, r.Method, r.URL.String(), rec.statusCode)
+				proxy.restHandler.ServeHTTP(w, r)
+				return
+			}
+
+			// gRPC-only service (e.g. purchases): forward the error response instead of
+			// dropping it, which previously surfaced as HTTP 200 with an empty body.
+			log.Printf("[%s][gRPC error] %s %s -> %d", proxy.name, r.Method, r.URL.String(), rec.statusCode)
+			w.WriteHeader(rec.statusCode)
+			w.Write(rec.body)
+			return
 		}
 
-		// Fall back to REST
+		// Fall back to REST when no gRPC handler is configured
 		if proxy.restHandler != nil {
 			log.Printf("[%s][REST] %s %s", proxy.name, r.Method, r.URL.String())
 			proxy.restHandler.ServeHTTP(w, r)
 			return
 		}
+
+		http.Error(w, "service unavailable", http.StatusBadGateway)
 	}
 }
 

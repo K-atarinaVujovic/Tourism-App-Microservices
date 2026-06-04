@@ -148,7 +148,6 @@ services:
       - ./Authorization/db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
       - ./seed/auth_seed.sql:/docker-entrypoint-initdb.d/02-seed.sql:ro
     healthcheck:
-#      test: [ "CMD-SHELL", "pg_isready -U tourism-app -d tourism-auth" ]
       test: ["CMD-SHELL", "psql -U tourism-app -d tourism-auth -c 'SELECT 1'"]
       interval: 5s
       timeout: 5s
@@ -162,8 +161,8 @@ services:
       dockerfile: Dockerfile
     container_name: auth
     depends_on:
-       auth-db:
-          condition: service_healthy
+      auth-db:
+        condition: service_healthy
     environment:
       USE_CONFIG_FILE: "false"
       PORT: 8081
@@ -174,7 +173,6 @@ services:
     networks:
       - auth-network
       - service-network
-
 
   stakeholders:
     build:
@@ -199,8 +197,8 @@ services:
   stakeholders_db:
     image: mongo:7
     volumes:
-       - stakeholders_db_data:/data/db
-       - ./seed/stakeholders_seed.js:/docker-entrypoint-initdb.d/seed.js:ro
+      - stakeholders_db_data:/data/db
+      - ./seed/stakeholders_seed.js:/docker-entrypoint-initdb.d/seed.js:ro
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: example
@@ -291,6 +289,48 @@ services:
     networks:
       - follower-network
 
+  purchases:
+    build:
+      context: .
+      dockerfile: ./Purchases/Dockerfile
+    container_name: purchases
+    restart: on-failure
+    ports:
+      - "9095:9095"
+    environment:
+      TOURS_SERVICE_URL: http://tours:8083
+      STAKEHOLDERS_SERVICE_URL: http://stakeholders:8082
+      JWT_SECRET: super-secret-change-me
+      DB_DSN: purchase:purchase@tcp(purchases-db:3306)/purchase?charset=utf8mb4&parseTime=True&loc=Local
+    depends_on:
+      purchases-db:
+        condition: service_healthy
+      tours:
+        condition: service_started
+      stakeholders:
+        condition: service_started
+    networks:
+      - purchases-network
+      - service-network
+
+  purchases-db:
+    image: mariadb:11
+    container_name: purchases-db
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: purchase
+      MYSQL_USER: purchase
+      MYSQL_PASSWORD: purchase
+    volumes:
+      - purchases-db-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - purchases-network
+
   jaeger:
     image: jaegertracing/all-in-one:1.57
     container_name: jaeger
@@ -312,6 +352,7 @@ volumes:
   grafana-storage:
   loki-data: 
   prometheus-data: 
+  purchases-db-data:
 
 networks:
   blog-network:
@@ -325,4 +366,6 @@ networks:
   tours-network:
     driver: bridge
   follower-network:
+    driver: bridge
+  purchases-network:
     driver: bridge
