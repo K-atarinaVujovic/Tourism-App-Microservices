@@ -9,6 +9,7 @@ class ProfileCreate(BaseModel):
     quote: str | None = Field(default=None)
     user_id: int
     role: Role
+    balance: float | None = Field(default=None)
 
 class ProfileUpdate(BaseModel):
     name: str | None = Field(default=None)
