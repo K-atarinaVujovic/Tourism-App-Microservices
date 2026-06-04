@@ -2,10 +2,10 @@ from app.models.profile import Profile
 from app.repositories.profile import ProfileRepository
 from app.schemas.profile import ProfileCreate, ProfileResponse, ProfileUpdate, BalanceResponse
 from app.core.exceptions import NotFoundException, AlreadyExistsException
-
 from fastapi import HTTPException
+import logging
 
-
+logger = logging.getLogger(__name__)
 class ProfileService:
   repo: ProfileRepository = ProfileRepository()
 
@@ -24,6 +24,7 @@ class ProfileService:
     saved = await self.repo.save(new_profile)
     data = saved.model_dump() # because uhhh getting id from doc db or something idk
     data["id"] = str(saved.id)
+    logger.info(f"Profile created for {new_profile.user_id}")
     return ProfileResponse.model_validate(data)
 
   async def update(self, user_id: int, updated_profile_schema: ProfileUpdate) -> ProfileResponse:
@@ -40,6 +41,7 @@ class ProfileService:
     updated = await self.repo.update(profile)
     data = updated.model_dump()
     data["id"] = str(updated.id)
+    logger.info(f"Profile updated for {user_id}")
     return ProfileResponse.model_validate(data)
 
   async def get(self, profile_id: str) -> ProfileResponse:
@@ -56,6 +58,7 @@ class ProfileService:
       raise NotFoundException("Profile not found")
     data = profile.model_dump()
     data["id"] = str(profile.id)
+    logger.info(f"Profile fetched for {user_id}")
     return ProfileResponse.model_validate(data)
 
   # Gets balance by user id
