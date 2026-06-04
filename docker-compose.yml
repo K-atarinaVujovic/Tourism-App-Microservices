@@ -8,8 +8,63 @@ services:
     ports:
       - "4317:4317" # gRPC
       - "4318:4318" # http
+      - "9464:9464" # prometheus metrics
     networks:
       - service-network
+
+  prometheus:
+    image: prom/prometheus
+    volumes:
+      - ./Monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    ports:
+      - "9090:9090"
+    networks:
+      - service-network
+
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: node-exporter
+    restart: unless-stopped
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.rootfs=/rootfs'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    networks:
+      - service-network
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: cadvisor
+    restart: unless-stopped
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    networks:
+      - service-network
+
+  # NVIDIA GPU Exporter
+  # gpu-exporter:
+  #   image: utkuozdemir/nvidia_gpu_exporter
+  #   container_name: gpu-exporter
+  #   restart: unless-stopped
+  #   deploy:
+  #     resources:
+  #       reservations:
+  #         devices:
+  #           - driver: nvidia
+  #             count: all
+  #             capabilities: [gpu]
+  #   networks:
+  #     - service-network
 
   grafana:
     image: grafana/grafana
@@ -256,6 +311,7 @@ volumes:
   neo4j_data:
   grafana-storage:
   loki-data: 
+  prometheus-data: 
 
 networks:
   blog-network:
