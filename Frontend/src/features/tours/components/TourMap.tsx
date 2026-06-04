@@ -92,7 +92,7 @@ export default function TourMap({ tourId, keypoints, className }: TourMapProps) 
             setRouteError(null);
             return;
         }
-        const ordered = [...keypoints].sort((a, b) => a.order - b.order);
+        const ordered = [...keypoints].sort((a, b) => a.id - b.id);
         const waypoints = ordered.map((kp) => ({ lat: kp.latitude, lng: kp.longitude }));
 
         fetchRoute(waypoints)

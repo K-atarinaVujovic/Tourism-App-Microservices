@@ -15,13 +15,15 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	"gopkg.in/yaml.v3"
 
+	purchasepb "gateway/proto/purchase"
 	servicepb "gateway/proto/service"
 	"jwtreader"
 )
 
 // MicroserviceRegistry Should contain all generated API handlers
 var MicroserviceRegistry = map[string]func(context.Context, *runtime.ServeMux, string, []grpc.DialOption) error{
-	"service": servicepb.RegisterAlbumServiceHandlerFromEndpoint,
+	"service":   servicepb.RegisterAlbumServiceHandlerFromEndpoint,
+	"purchases": purchasepb.RegisterPurchaseServiceHandlerFromEndpoint,
 	// add more services here
 }
 
@@ -233,26 +235,26 @@ func FindProxy(proxies []ProxyRegistry, r *http.Request) ProxyRegistry {
 
 // CORSMiddleware Middleware to handle CORS
 func CORSMiddleware(next http.Handler) http.Handler {
-    allowed := map[string]bool{
-        "http://localhost:5173": true,
-        "http://localhost:8080": true,
-    }
+	allowed := map[string]bool{
+		"http://localhost:5173": true,
+		"http://localhost:8080": true,
+	}
 
-    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-        origin := r.Header.Get("Origin")
-        if allowed[origin] {
-            w.Header().Set("Access-Control-Allow-Origin", origin)
-        }
-        w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-        w.Header().Set("Access-Control-Allow-Headers", "Authorization, Content-Type")
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		origin := r.Header.Get("Origin")
+		if allowed[origin] {
+			w.Header().Set("Access-Control-Allow-Origin", origin)
+		}
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Authorization, Content-Type")
 
-        if r.Method == http.MethodOptions {
-            w.WriteHeader(http.StatusNoContent)
-            return
-        }
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
 
-        next.ServeHTTP(w, r)
-    })
+		next.ServeHTTP(w, r)
+	})
 }
 
 func main() {
@@ -275,7 +277,7 @@ func main() {
 	authHandler := JWTAuthMiddleware(config.ExcludedPaths, proxyHandler)
 
 	// Handle cors
-    corsHandler := CORSMiddleware(authHandler)
+	corsHandler := CORSMiddleware(authHandler)
 
 	// Handle all requests to the server using the authenticated proxy
 	http.Handle("/", corsHandler)

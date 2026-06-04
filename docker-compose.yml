@@ -207,7 +207,7 @@ services:
     container_name: purchases
     restart: on-failure
     ports:
-      - "50051:50051"
+      - "9095:9095"
     environment:
       TOURS_SERVICE_URL: http://tours:8083
       STAKEHOLDERS_SERVICE_URL: http://stakeholders:8082

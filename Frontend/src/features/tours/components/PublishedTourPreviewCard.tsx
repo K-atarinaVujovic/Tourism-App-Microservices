@@ -2,6 +2,10 @@ import { Clock, DollarSign, MapPin, Navigation, Route, Tag } from 'lucide-react'
 import { cn } from '@/lib/utils';
 import type { PublishedTourPreview } from '@/types/tour';
 import type { TourDifficulty } from '@/features/tours/services/tourService';
+import { useAuthStore } from '@/store/authStore';
+import { useProfile } from '@/features/stakeholders/hooks/useProfile';
+import { useNavigate } from 'react-router';
+import { useCart, useAddToCart, useHasPurchased } from '@/features/purchases/hooks/usePurchases';
 
 const DIFFICULTY_STYLES: Record<TourDifficulty, string> = {
     EASY: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
@@ -20,6 +24,35 @@ type Props = {
 };
 
 export default function PublishedTourPreviewCard({ tour }: Props) {
+    const { user, isAuthenticated } = useAuthStore();
+    const { data: profile } = useProfile(user?.id ?? 0);
+    const navigate = useNavigate();
+
+    const isTourist = isAuthenticated && profile?.role?.toLowerCase() === 'tourist';
+
+    // Fetch cart to check if it's already in there
+    const { data: cart } = useCart(!!isTourist);
+    const isInCart = cart?.items?.some(item => String(item.tour_id) === String(tour.id));
+
+    // Check if purchased
+    const { data: purchaseStatus } = useHasPurchased(
+        isTourist ? String(user?.id) : undefined,
+        String(tour.id)
+    );
+    const isPurchased = purchaseStatus?.purchased ?? false;
+
+    const addToCartMutation = useAddToCart();
+
+    const handleAddToCart = () => {
+        if (!isTourist) {
+            navigate('/login');
+            return;
+        }
+        addToCartMutation.mutate({
+            touristId: String(user?.id),
+            tourId: String(tour.id),
+        });
+    };
     return (
         <article
             className={cn(
@@ -119,13 +152,40 @@ export default function PublishedTourPreviewCard({ tour }: Props) {
                 </div>
             )}
 
-            <button
-                type="button"
-                disabled
-                className="mt-5 rounded-lg border border-(--border) px-4 py-2 text-sm font-medium text-(--text)/45 cursor-not-allowed"
-            >
-                Purchase coming soon
-            </button>
+            {!isTourist ? (
+                <button
+                    type="button"
+                    onClick={() => navigate('/login')}
+                    className="mt-5 w-full rounded-lg bg-(--accent) text-white hover:opacity-90 transition-opacity px-4 py-2 text-sm font-medium"
+                >
+                    Log in to Purchase
+                </button>
+            ) : isPurchased ? (
+                <button
+                    type="button"
+                    onClick={() => navigate(`/tours/${tour.id}`)}
+                    className="mt-5 w-full rounded-lg border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 px-4 py-2 text-sm font-medium hover:bg-emerald-500/20 transition-all flex items-center justify-center gap-1.5"
+                >
+                    ✓ Purchased (View Details)
+                </button>
+            ) : isInCart ? (
+                <button
+                    type="button"
+                    disabled
+                    className="mt-5 w-full rounded-lg border border-(--border) px-4 py-2 text-sm font-medium text-(--text)/45 cursor-not-allowed"
+                >
+                    Already in Cart
+                </button>
+            ) : (
+                <button
+                    type="button"
+                    onClick={handleAddToCart}
+                    disabled={addToCartMutation.isPending}
+                    className="mt-5 w-full rounded-lg bg-(--accent) text-white hover:opacity-90 disabled:opacity-50 transition-all px-4 py-2 text-sm font-medium"
+                >
+                    {addToCartMutation.isPending ? 'Adding to Cart...' : 'Add to Cart'}
+                </button>
+            )}
         </article>
     );
 }

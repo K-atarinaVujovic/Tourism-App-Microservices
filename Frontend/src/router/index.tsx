@@ -17,6 +17,7 @@ import BlogPage from '@/pages/BlogPage.tsx';
 import FollowersPage from '@/pages/FollowersPage.tsx';
 import PurchasedToursPage from '@/pages/PurchasedToursPage.tsx';
 import ActiveTourPage from '@/pages/ActiveTourPage.tsx';
+import CartPage from '@/pages/CartPage.tsx';
 
 export const router = createBrowserRouter([
   {
@@ -87,6 +88,9 @@ export const router = createBrowserRouter([
       },
       { path: "tours/active", 
         element: <ActiveTourPage /> 
+      },
+      { path: "cart", 
+        element: <CartPage /> 
       },
     ],
   },

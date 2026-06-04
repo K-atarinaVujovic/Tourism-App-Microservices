@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 
+	grpcauth "purchase-service/internal/grpc-auth"
 	"purchase-service/internal/domain"
 	"purchase-service/internal/service"
 	pb "purchase-service/pb"
@@ -28,7 +29,11 @@ func (h *PurchaseHandler) AddToCart(ctx context.Context, req *pb.AddToCartReques
 }
 
 func (h *PurchaseHandler) RemoveFromCart(ctx context.Context, req *pb.RemoveFromCartRequest) (*pb.CartResponse, error) {
-	cart, err := h.svc.RemoveFromCart(req.TouristId, req.TourId)
+	touristID, err := grpcauth.TouristIDFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+	cart, err := h.svc.RemoveFromCart(touristID, req.TourId)
 	if err != nil {
 		return nil, err
 	}

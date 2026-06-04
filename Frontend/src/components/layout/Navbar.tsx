@@ -1,7 +1,7 @@
 import { NavLink, useNavigate } from "react-router";
-import { BadgeDollarSign, LogOut, MapIcon } from 'lucide-react';
+import { BadgeDollarSign, LogOut, MapIcon, ShoppingCart } from 'lucide-react';
 import { cn } from "../../lib/utils.ts";
-import { BookOpen, Map, PlusCircle, LayoutDashboard, PenLine, PersonStanding, Shield, Wheat, Route } from "lucide-react";
+import { BookOpen, PlusCircle, LayoutDashboard, PenLine, PersonStanding, Shield, Wheat, Route } from "lucide-react";
 import {
   NavigationMenu,
   NavigationMenuItem,
@@ -11,6 +11,7 @@ import {
 import { logoutUser } from '../../features/auth/services/authService';
 import { useAuthStore } from '../../store/authStore';
 import { useProfile } from "@/features/stakeholders/hooks/useProfile";
+import { useCart } from "@/features/purchases/hooks/usePurchases";
 
 // ---------------------------------------------------------------------------
 // Navbar
@@ -28,7 +29,8 @@ export default function Navbar() {
   const isAuthor = profileRole === "author";
   const isTourist = !isAdmin && profileRole === "tourist";
 
-
+  const { data: cart } = useCart(!!(isAuthenticated && isTourist));
+  const cartCount = cart?.items?.length ?? 0;
 
   const navItems = [
       { path: "/home", label: "Home", icon: LayoutDashboard, show: true },
@@ -40,6 +42,7 @@ export default function Navbar() {
       { path: "/tourist/tours", label: "Tours", icon: Route, show: isAuthenticated && isTourist },
       { path: "/blogs", label: "Blogs", icon: BookOpen, show: isAuthenticated && !isAdmin },
       { path: "/blogs/create", label: "Create Blog", icon: PenLine, show: isAuthenticated && !isAdmin },
+      { path: "/cart", label: `Cart${cartCount > 0 ? ` (${cartCount})` : ''}`, icon: ShoppingCart, show: isAuthenticated && isTourist },
       { path: "/tours/purchased", label: "Purchased Tours", icon: BadgeDollarSign, show: isAuthenticated && isTourist },
       { path: "/tours/active", label: "Active Tour", icon: MapIcon, show: isAuthenticated && isTourist },
   ];

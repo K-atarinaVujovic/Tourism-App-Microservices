@@ -9,5 +9,5 @@ RUN go build -o purchases ./cmd/main.go
 FROM alpine:latest
 WORKDIR /app
 COPY --from=builder /usr/src/app/purchases .
-EXPOSE 50051
+EXPOSE 9095
 CMD ["./purchases"]
