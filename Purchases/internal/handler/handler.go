@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"purchase-service/internal/domain"
+	grpcauth "purchase-service/internal/grpc-auth"
 	"purchase-service/internal/service"
 	pb "purchase-service/pb"
 )
@@ -20,25 +21,37 @@ func NewPurchaseHandler(svc *service.PurchaseService) *PurchaseHandler {
 // AddToCart expects AddToCartRequest to have a flat tour_id field (not a nested OrderItem).
 // Update your proto: replace the OrderItem field with `string tour_id = 2;`
 func (h *PurchaseHandler) AddToCart(ctx context.Context, req *pb.AddToCartRequest) (*pb.CartResponse, error) {
-	cart, err := h.svc.AddToCart(ctx, req.TouristId, req.TourId)
+	touristID, err := grpcauth.TouristIDFromContext(ctx)
 	if err != nil {
 		return nil, err
+	}
+	cart, err := h.svc.AddToCart(ctx, touristID, req.TourId)
+	if err != nil {
+		return nil, toGRPCError(err)
 	}
 	return toCartResponse(cart), nil
 }
 
 func (h *PurchaseHandler) RemoveFromCart(ctx context.Context, req *pb.RemoveFromCartRequest) (*pb.CartResponse, error) {
-	cart, err := h.svc.RemoveFromCart(req.TouristId, req.TourId)
+	touristID, err := grpcauth.TouristIDFromContext(ctx)
 	if err != nil {
 		return nil, err
+	}
+	cart, err := h.svc.RemoveFromCart(touristID, req.TourId)
+	if err != nil {
+		return nil, toGRPCError(err)
 	}
 	return toCartResponse(cart), nil
 }
 
-func (h *PurchaseHandler) Checkout(ctx context.Context, req *pb.CheckoutRequest) (*pb.CheckoutResponse, error) {
-	tokens, err := h.svc.Checkout(ctx, req.TouristId)
+func (h *PurchaseHandler) Checkout(ctx context.Context, _ *pb.CheckoutRequest) (*pb.CheckoutResponse, error) {
+	touristID, err := grpcauth.TouristIDFromContext(ctx)
 	if err != nil {
 		return nil, err
+	}
+	tokens, err := h.svc.Checkout(ctx, touristID)
+	if err != nil {
+		return nil, toGRPCError(err)
 	}
 
 	var pbTokens []*pb.TokenResponse
@@ -92,6 +105,14 @@ func (h *PurchaseHandler) RefundPurchase(ctx context.Context, req *pb.RefundPurc
 		return nil, err
 	}
 	return &pb.RefundPurchaseResponse{Success: true}, nil
+}
+
+func (h *PurchaseHandler) GetMyCartItems(ctx context.Context, _ *pb.GetMyCartItemsRequest) (*pb.CartResponse, error) {
+	cart, err := h.svc.GetMyCartItems(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return toCartResponse(cart), nil
 }
 
 // --- saga related stuff ---

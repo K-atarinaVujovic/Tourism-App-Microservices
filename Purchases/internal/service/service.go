@@ -139,7 +139,9 @@ func (s *PurchaseService) Checkout(ctx context.Context, touristID string) ([]dom
 	// clear cart after checkout
 	cart.Items = []domain.OrderItem{}
 	cart.TotalPrice = 0
-	s.carts.SaveCart(cart)
+	if err := s.carts.SaveCart(cart); err != nil {
+		return nil, err
+	}
 
 	return tokens, nil
 }
@@ -204,6 +206,19 @@ func (s *PurchaseService) RefundPurchase(ctx context.Context, tokenID string) er
 	}
 
 	return s.tokens.DeleteToken(tokenID)
+}
+
+func (s *PurchaseService) GetMyCartItems(ctx context.Context) (*domain.ShoppingCart, error) {
+	touristID, err := grpcauth.TouristIDFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	cart, err := s.carts.FindCartByTouristID(touristID)
+	if err != nil {
+		return domain.NewShoppingCart(touristID), nil
+	}
+	return cart, nil
 }
 
 // SAGA stuff

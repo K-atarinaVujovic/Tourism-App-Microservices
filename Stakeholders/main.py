@@ -40,7 +40,8 @@ async def serve_grpc():
     global grpc_server
     grpc_server = grpc.aio.server(futures.ThreadPoolExecutor(max_workers=10))
     profile_service = ProfileService()
-    profile_pb2_grpc.add_ProfileServiceServicer_to_server(ProfileServicer(profile_service), grpc_server)
+    uploader_service = Uploader()
+    profile_pb2_grpc.add_ProfileServiceServicer_to_server(ProfileServicer(profile_service, uploader_service), grpc_server)
     grpc_server.add_insecure_port(LISTEN_ADDR)
     await grpc_server.start()
     print("gRPC server started, listening on " + str(GRPC_PORT))

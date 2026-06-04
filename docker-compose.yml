@@ -120,7 +120,6 @@ services:
       - auth-network
       - service-network
 
-
   stakeholders:
     build:
       context: ./Stakeholders
@@ -244,7 +243,7 @@ services:
     container_name: purchases
     restart: on-failure
     ports:
-      - "50051:50051"
+      - "9095:9095"
     environment:
       TOURS_SERVICE_URL: http://tours:8083
       STAKEHOLDERS_SERVICE_URL: http://stakeholders:8082
@@ -301,7 +300,6 @@ services:
     networks:
       - service-network
 
-
   jaeger:
     image: jaegertracing/all-in-one:1.57
     container_name: jaeger
@@ -320,9 +318,9 @@ volumes:
   stakeholders_images_data:
   tours-db-data:
   neo4j_data:
-  purchases-db-data:
   grafana-storage:
   loki-data:
+  purchases-db-data:
 
 networks:
   blog-network:

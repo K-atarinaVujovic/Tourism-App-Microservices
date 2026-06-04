@@ -36,11 +36,6 @@ export const tourService = {
         return data;
     },
 
-    getPurchasedTours: async(): Promise<Tour[]> => {
-        const { data } = await apiClient.get<Tour[]>('/tours/tours/purchased');
-        return data;
-    },
-
     updateLength: async (id: number, lengthInKm: number): Promise<Tour> => {
         const { data } = await apiClient.put<Tour>(`/tours/tours/${id}/length`, {
             lengthInKm,

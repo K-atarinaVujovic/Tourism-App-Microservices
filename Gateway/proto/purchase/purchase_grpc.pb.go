@@ -4,7 +4,7 @@
 // - protoc             v4.25.9
 // source: purchase.proto
 
-package pb
+package __
 
 import (
 	context "context"
@@ -21,12 +21,12 @@ const _ = grpc.SupportPackageIsVersion9
 const (
 	PurchaseService_AddToCart_FullMethodName       = "/purchase.PurchaseService/AddToCart"
 	PurchaseService_RemoveFromCart_FullMethodName  = "/purchase.PurchaseService/RemoveFromCart"
+	PurchaseService_GetMyCartItems_FullMethodName  = "/purchase.PurchaseService/GetMyCartItems"
 	PurchaseService_Checkout_FullMethodName        = "/purchase.PurchaseService/Checkout"
 	PurchaseService_HasPurchased_FullMethodName    = "/purchase.PurchaseService/HasPurchased"
 	PurchaseService_GetMyPurchases_FullMethodName  = "/purchase.PurchaseService/GetMyPurchases"
 	PurchaseService_GetAllPurchases_FullMethodName = "/purchase.PurchaseService/GetAllPurchases"
 	PurchaseService_RefundPurchase_FullMethodName  = "/purchase.PurchaseService/RefundPurchase"
-	PurchaseService_GetMyCartItems_FullMethodName  = "/purchase.PurchaseService/GetMyCartItems"
 )
 
 // PurchaseServiceClient is the client API for PurchaseService service.
@@ -37,12 +37,12 @@ const (
 type PurchaseServiceClient interface {
 	AddToCart(ctx context.Context, in *AddToCartRequest, opts ...grpc.CallOption) (*CartResponse, error)
 	RemoveFromCart(ctx context.Context, in *RemoveFromCartRequest, opts ...grpc.CallOption) (*CartResponse, error)
+	GetMyCartItems(ctx context.Context, in *GetMyCartItemsRequest, opts ...grpc.CallOption) (*CartResponse, error)
 	Checkout(ctx context.Context, in *CheckoutRequest, opts ...grpc.CallOption) (*CheckoutResponse, error)
 	HasPurchased(ctx context.Context, in *HasPurchasedRequest, opts ...grpc.CallOption) (*HasPurchasedResponse, error)
 	GetMyPurchases(ctx context.Context, in *GetMyPurchasesRequest, opts ...grpc.CallOption) (*GetMyPurchasesResponse, error)
 	GetAllPurchases(ctx context.Context, in *GetAllPurchasesRequest, opts ...grpc.CallOption) (*GetAllPurchasesResponse, error)
 	RefundPurchase(ctx context.Context, in *RefundPurchaseRequest, opts ...grpc.CallOption) (*RefundPurchaseResponse, error)
-	GetMyCartItems(ctx context.Context, in *GetMyCartItemsRequest, opts ...grpc.CallOption) (*CartResponse, error)
 }
 
 type purchaseServiceClient struct {
@@ -67,6 +67,16 @@ func (c *purchaseServiceClient) RemoveFromCart(ctx context.Context, in *RemoveFr
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(CartResponse)
 	err := c.cc.Invoke(ctx, PurchaseService_RemoveFromCart_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *purchaseServiceClient) GetMyCartItems(ctx context.Context, in *GetMyCartItemsRequest, opts ...grpc.CallOption) (*CartResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CartResponse)
+	err := c.cc.Invoke(ctx, PurchaseService_GetMyCartItems_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -123,16 +133,6 @@ func (c *purchaseServiceClient) RefundPurchase(ctx context.Context, in *RefundPu
 	return out, nil
 }
 
-func (c *purchaseServiceClient) GetMyCartItems(ctx context.Context, in *GetMyCartItemsRequest, opts ...grpc.CallOption) (*CartResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(CartResponse)
-	err := c.cc.Invoke(ctx, PurchaseService_GetMyCartItems_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 // PurchaseServiceServer is the server API for PurchaseService service.
 // All implementations must embed UnimplementedPurchaseServiceServer
 // for forward compatibility.
@@ -141,12 +141,12 @@ func (c *purchaseServiceClient) GetMyCartItems(ctx context.Context, in *GetMyCar
 type PurchaseServiceServer interface {
 	AddToCart(context.Context, *AddToCartRequest) (*CartResponse, error)
 	RemoveFromCart(context.Context, *RemoveFromCartRequest) (*CartResponse, error)
+	GetMyCartItems(context.Context, *GetMyCartItemsRequest) (*CartResponse, error)
 	Checkout(context.Context, *CheckoutRequest) (*CheckoutResponse, error)
 	HasPurchased(context.Context, *HasPurchasedRequest) (*HasPurchasedResponse, error)
 	GetMyPurchases(context.Context, *GetMyPurchasesRequest) (*GetMyPurchasesResponse, error)
 	GetAllPurchases(context.Context, *GetAllPurchasesRequest) (*GetAllPurchasesResponse, error)
 	RefundPurchase(context.Context, *RefundPurchaseRequest) (*RefundPurchaseResponse, error)
-	GetMyCartItems(context.Context, *GetMyCartItemsRequest) (*CartResponse, error)
 	mustEmbedUnimplementedPurchaseServiceServer()
 }
 
@@ -163,6 +163,9 @@ func (UnimplementedPurchaseServiceServer) AddToCart(context.Context, *AddToCartR
 func (UnimplementedPurchaseServiceServer) RemoveFromCart(context.Context, *RemoveFromCartRequest) (*CartResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method RemoveFromCart not implemented")
 }
+func (UnimplementedPurchaseServiceServer) GetMyCartItems(context.Context, *GetMyCartItemsRequest) (*CartResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetMyCartItems not implemented")
+}
 func (UnimplementedPurchaseServiceServer) Checkout(context.Context, *CheckoutRequest) (*CheckoutResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method Checkout not implemented")
 }
@@ -177,9 +180,6 @@ func (UnimplementedPurchaseServiceServer) GetAllPurchases(context.Context, *GetA
 }
 func (UnimplementedPurchaseServiceServer) RefundPurchase(context.Context, *RefundPurchaseRequest) (*RefundPurchaseResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method RefundPurchase not implemented")
-}
-func (UnimplementedPurchaseServiceServer) GetMyCartItems(context.Context, *GetMyCartItemsRequest) (*CartResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method GetMyCartItems not implemented")
 }
 func (UnimplementedPurchaseServiceServer) mustEmbedUnimplementedPurchaseServiceServer() {}
 func (UnimplementedPurchaseServiceServer) testEmbeddedByValue()                         {}
@@ -234,6 +234,24 @@ func _PurchaseService_RemoveFromCart_Handler(srv interface{}, ctx context.Contex
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(PurchaseServiceServer).RemoveFromCart(ctx, req.(*RemoveFromCartRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _PurchaseService_GetMyCartItems_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetMyCartItemsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PurchaseServiceServer).GetMyCartItems(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PurchaseService_GetMyCartItems_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PurchaseServiceServer).GetMyCartItems(ctx, req.(*GetMyCartItemsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -328,24 +346,6 @@ func _PurchaseService_RefundPurchase_Handler(srv interface{}, ctx context.Contex
 	return interceptor(ctx, in, info, handler)
 }
 
-func _PurchaseService_GetMyCartItems_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetMyCartItemsRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(PurchaseServiceServer).GetMyCartItems(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: PurchaseService_GetMyCartItems_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(PurchaseServiceServer).GetMyCartItems(ctx, req.(*GetMyCartItemsRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 // PurchaseService_ServiceDesc is the grpc.ServiceDesc for PurchaseService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -360,6 +360,10 @@ var PurchaseService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "RemoveFromCart",
 			Handler:    _PurchaseService_RemoveFromCart_Handler,
+		},
+		{
+			MethodName: "GetMyCartItems",
+			Handler:    _PurchaseService_GetMyCartItems_Handler,
 		},
 		{
 			MethodName: "Checkout",
@@ -380,10 +384,6 @@ var PurchaseService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "RefundPurchase",
 			Handler:    _PurchaseService_RefundPurchase_Handler,
-		},
-		{
-			MethodName: "GetMyCartItems",
-			Handler:    _PurchaseService_GetMyCartItems_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

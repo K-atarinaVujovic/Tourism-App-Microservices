@@ -43,7 +43,7 @@ func main() {
 	h := handler.NewPurchaseHandler(svc)
 
 	// --- gRPC server ---
-	lis, err := net.Listen("tcp", ":50051")
+	lis, err := net.Listen("tcp", ":9095")
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
@@ -53,7 +53,7 @@ func main() {
 	)
 	pb.RegisterPurchaseServiceServer(grpcServer, h)
 
-	log.Println("Purchase service listening on :50051")
+	log.Println("Purchase service listening on :9095")
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}

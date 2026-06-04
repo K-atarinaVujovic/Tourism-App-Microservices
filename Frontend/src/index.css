@@ -6,8 +6,8 @@
   --color-primary-foreground: var(--primary-foreground);
   --color-secondary: var(--accent);
   --color-secondary-foreground: var(--accent-bg);
-  --color-destructive: var(--color-red-500);
-  --color-destructive-foreground: var(--color-red-500);
+  --color-destructive: #ef4444;
+  --color-destructive-foreground: #ffffff;
   --color-background: var(--bg);
   --color-foreground: var(--text);
   --color-border: var(--border);

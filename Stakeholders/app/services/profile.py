@@ -2,12 +2,10 @@ from app.models.profile import Profile
 from app.repositories.profile import ProfileRepository
 from app.schemas.profile import ProfileCreate, ProfileResponse, ProfileUpdate, BalanceResponse
 from app.core.exceptions import NotFoundException, AlreadyExistsException
-
-import logging
-logger = logging.getLogger(__name__)
 from fastapi import HTTPException
+import logging
 
-
+logger = logging.getLogger(__name__)
 class ProfileService:
   repo: ProfileRepository = ProfileRepository()
 

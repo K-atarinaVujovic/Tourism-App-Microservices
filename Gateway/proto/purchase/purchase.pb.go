@@ -4,9 +4,10 @@
 // 	protoc        v4.25.9
 // source: purchase.proto
 
-package pb
+package __
 
 import (
+	_ "google.golang.org/genproto/googleapis/api/annotations"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
@@ -911,7 +912,7 @@ var File_purchase_proto protoreflect.FileDescriptor
 
 const file_purchase_proto_rawDesc = "" +
 	"\n" +
-	"\x0epurchase.proto\x12\bpurchase\"^\n" +
+	"\x0epurchase.proto\x12\bpurchase\x1a\x1cgoogle/api/annotations.proto\"^\n" +
 	"\x10OrderItemRequest\x12\x17\n" +
 	"\atour_id\x18\x01 \x01(\tR\x06tourId\x12\x1b\n" +
 	"\ttour_name\x18\x02 \x01(\tR\btourName\x12\x14\n" +
@@ -966,16 +967,18 @@ const file_purchase_proto_rawDesc = "" +
 	"\x15RefundPurchaseRequest\x12\x19\n" +
 	"\btoken_id\x18\x01 \x01(\tR\atokenId\"2\n" +
 	"\x16RefundPurchaseResponse\x12\x18\n" +
-	"\asuccess\x18\x01 \x01(\bR\asuccess2\xfc\x04\n" +
-	"\x0fPurchaseService\x12?\n" +
-	"\tAddToCart\x12\x1a.purchase.AddToCartRequest\x1a\x16.purchase.CartResponse\x12I\n" +
-	"\x0eRemoveFromCart\x12\x1f.purchase.RemoveFromCartRequest\x1a\x16.purchase.CartResponse\x12A\n" +
-	"\bCheckout\x12\x19.purchase.CheckoutRequest\x1a\x1a.purchase.CheckoutResponse\x12M\n" +
-	"\fHasPurchased\x12\x1d.purchase.HasPurchasedRequest\x1a\x1e.purchase.HasPurchasedResponse\x12S\n" +
-	"\x0eGetMyPurchases\x12\x1f.purchase.GetMyPurchasesRequest\x1a .purchase.GetMyPurchasesResponse\x12V\n" +
-	"\x0fGetAllPurchases\x12 .purchase.GetAllPurchasesRequest\x1a!.purchase.GetAllPurchasesResponse\x12S\n" +
-	"\x0eRefundPurchase\x12\x1f.purchase.RefundPurchaseRequest\x1a .purchase.RefundPurchaseResponse\x12I\n" +
-	"\x0eGetMyCartItems\x12\x1f.purchase.GetMyCartItemsRequest\x1a\x16.purchase.CartResponseB\aZ\x05../pbb\x06proto3"
+	"\asuccess\x18\x01 \x01(\bR\asuccess2\xc7\x06\n" +
+	"\x0fPurchaseService\x12Q\n" +
+	"\tAddToCart\x12\x1a.purchase.AddToCartRequest\x1a\x16.purchase.CartResponse\"\x10\x82\xd3\xe4\x93\x02\n" +
+	":\x01*\"\x05/cart\x12b\n" +
+	"\x0eRemoveFromCart\x12\x1f.purchase.RemoveFromCartRequest\x1a\x16.purchase.CartResponse\"\x17\x82\xd3\xe4\x93\x02\x11*\x0f/cart/{tour_id}\x12X\n" +
+	"\x0eGetMyCartItems\x12\x1f.purchase.GetMyCartItemsRequest\x1a\x16.purchase.CartResponse\"\r\x82\xd3\xe4\x93\x02\a\x12\x05/cart\x12W\n" +
+	"\bCheckout\x12\x19.purchase.CheckoutRequest\x1a\x1a.purchase.CheckoutResponse\"\x14\x82\xd3\xe4\x93\x02\x0e:\x01*\"\t/checkout\x12~\n" +
+	"\fHasPurchased\x12\x1d.purchase.HasPurchasedRequest\x1a\x1e.purchase.HasPurchasedResponse\"/\x82\xd3\xe4\x93\x02)\x12'/purchases/{tourist_id}/tours/{tour_id}\x12j\n" +
+	"\x0eGetMyPurchases\x12\x1f.purchase.GetMyPurchasesRequest\x1a .purchase.GetMyPurchasesResponse\"\x15\x82\xd3\xe4\x93\x02\x0f\x12\r/purchases/my\x12j\n" +
+	"\x0fGetAllPurchases\x12 .purchase.GetAllPurchasesRequest\x1a!.purchase.GetAllPurchasesResponse\"\x12\x82\xd3\xe4\x93\x02\f\x12\n" +
+	"/purchases\x12r\n" +
+	"\x0eRefundPurchase\x12\x1f.purchase.RefundPurchaseRequest\x1a .purchase.RefundPurchaseResponse\"\x1d\x82\xd3\xe4\x93\x02\x17*\x15/purchases/{token_id}B\x03Z\x01.b\x06proto3"
 
 var (
 	file_purchase_proto_rawDescOnce sync.Once
@@ -1018,20 +1021,20 @@ var file_purchase_proto_depIdxs = []int32{
 	13, // 4: purchase.GetAllPurchasesResponse.purchases:type_name -> purchase.PurchasesByTourist
 	2,  // 5: purchase.PurchaseService.AddToCart:input_type -> purchase.AddToCartRequest
 	3,  // 6: purchase.PurchaseService.RemoveFromCart:input_type -> purchase.RemoveFromCartRequest
-	6,  // 7: purchase.PurchaseService.Checkout:input_type -> purchase.CheckoutRequest
-	9,  // 8: purchase.PurchaseService.HasPurchased:input_type -> purchase.HasPurchasedRequest
-	11, // 9: purchase.PurchaseService.GetMyPurchases:input_type -> purchase.GetMyPurchasesRequest
-	14, // 10: purchase.PurchaseService.GetAllPurchases:input_type -> purchase.GetAllPurchasesRequest
-	16, // 11: purchase.PurchaseService.RefundPurchase:input_type -> purchase.RefundPurchaseRequest
-	5,  // 12: purchase.PurchaseService.GetMyCartItems:input_type -> purchase.GetMyCartItemsRequest
+	5,  // 7: purchase.PurchaseService.GetMyCartItems:input_type -> purchase.GetMyCartItemsRequest
+	6,  // 8: purchase.PurchaseService.Checkout:input_type -> purchase.CheckoutRequest
+	9,  // 9: purchase.PurchaseService.HasPurchased:input_type -> purchase.HasPurchasedRequest
+	11, // 10: purchase.PurchaseService.GetMyPurchases:input_type -> purchase.GetMyPurchasesRequest
+	14, // 11: purchase.PurchaseService.GetAllPurchases:input_type -> purchase.GetAllPurchasesRequest
+	16, // 12: purchase.PurchaseService.RefundPurchase:input_type -> purchase.RefundPurchaseRequest
 	4,  // 13: purchase.PurchaseService.AddToCart:output_type -> purchase.CartResponse
 	4,  // 14: purchase.PurchaseService.RemoveFromCart:output_type -> purchase.CartResponse
-	8,  // 15: purchase.PurchaseService.Checkout:output_type -> purchase.CheckoutResponse
-	10, // 16: purchase.PurchaseService.HasPurchased:output_type -> purchase.HasPurchasedResponse
-	12, // 17: purchase.PurchaseService.GetMyPurchases:output_type -> purchase.GetMyPurchasesResponse
-	15, // 18: purchase.PurchaseService.GetAllPurchases:output_type -> purchase.GetAllPurchasesResponse
-	17, // 19: purchase.PurchaseService.RefundPurchase:output_type -> purchase.RefundPurchaseResponse
-	4,  // 20: purchase.PurchaseService.GetMyCartItems:output_type -> purchase.CartResponse
+	4,  // 15: purchase.PurchaseService.GetMyCartItems:output_type -> purchase.CartResponse
+	8,  // 16: purchase.PurchaseService.Checkout:output_type -> purchase.CheckoutResponse
+	10, // 17: purchase.PurchaseService.HasPurchased:output_type -> purchase.HasPurchasedResponse
+	12, // 18: purchase.PurchaseService.GetMyPurchases:output_type -> purchase.GetMyPurchasesResponse
+	15, // 19: purchase.PurchaseService.GetAllPurchases:output_type -> purchase.GetAllPurchasesResponse
+	17, // 20: purchase.PurchaseService.RefundPurchase:output_type -> purchase.RefundPurchaseResponse
 	13, // [13:21] is the sub-list for method output_type
 	5,  // [5:13] is the sub-list for method input_type
 	5,  // [5:5] is the sub-list for extension type_name

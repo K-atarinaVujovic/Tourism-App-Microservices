@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 )
 
@@ -35,7 +36,7 @@ func (c *StakeholdersClient) GetBalance(ctx context.Context, authHeader string) 
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return 0, fmt.Errorf("stakeholders service returned %d", resp.StatusCode)
+		return 0, readStakeholdersError(resp)
 	}
 
 	var b balanceBody
@@ -62,9 +63,17 @@ func (c *StakeholdersClient) UpdateBalance(ctx context.Context, authHeader strin
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("stakeholders service returned %d", resp.StatusCode)
+		return readStakeholdersError(resp)
 	}
 	return nil
+}
+
+func readStakeholdersError(resp *http.Response) error {
+	body, _ := io.ReadAll(resp.Body)
+	if len(body) == 0 {
+		return fmt.Errorf("stakeholders service returned %d", resp.StatusCode)
+	}
+	return fmt.Errorf("stakeholders service returned %d: %s", resp.StatusCode, string(body))
 }
 
 func (c *StakeholdersClient) UpdateBalanceForUser(ctx context.Context, authHeader string, userID int64, newBalance float64) error {
@@ -85,7 +94,7 @@ func (c *StakeholdersClient) UpdateBalanceForUser(ctx context.Context, authHeade
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("stakeholders service returned %d", resp.StatusCode)
+		return readStakeholdersError(resp)
 	}
 	return nil
 }

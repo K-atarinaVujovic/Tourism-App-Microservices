@@ -17,27 +17,29 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	"gopkg.in/yaml.v3"
 
+	purchasepb "gateway/proto/purchase"
 	servicepb "gateway/proto/service"
-	tourspb "gateway/proto/tours"
 	stakeholderspb "gateway/proto/stakeholders"
+	tourspb "gateway/proto/tours"
 	"jwtreader"
 
-    "time"
+	"time"
 
-    "go.opentelemetry.io/otel"
-    "go.opentelemetry.io/otel/attribute"
-    "go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
-    "go.opentelemetry.io/otel/sdk/resource"
-    sdktrace "go.opentelemetry.io/otel/sdk/trace"
-    semconv "go.opentelemetry.io/otel/semconv/v1.24.0"
-    "go.opentelemetry.io/otel/trace"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
+	"go.opentelemetry.io/otel/sdk/resource"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	semconv "go.opentelemetry.io/otel/semconv/v1.24.0"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // MicroserviceRegistry Should contain all generated API handlers
 var MicroserviceRegistry = map[string]func(context.Context, *runtime.ServeMux, string, []grpc.DialOption) error{
 	"service":      servicepb.RegisterAlbumServiceHandlerFromEndpoint,
-	"tours":   tourspb.RegisterTourGrpcServiceHandlerFromEndpoint,
+	"tours":        tourspb.RegisterTourGrpcServiceHandlerFromEndpoint,
 	"stakeholders": stakeholderspb.RegisterProfileServiceHandlerFromEndpoint,
+	"purchases":    purchasepb.RegisterPurchaseServiceHandlerFromEndpoint,
 	// add more services here
 }
 
@@ -188,17 +190,30 @@ func ProxyRequestHandler(proxies []ProxyRegistry) func(http.ResponseWriter, *htt
 				return
 			}
 
-			// Restore body for REST fallback
-			r.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
-			log.Printf("[%s][gRPC->REST fallback] %s %s", proxy.name, r.Method, r.URL.String())
+			// gRPC failed — fall back to REST only when a REST proxy exists
+			if proxy.restHandler != nil {
+				r.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
+				log.Printf("[%s][gRPC->REST fallback] %s %s (gRPC %d)", proxy.name, r.Method, r.URL.String(), rec.statusCode)
+				proxy.restHandler.ServeHTTP(w, r)
+				return
+			}
+
+			// gRPC-only service (e.g. purchases): forward the error response instead of
+			// dropping it, which previously surfaced as HTTP 200 with an empty body.
+			log.Printf("[%s][gRPC error] %s %s -> %d", proxy.name, r.Method, r.URL.String(), rec.statusCode)
+			w.WriteHeader(rec.statusCode)
+			w.Write(rec.body)
+			return
 		}
 
-		// Fall back to REST
+		// Fall back to REST when no gRPC handler is configured
 		if proxy.restHandler != nil {
 			log.Printf("[%s][REST] %s %s", proxy.name, r.Method, r.URL.String())
 			proxy.restHandler.ServeHTTP(w, r)
 			return
 		}
+
+		http.Error(w, "service unavailable", http.StatusBadGateway)
 	}
 }
 
@@ -322,7 +337,7 @@ func TracingMiddleware(next http.Handler) http.Handler {
 			attribute.String("http.target", r.URL.RequestURI()),
 		)
 
-		next.ServeHTTP(w, r.WithContext(ctx))   //withContext -> ako budemo propagirali tracing ka mikroservisima
+		next.ServeHTTP(w, r.WithContext(ctx)) //withContext -> ako budemo propagirali tracing ka mikroservisima
 
 		span.SetAttributes(
 			attribute.String("duration", time.Since(start).String()),
@@ -331,14 +346,14 @@ func TracingMiddleware(next http.Handler) http.Handler {
 }
 
 func main() {
-    ctx := context.Background()
-    tp, err := InitTracer(ctx)
-    if err != nil {
-        log.Fatal("failed to initialize tracer: ", err)
-    }
-    defer func() {
-        _ = tp.Shutdown(ctx)
-    }()
+	ctx := context.Background()
+	tp, err := InitTracer(ctx)
+	if err != nil {
+		log.Fatal("failed to initialize tracer: ", err)
+	}
+	defer func() {
+		_ = tp.Shutdown(ctx)
+	}()
 
 	// Load config
 	config, err := LoadConfig("CONFIG.yaml")
@@ -359,10 +374,10 @@ func main() {
 	authHandler := JWTAuthMiddleware(config.ExcludedPaths, proxyHandler)
 
 	// Handle tracing
-    tracingHandler := TracingMiddleware(authHandler)
+	tracingHandler := TracingMiddleware(authHandler)
 
 	// Handle cors
-    corsHandler := CORSMiddleware(tracingHandler)
+	corsHandler := CORSMiddleware(tracingHandler)
 
 	// Handle all requests to the server using the authenticated proxy
 	http.Handle("/", corsHandler)
