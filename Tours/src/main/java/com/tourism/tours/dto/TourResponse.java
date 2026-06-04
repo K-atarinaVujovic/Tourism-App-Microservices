@@ -4,6 +4,7 @@ import com.tourism.tours.enums.TourDifficulty;
 import com.tourism.tours.enums.TourStatus;
 import lombok.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Getter
@@ -20,4 +21,7 @@ public class TourResponse {
     private List<String> tags;
     private TourStatus status;
     private double price;
+    private Double lengthInKm;
+    private LocalDateTime publishedAt;
+    private LocalDateTime archivedAt;
 }
