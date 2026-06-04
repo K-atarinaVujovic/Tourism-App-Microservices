@@ -1,6 +1,5 @@
 import { useParams, useNavigate } from 'react-router';
-import { MapPin, Globe, ArrowLeft } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { MapPin, ArrowLeft } from 'lucide-react';
 import TourMap from '@/features/tours/components/TourMap';
 import { useKeypoints } from '@/features/tours/hooks/useKeypoints';
 import { useTour } from '@/features/tours/hooks/useTours';

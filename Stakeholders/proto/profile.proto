@@ -22,10 +22,25 @@ service ProfileService {
       get: "/profiles/{user_id}"
     };
   }
+  rpc GetBalance(GetProfileRequest) returns (BalanceResponse) {
+    option (google.api.http) = {
+      get: "/profiles/balance/{user_id}"
+    };
+  }
+  rpc UpdateBalance(ProfileUpdate) returns (BalanceResponse) {
+    option (google.api.http) = {
+      put: "/profiles/balance"
+      body: "*"
+    };
+  }
 }
 
 message GetProfileRequest {
   int32 user_id = 1;
+}
+
+message BalanceResponse {
+  float balance = 1;
 }
 
 message ProfileResponse {
@@ -36,7 +51,8 @@ message ProfileResponse {
   string biography = 5;
   string quote = 6;
   int32 user_id = 7;
-  Role role = 8;
+  float balance = 8;
+  Role role = 9;
 }
 
 message ProfileCreate {
@@ -47,4 +63,24 @@ message ProfileCreate {
   optional string quote = 5;
   int32 user_id = 6;
   Role role = 7;
+  optional float balance = 8;
+}
+
+message ProfileUpdate {
+  optional string name = 1;
+  optional string lastname = 2;
+  optional string imageUrl = 3;
+  optional string biography = 4;
+  optional string quote = 5;
+  int32 user_id = 6;
+  optional float balance = 7;
+}
+
+message ImageUploadRequest {
+  bytes file_data = 1;
+  string filename = 2;
+}
+
+message ImageUploadResponse {
+  string imageUrl = 1;
 }

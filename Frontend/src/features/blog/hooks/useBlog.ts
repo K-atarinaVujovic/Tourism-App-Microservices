@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
-  getAllBlogs, getBlog, createBlog,
+  getBlog, createBlog,
   getComments, addComment, editComment,
   getLikeCount, hasLiked, likeBlog, unlikeBlog,
 } from "../services/blogService";

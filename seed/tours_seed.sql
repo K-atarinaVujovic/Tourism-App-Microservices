@@ -16,39 +16,39 @@ INSERT INTO tours (author_id, author_username, name, description, difficulty, st
 (4, 'user4',
  'Coastal Cliffs of the Algarve',
  'Explore the dramatic limestone cliffs and golden sea caves of southern Portugal. This tour follows the Rota Vicentina coastal path through some of the most scenic stretches of the Atlantic coast.',
- 'EASY', 'PUBLISHED', 0),
+ 'EASY', 'PUBLISHED', 200),
 
 (4, 'user4',
  'Lisbon to Sintra Day Tour',
  'A full-day journey from the heart of Lisbon to the fairy-tale palaces and forested hills of Sintra. Includes a guided walk through the historic centre and a visit to Pena Palace.',
- 'EASY', 'PUBLISHED', 0),
+ 'EASY', 'PUBLISHED', 300),
 
 -- user5
 (5, 'user5',
  'High Alpine Trek: Mont Blanc Circuit',
  'A challenging multi-day circuit around the Mont Blanc massif crossing through France, Italy and Switzerland. Stunning glaciers, high passes and remote mountain refuges.',
- 'HARD', 'PUBLISHED', 0),
+ 'HARD', 'PUBLISHED', 50),
 
 (5, 'user5',
  'Dolomites Valley Hiking Tour',
  'A moderate hiking tour through the Val Gardena and Alpe di Siusi plateau. Suitable for those who want alpine scenery without extreme elevation. Cable cars available for assisted ascents.',
- 'MEDIUM', 'PUBLISHED', 0),
+ 'MEDIUM', 'PUBLISHED', 1000),
 
 -- user6
 (6, 'user6',
  'Tuscany Wine and Villages Tour',
  'A leisurely tour through the Chianti wine region and the medieval hill towns of Tuscany. Includes guided tastings at two local wineries and a sunset walk through Monteriggioni.',
- 'EASY', 'PUBLISHED', 0),
+ 'EASY', 'PUBLISHED', 350),
 
 (6, 'user6',
  'Inca Trail Express: Machu Picchu in 4 Days',
  'The classic 4-day Inca Trail trek from the Sacred Valley to Machu Picchu. Your guide will share the history of the Inca civilisation at each archaeological site along the route.',
- 'HARD', 'PUBLISHED', 0),
+ 'HARD', 'PUBLISHED', 200),
 
 (6, 'user6',
  'Croatian Island Hopping',
  'A week-long sailing tour along the Dalmatian coast visiting Hvar, Korčula and the Pakleni islands. Swim in hidden coves, dine at waterfront konobas and watch the sun set over the Adriatic.',
- 'EASY', 'PUBLISHED', 0);
+ 'EASY', 'PUBLISHED', 500);
 
 -- -----------------------------------------------
 -- KEY POINTS

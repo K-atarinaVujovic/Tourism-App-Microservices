@@ -9,6 +9,7 @@ class ProfileCreate(BaseModel):
     quote: str | None = Field(default=None)
     user_id: int
     role: Role
+    balance: float | None = Field(default=None)
 
 class ProfileUpdate(BaseModel):
     name: str | None = Field(default=None)
@@ -16,6 +17,7 @@ class ProfileUpdate(BaseModel):
     imageUrl: str | None = Field(default=None)
     biography: str | None = Field(default=None)
     quote: str | None = Field(default=None)
+    balance: float | None = Field(default=None)
 
 class ProfileResponse(BaseModel):
     id: str  # MongoDB id is a string, not int
@@ -26,3 +28,7 @@ class ProfileResponse(BaseModel):
     quote: str | None = Field(default=None)
     user_id: int
     role: Role
+    balance: float | None = Field(default=None)
+
+class BalanceResponse(BaseModel):
+    balance: float | None = Field(default=None)
