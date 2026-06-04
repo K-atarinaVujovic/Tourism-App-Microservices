@@ -128,3 +128,23 @@ func (s *OrchestratorServer) doPost(
 
 	return s.httpClient.Do(req)
 }
+
+func (s *OrchestratorServer) doPut(
+	ctx context.Context,
+	url string,
+	body []byte,
+	authHeader string,
+	withInternalSecret bool,
+) (*http.Response, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodPut, url, bytes.NewReader(body))
+	if err != nil {
+		return nil, fmt.Errorf("failed to build request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	if withInternalSecret {
+		req.Header.Set("X-Internal-Secret", s.config.InternalSecret)
+	} else if authHeader != "" {
+		req.Header.Set("Authorization", authHeader)
+	}
+	return s.httpClient.Do(req)
+}

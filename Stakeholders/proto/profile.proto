@@ -68,3 +68,14 @@ message ImageUploadResponse {
   string imageUrl = 1;
   Role role = 7;
 }
+
+message GetBalanceRequest {
+  int32 user_id = 1;
+}
+
+message GetBalanceResponse {
+  int32 user_id = 1;
+  float balance = 2;
+}
+
+

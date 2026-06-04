@@ -27,8 +27,8 @@ class ProfileServicer(ProfileServiceServicer):
         biography=result.biography,
         quote=result.quote,
         user_id=result.user_id,
-        role=ROLE_MAP.get(result.role, ProtoRole.TOURIST) # first param what we are mapping, second param default value
-        balance=result.balance
+        role=ROLE_MAP.get(result.role, ProtoRole.TOURIST), # first param what we are mapping, second param default value
+        balance=result.balance,
     )
 
   def __get_profile_update_from_request(self, request):
@@ -49,7 +49,7 @@ class ProfileServicer(ProfileServiceServicer):
       imageUrl=request.imageUrl if request.HasField("imageUrl") else None,
       biography=request.biography if request.HasField("biography") else None,
       quote=request.quote if request.HasField("quote") else None,
-      role=ROLE_REVERSE_MAP.get(request.role, Role.TOURIST)
+      role=ROLE_REVERSE_MAP.get(request.role, Role.TOURIST),
       balance=request.balance if request.HasField("balance") else None,
     )
 
