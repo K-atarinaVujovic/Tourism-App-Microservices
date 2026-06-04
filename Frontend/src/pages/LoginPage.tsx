@@ -1,10 +1,11 @@
-// src/pages/LoginPage.tsx
 import { useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { useMutation } from "@tanstack/react-query";
 import { LoginForm } from "@/features/auth/components/LoginForm";
 import { loginUser } from "@/features/auth/services/authService";
 import type { LoginFormData } from "@/features/auth/components/LoginForm";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { AlertCircle } from "lucide-react";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -22,35 +23,35 @@ export default function LoginPage() {
   };
 
   return (
-      <div className="min-h-screen flex items-center justify-center bg-background px-4">
-        <div className="w-full max-w-sm">
-          {/* Header */}
-          <div className="mb-8 space-y-1">
-            <h1 className="text-2xl font-bold tracking-tight">Welcome back</h1>
-            <p className="text-sm text-muted-foreground">
-              Sign in to continue to your account
-            </p>
-          </div>
-
-          {/* Form */}
+    <div className="min-h-[calc(100vh-3.5rem)] flex items-center justify-center bg-background px-4">
+      <Card className="w-full max-w-sm shadow-xl border-t-4 border-t-primary">
+        <CardHeader className="space-y-1 text-center">
+          <CardTitle className="text-2xl font-bold tracking-tight text-foreground">Welcome back</CardTitle>
+          <CardDescription className="text-sm text-muted-foreground">
+            Sign in to continue to your account
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
           <LoginForm onSubmit={handleSubmit} isLoading={isPending} />
 
-          {/* Server-side error (blocked account, wrong credentials, etc.) */}
           {errorMsg && (
-              <p className="mt-4 text-sm text-destructive">{errorMsg}</p>
+            <div className="mt-4 p-3 rounded-md bg-destructive/10 text-destructive text-sm flex items-center gap-2">
+              <AlertCircle className="h-4 w-4" />
+              <span>{errorMsg}</span>
+            </div>
           )}
 
-          {/* Footer */}
-          <p className="mt-6 text-center text-sm text-muted-foreground">
+          <div className="mt-6 text-center text-sm text-muted-foreground">
             Don't have an account?{" "}
             <Link
-                to="/register"
-                className="font-medium text-foreground underline underline-offset-4 hover:text-primary transition-colors"
+              to="/register"
+              className="font-semibold text-primary hover:underline underline-offset-4 transition-colors"
             >
               Sign up
             </Link>
-          </p>
-        </div>
-      </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 }

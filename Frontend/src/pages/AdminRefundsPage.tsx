@@ -32,14 +32,14 @@ export default function AdminRefundsPage() {
 
   return (
     <div className="container mx-auto p-6 space-y-8">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-        <div className="space-y-2">
-          <h1 className="text-3xl font-bold tracking-tight">Refund Management</h1>
-          <p className="text-muted-foreground text-lg">
-            Search and process refunds for any purchase token.
-          </p>
-        </div>
-        
+      <div className="space-y-2 text-center">
+        <h1 className="text-3xl font-bold tracking-tight">Refund Management</h1>
+        <p className="text-muted-foreground text-lg">
+          Search and process refunds for any purchase token.
+        </p>
+      </div>
+
+      <div className="flex justify-center">
         <div className="relative w-full md:w-80">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input 

@@ -13,7 +13,7 @@ export default function AdminPurchasesPage() {
 
   return (
     <div className="container mx-auto p-6 space-y-8">
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-2 text-center">
         <h1 className="text-3xl font-bold tracking-tight">Purchase Overview</h1>
         <p className="text-muted-foreground text-lg">
           View all purchases grouped by tourist.

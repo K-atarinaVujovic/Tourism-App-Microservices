@@ -1,33 +1,14 @@
 import { useState } from 'react';
-import { Search } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { Search, Compass, AlertCircle, Tag as TagIcon } from 'lucide-react';
 import PublishedTourPreviewCard from '@/features/tours/components/PublishedTourPreviewCard';
 import { usePublishedTourPreviews } from '@/features/tours/hooks/useTours';
 import type { TourDifficulty } from '@/features/tours/services/tourService';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 type DifficultyFilter = TourDifficulty | 'ALL';
 const DIFFICULTY_FILTERS: DifficultyFilter[] = ['ALL', 'EASY', 'MEDIUM', 'HARD'];
-
-function TourPreviewSkeleton() {
-    return (
-        <div className="rounded-xl border border-(--border) bg-(--accent-bg)/20 p-5 animate-pulse">
-            <div className="flex items-start justify-between gap-3 mb-3">
-                <div className="h-4 w-3/4 rounded bg-(--border)" />
-                <div className="h-5 w-14 rounded-full bg-(--border)" />
-            </div>
-            <div className="space-y-1.5 mb-4">
-                <div className="h-3 w-full rounded bg-(--border)" />
-                <div className="h-3 w-5/6 rounded bg-(--border)" />
-                <div className="h-3 w-2/3 rounded bg-(--border)" />
-            </div>
-            <div className="h-20 w-full rounded-lg bg-(--border) mb-4" />
-            <div className="flex gap-1.5">
-                <div className="h-5 w-16 rounded-full bg-(--border)" />
-                <div className="h-5 w-12 rounded-full bg-(--border)" />
-            </div>
-        </div>
-    );
-}
 
 export default function TouristToursPage() {
     const { data: tours = [], isLoading, isError } = usePublishedTourPreviews();
@@ -51,88 +32,94 @@ export default function TouristToursPage() {
     });
 
     return (
-        <div className="min-h-screen bg-(--bg)">
-            <div className="max-w-6xl mx-auto px-4 py-10">
-                <div className="mb-8">
-                    <h1 className="text-2xl font-bold text-(--text-h) mb-1">Published Tours</h1>
-                    <p className="text-sm text-(--text)/55">
-                        Browse available tours. Full route is unlocked after purchase.
+        <div className="container mx-auto p-6 space-y-8">
+            <div className="space-y-2 text-center">
+                <h1 className="text-3xl font-bold tracking-tight">Explore Tours</h1>
+                <p className="text-muted-foreground text-lg">
+                    Browse available tours. Full route is unlocked after purchase.
+                </p>
+            </div>
+
+            <div className="flex flex-col lg:flex-row gap-4">
+                <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                        value={search}
+                        onChange={e => setSearch(e.target.value)}
+                        placeholder="Search by name, description, tag or starting point..."
+                        className="pl-10"
+                    />
+                </div>
+
+                <div className="flex gap-2 overflow-x-auto pb-1 lg:pb-0">
+                    {DIFFICULTY_FILTERS.map(d => (
+                        <Button
+                            key={d}
+                            variant={difficulty === d ? 'default' : 'outline'}
+                            size="sm"
+                            onClick={() => setDifficulty(d)}
+                            className="whitespace-nowrap"
+                        >
+                            {d === 'ALL' ? 'All' : d.charAt(0) + d.slice(1).toLowerCase()}
+                        </Button>
+                    ))}
+                </div>
+            </div>
+
+            {isLoading && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {Array.from({ length: 6 }).map((_, i) => (
+                        <Card key={i} className="animate-pulse">
+                            <CardContent className="p-6 space-y-4">
+                                <div className="h-4 w-3/4 bg-muted rounded" />
+                                <div className="space-y-2">
+                                    <div className="h-3 w-full bg-muted rounded" />
+                                    <div className="h-3 w-5/6 bg-muted rounded" />
+                                </div>
+                                <div className="h-32 w-full bg-muted rounded-lg" />
+                                <div className="flex gap-2">
+                                    <div className="h-5 w-16 bg-muted rounded-full" />
+                                    <div className="h-5 w-12 bg-muted rounded-full" />
+                                </div>
+                            </CardContent>
+                        </Card>
+                    ))}
+                </div>
+            )}
+
+            {isError && (
+                <div className="p-12 text-center border-2 border-dashed rounded-xl flex flex-col items-center gap-3">
+                    <AlertCircle className="h-10 w-10 text-destructive opacity-50" />
+                    <p className="text-destructive font-medium">Failed to load published tours.</p>
+                    <Button variant="outline" size="sm" onClick={() => window.location.reload()}>Retry</Button>
+                </div>
+            )}
+
+            {!isLoading && !isError && filtered.length === 0 && (
+                <div className="p-12 text-center border-2 border-dashed rounded-xl flex flex-col items-center gap-3">
+                    <Compass className="h-10 w-10 text-muted-foreground opacity-30" />
+                    <p className="text-muted-foreground font-medium">
+                        {tours.length === 0
+                            ? 'There are no published tours yet.'
+                            : 'No published tours match your search criteria.'}
                     </p>
                 </div>
+            )}
 
-                <div className="flex flex-col sm:flex-row gap-3 mb-8">
-                    <div className="relative flex-1">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-(--text)/40 pointer-events-none" />
-                        <input
-                            value={search}
-                            onChange={e => setSearch(e.target.value)}
-                            placeholder="Search by name, description, tag or starting point…"
-                            className={cn(
-                                'w-full rounded-lg border border-(--border) bg-(--bg)',
-                                'pl-9 pr-4 py-2.5 text-sm text-(--text)',
-                                'placeholder:text-(--text)/40 outline-none',
-                                'focus:ring-2 focus:ring-(--accent)/30 focus:border-(--accent)',
-                                'transition-colors',
-                            )}
-                        />
+            {!isLoading && !isError && filtered.length > 0 && (
+                <div className="space-y-4">
+                    <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                        <TagIcon className="h-3 w-3" />
+                        {filtered.length} published tour{filtered.length !== 1 ? 's' : ''} found
                     </div>
 
-                    <div className="flex gap-2 shrink-0">
-                        {DIFFICULTY_FILTERS.map(d => (
-                            <button
-                                key={d}
-                                onClick={() => setDifficulty(d)}
-                                className={cn(
-                                    'rounded-lg border px-3 py-2 text-xs font-medium transition-colors',
-                                    difficulty === d
-                                        ? 'bg-(--accent) text-white border-(--accent)'
-                                        : 'border-(--border) text-(--text) hover:border-(--accent)/40',
-                                )}
-                            >
-                                {d === 'ALL' ? 'All' : d.charAt(0) + d.slice(1).toLowerCase()}
-                            </button>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {filtered.map(tour => (
+                            <PublishedTourPreviewCard key={tour.id} tour={tour} />
                         ))}
                     </div>
                 </div>
-
-                {isLoading && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {Array.from({ length: 6 }).map((_, i) => (
-                            <TourPreviewSkeleton key={i} />
-                        ))}
-                    </div>
-                )}
-
-                {isError && (
-                    <div className="text-center py-20">
-                        <p className="text-sm text-red-400">Failed to load published tours.</p>
-                    </div>
-                )}
-
-                {!isLoading && !isError && filtered.length === 0 && (
-                    <div className="text-center py-20">
-                        <p className="text-sm text-(--text)/50">
-                            {tours.length === 0
-                                ? 'There are no published tours yet.'
-                                : 'No published tours match your search.'}
-                        </p>
-                    </div>
-                )}
-
-                {!isLoading && !isError && filtered.length > 0 && (
-                    <>
-                        <p className="text-xs text-(--text)/40 mb-4">
-                            {filtered.length} published tour{filtered.length !== 1 ? 's' : ''} found
-                        </p>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {filtered.map(tour => (
-                                <PublishedTourPreviewCard key={tour.id} tour={tour} />
-                            ))}
-                        </div>
-                    </>
-                )}
-            </div>
+            )}
         </div>
     );
 }

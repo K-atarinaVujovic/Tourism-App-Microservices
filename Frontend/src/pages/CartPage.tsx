@@ -1,11 +1,14 @@
 import { useState } from 'react';
 import { Link } from 'react-router';
-import { ShoppingCart, Trash2, ArrowRight, ArrowLeft, ShieldAlert, Wallet } from 'lucide-react';
+import { ShoppingCart, Trash2, ArrowRight, ArrowLeft, ShieldAlert, Wallet, CheckCircle, Ticket } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/store/authStore';
 import { useProfile } from '@/features/stakeholders/hooks/useProfile';
 import { useCart, useRemoveFromCart, useCheckout } from '@/features/purchases/hooks/usePurchases';
 import type { CartItem } from '@/types/purchase';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 
 export default function CartPage() {
     const { user, isAuthenticated } = useAuthStore();
@@ -23,20 +26,19 @@ export default function CartPage() {
 
     if (!isTourist) {
         return (
-            <div className="min-h-screen bg-(--bg) flex flex-col items-center justify-center p-4">
-                <div className="max-w-md w-full rounded-xl border border-(--border) bg-(--bg) p-6 text-center shadow-lg">
-                    <ShieldAlert className="h-12 w-12 text-red-400 mx-auto mb-4" />
-                    <h2 className="text-lg font-bold text-(--text-h) mb-2">Access Denied</h2>
-                    <p className="text-sm text-(--text)/70 mb-6">
-                        Only logged-in tourists can access the shopping cart.
-                    </p>
-                    <Link
-                        to="/login"
-                        className="inline-flex items-center justify-center w-full rounded-lg bg-(--accent) text-white py-2.5 text-sm font-semibold hover:opacity-90 transition-all"
-                    >
-                        Go to Login
-                    </Link>
-                </div>
+            <div className="container mx-auto p-6 flex flex-col items-center justify-center min-h-[calc(100vh-3.5rem)]">
+                <Card className="max-w-md w-full text-center">
+                    <CardHeader>
+                        <ShieldAlert className="h-12 w-12 text-destructive mx-auto mb-2" />
+                        <CardTitle className="text-2xl">Access Denied</CardTitle>
+                        <CardDescription>Only logged-in tourists can access the shopping cart.</CardDescription>
+                    </CardHeader>
+                    <CardFooter>
+                        <Button asChild className="w-full">
+                            <Link to="/login">Go to Login</Link>
+                        </Button>
+                    </CardFooter>
+                </Card>
             </div>
         );
     }
@@ -72,201 +74,167 @@ export default function CartPage() {
 
     if (checkoutSuccess) {
         return (
-            <div className="min-h-screen bg-(--bg)">
-                <div className="max-w-2xl mx-auto px-4 py-16">
-                    <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-8 shadow-xl">
-                        <h1 className="text-2xl font-bold text-(--text-h) mb-2 text-center">
-                            Order complete
-                        </h1>
-                        <p className="text-sm text-(--text)/75 mb-8 text-center">
-                            Thank you for your purchase. Your tours are ready to explore.
-                        </p>
-
-                        <div className="border border-(--border) rounded-lg bg-(--bg) p-5 mb-6 space-y-4">
-                            <h2 className="text-xs font-semibold text-(--text)/50 uppercase tracking-widest border-b border-(--border) pb-2">
-                                Order summary
-                            </h2>
+            <div className="container mx-auto p-6 flex flex-col items-center justify-center min-h-[calc(100vh-3.5rem)]">
+                <Card className="max-w-2xl w-full shadow-2xl border-emerald-500/20 overflow-hidden">
+                    <div className="h-2 bg-emerald-500" />
+                    <CardHeader className="text-center pb-2">
+                        <CheckCircle className="h-12 w-12 text-emerald-500 mx-auto mb-2" />
+                        <CardTitle className="text-3xl">Order Complete</CardTitle>
+                        <CardDescription className="text-lg">Thank you for your purchase. Your tours are ready to explore.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                        <div className="rounded-xl border bg-muted/30 p-6 space-y-4">
+                            <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground uppercase tracking-wider border-b pb-2">
+                                <Ticket className="h-3.5 w-3.5" /> Order Summary
+                            </div>
                             {purchasedItems.map(item => (
-                                <div
-                                    key={item.tourId}
-                                    className="flex justify-between items-start gap-4 text-sm"
-                                >
-                                    <div className="min-w-0">
-                                        <p className="font-semibold text-(--text-h)">{item.tourName}</p>
-                                        <p className="text-xs text-(--text)/50">Tour ID: {item.tourId}</p>
+                                <div key={item.tourId} className="flex justify-between items-start gap-4">
+                                    <div className="space-y-0.5">
+                                        <p className="font-bold text-foreground">{item.tourName}</p>
+                                        <p className="text-xs text-muted-foreground">ID: {item.tourId}</p>
                                     </div>
-                                    <span className="font-semibold text-(--text-h) shrink-0">
-                                        ${item.price.toFixed(2)}
-                                    </span>
+                                    <span className="font-bold text-foreground">${item.price.toFixed(2)}</span>
                                 </div>
                             ))}
-                            <div className="border-t border-(--border) pt-3 flex justify-between items-baseline">
-                                <span className="text-sm font-semibold text-(--text-h)">Total paid</span>
-                                <span className="text-lg font-bold text-(--accent)">
-                                    ${purchasedTotal.toFixed(2)}
-                                </span>
+                            <div className="border-t pt-4 flex justify-between items-center">
+                                <span className="font-bold text-foreground">Total Paid</span>
+                                <span className="text-2xl font-black text-primary">${purchasedTotal.toFixed(2)}</span>
                             </div>
                         </div>
-
-                        <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                            <Link
-                                to="/tours/purchased"
-                                className="rounded-lg bg-(--accent) text-white px-5 py-2.5 text-sm font-semibold hover:opacity-90 transition-all flex items-center justify-center gap-1.5"
-                            >
-                                View my purchased tours <ArrowRight className="h-4 w-4" />
+                    </CardContent>
+                    <CardFooter className="flex flex-col sm:flex-row gap-3">
+                        <Button asChild className="w-full sm:flex-1 h-12 text-base">
+                            <Link to="/tours/purchased">
+                                View Purchased Tours <ArrowRight className="h-4 w-4 ml-2" />
                             </Link>
-                            <Link
-                                to="/tourist/tours"
-                                className="rounded-lg border border-(--border) text-(--text) px-5 py-2.5 text-sm font-semibold hover:border-(--accent)/40 hover:text-(--accent) transition-all flex items-center justify-center"
-                            >
-                                Browse more tours
-                            </Link>
-                        </div>
-                    </div>
-                </div>
+                        </Button>
+                        <Button asChild variant="outline" className="w-full sm:flex-1 h-12 text-base">
+                            <Link to="/tourist/tours">Browse More Tours</Link>
+                        </Button>
+                    </CardFooter>
+                </Card>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-(--bg)">
-            <div className="max-w-6xl mx-auto px-4 py-10">
-                <div className="mb-8">
-                    <h1 className="text-2xl font-bold text-(--text-h) mb-1 flex items-center gap-2">
-                        Shopping Cart
-                    </h1>
+        <div className="container mx-auto p-6 space-y-8">
+            <div className="space-y-2 text-center">
+                <h1 className="text-3xl font-bold tracking-tight">
+                    Shopping Cart
+                </h1>
+                <p className="text-muted-foreground text-lg">Manage tours in your cart and complete your order.</p>
+            </div>
+
+            {errorMsg && (
+                <div className="p-4 rounded-lg bg-destructive/10 text-destructive text-sm flex items-center gap-3 border border-destructive/20 animate-in fade-in slide-in-from-top-2 duration-300">
+                    <ShieldAlert className="h-5 w-5 shrink-0" />
+                    <span className="font-medium">{errorMsg}</span>
                 </div>
+            )}
 
-                {errorMsg && (
-                    <div className="mb-6 p-4 rounded-lg border border-red-500/20 bg-red-500/5 text-sm text-red-400 flex items-center gap-2">
-                        <ShieldAlert className="h-5 w-5 shrink-0" />
-                        <span>{errorMsg}</span>
+            {isLoading ? (
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div className="lg:col-span-2 space-y-4">
+                        {Array.from({ length: 3 }).map((_, i) => (
+                            <Card key={i} className="animate-pulse">
+                                <CardContent className="p-6 h-24" />
+                            </Card>
+                        ))}
                     </div>
-                )}
-
-                {isLoading && (
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                        <div className="lg:col-span-2 space-y-4">
-                            {Array.from({ length: 2 }).map((_, i) => (
-                                <div key={i} className="h-28 w-full rounded-xl border border-(--border) bg-(--accent-bg)/20 p-5 animate-pulse flex justify-between items-center" />
-                            ))}
-                        </div>
-                        <div className="h-56 w-full rounded-xl border border-(--border) bg-(--accent-bg)/20 p-5 animate-pulse" />
+                    <Card className="animate-pulse h-64" />
+                </div>
+            ) : isError ? (
+                <div className="p-12 text-center border-2 border-dashed rounded-xl flex flex-col items-center gap-3">
+                    <ShieldAlert className="h-10 w-10 text-destructive opacity-50" />
+                    <p className="text-destructive font-medium">Failed to load shopping cart.</p>
+                    <Button variant="outline" size="sm" onClick={() => window.location.reload()}>Retry</Button>
+                </div>
+            ) : items.length === 0 ? (
+                <div className="p-16 text-center border-2 border-dashed rounded-xl flex flex-col items-center gap-4">
+                    <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center">
+                        <ShoppingCart className="h-8 w-8 text-muted-foreground" />
                     </div>
-                )}
-
-                {isError && !isLoading && (
-                    <div className="text-center py-20 border border-(--border) rounded-xl">
-                        <ShieldAlert className="h-10 w-10 text-red-400 mx-auto mb-3" />
-                        <p className="text-sm text-red-400 mb-4">Failed to load shopping cart.</p>
-                        <button
-                            onClick={() => window.location.reload()}
-                            className="text-sm text-(--accent) font-semibold hover:underline"
-                        >
-                            Retry
-                        </button>
+                    <div className="space-y-1">
+                        <h3 className="text-xl font-bold">Your cart is empty</h3>
+                        <p className="text-muted-foreground">Looks like you haven't added any tours to your cart yet.</p>
                     </div>
-                )}
-
-                {!isLoading && !isError && items.length === 0 && (
-                    <div className="text-center py-20 border border-dashed border-(--border) rounded-xl">
-                        <ShoppingCart className="h-12 w-12 text-(--text)/30 mx-auto mb-4" />
-                        <h3 className="text-base font-semibold text-(--text-h) mb-1">Your cart is empty</h3>
-                        <p className="text-sm text-(--text)/50 mb-6">
-                            Looks like you haven't added any tours to your cart yet.
-                        </p>
-                        <Link
-                            to="/tourist/tours"
-                            className="inline-flex items-center gap-1.5 rounded-lg bg-(--accent) text-white px-5 py-2.5 text-sm font-semibold hover:opacity-90 transition-all"
-                        >
-                            <ArrowLeft className="h-4 w-4" /> Browse Tours
+                    <Button asChild size="lg" className="mt-2">
+                        <Link to="/tourist/tours">
+                            <ArrowLeft className="h-4 w-4 mr-2" /> Browse Tours
                         </Link>
+                    </Button>
+                </div>
+            ) : (
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+                    <div className="lg:col-span-2 space-y-4">
+                        {items.map(item => (
+                            <Card key={item.tourId} className="group hover:border-primary/50 transition-all duration-300">
+                                <CardContent className="p-6">
+                                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                                        <div className="space-y-1">
+                                            <h3 className="text-lg font-bold group-hover:text-primary transition-colors">{item.tourName}</h3>
+                                            <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                                                <Ticket className="h-3 w-3" /> ID: {item.tourId}
+                                            </div>
+                                        </div>
+
+                                        <div className="flex items-center gap-6 w-full sm:w-auto justify-between sm:justify-end">
+                                            <span className="text-xl font-black text-foreground">
+                                                ${item.price.toFixed(2)}
+                                            </span>
+
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                onClick={() => handleRemove(item.tourId)}
+                                                disabled={removeFromCart.isPending}
+                                                className="text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                                            >
+                                                <Trash2 className="h-5 w-5" />
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        ))}
                     </div>
-                )}
 
-                {!isLoading && !isError && items.length > 0 && (
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                        <div className="lg:col-span-2 space-y-4">
-                            {items.map(item => (
-                                <div
-                                    key={item.tourId}
-                                    className="flex justify-between items-center gap-4 rounded-xl border border-(--border) bg-(--bg) p-5 hover:border-(--accent)/30 transition-all duration-200"
-                                >
-                                    <div className="min-w-0 flex-1">
-                                        <h3 className="text-base font-semibold text-(--text-h) truncate mb-1">
-                                            {item.tourName}
-                                        </h3>
-                                        <p className="text-xs text-(--text)/50 flex items-center gap-1">
-                                            <span>Tour ID: {item.tourId}</span>
-                                        </p>
-                                    </div>
-
-                                    <div className="flex items-center gap-4 shrink-0">
-                                        <span className="text-base font-bold text-(--text-h)">
-                                            ${item.price.toFixed(2)}
-                                        </span>
-
-                                        <button
-                                            type="button"
-                                            onClick={() => handleRemove(item.tourId)}
-                                            disabled={removeFromCart.isPending}
-                                            className="rounded-lg p-2 text-(--text)/55 hover:text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-50"
-                                            title="Remove item"
-                                        >
-                                            <Trash2 className="h-4 w-4" />
-                                        </button>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-
-                        <div className="rounded-xl border border-(--border) bg-(--bg) p-6 shadow-md h-fit">
-                            <h2 className="text-base font-semibold text-(--text-h) border-b border-(--border) pb-3 mb-4">
-                                Order Summary
-                            </h2>
-
-                            <div className="space-y-3 mb-6">
-                                <div className="flex justify-between text-sm">
-                                    <span className="text-(--text)/75">Total Items</span>
-                                    <span className="font-semibold text-(--text-h)">{items.length}</span>
-                                </div>
-                                <div className="border-t border-(--border) pt-3 flex justify-between items-baseline">
-                                    <span className="text-sm font-semibold text-(--text-h)">Total Price</span>
-                                    <span className="text-xl font-bold text-(--accent)">
-                                        ${total.toFixed(2)}
-                                    </span>
-                                </div>
+                    <Card className="sticky top-20 shadow-xl border-primary/10">
+                        <CardHeader className="pb-4">
+                            <CardTitle className="text-xl">Order Summary</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="flex justify-between text-sm">
+                                <span className="text-muted-foreground">Subtotal ({items.length} items)</span>
+                                <span className="font-bold">${total.toFixed(2)}</span>
                             </div>
-
-                            <button
-                                type="button"
+                            <div className="flex justify-between text-sm">
+                                <span className="text-muted-foreground">Tax</span>
+                                <span className="font-bold">$0.00</span>
+                            </div>
+                            <div className="border-t pt-4 flex justify-between items-center">
+                                <span className="font-bold">Total</span>
+                                <span className="text-2xl font-black text-primary">${total.toFixed(2)}</span>
+                            </div>
+                        </CardContent>
+                        <CardFooter className="flex flex-col gap-4">
+                            <Button 
+                                className="w-full h-12 text-base font-bold shadow-lg shadow-primary/20"
                                 onClick={handleCheckout}
                                 disabled={checkout.isPending}
-                                className={cn(
-                                    'w-full rounded-lg py-3 text-sm font-semibold text-white transition-all duration-200',
-                                    'bg-(--accent) hover:opacity-95 shadow-lg shadow-(--accent)/15',
-                                    'disabled:opacity-50 disabled:cursor-not-allowed',
-                                    'flex items-center justify-center gap-2'
-                                )}
                             >
-                                {checkout.isPending ? (
-                                    <span>Processing...</span>
-                                ) : (
-                                    <>
-                                        <span>Checkout</span>
-                                        <ArrowRight className="h-4 w-4" />
-                                    </>
-                                )}
-                            </button>
-
-                            <p className="text-[11px] text-(--text)/40 text-center mt-4 flex items-center justify-center gap-1.5">
+                                {checkout.isPending ? "Processing..." : "Complete Purchase"}
+                                {!checkout.isPending && <ArrowRight className="h-5 w-5 ml-2" />}
+                            </Button>
+                            <div className="flex items-center justify-center gap-2 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
                                 <Wallet className="h-3 w-3" />
-                                Balance will be deducted from stakeholders account
-                            </p>
-                        </div>
-                    </div>
-                )}
-            </div>
+                                Balance will be deducted
+                            </div>
+                        </CardFooter>
+                    </Card>
+                </div>
+            )}
         </div>
     );
 }

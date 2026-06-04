@@ -4,6 +4,7 @@ import type {
   CheckoutResponse,
   HasPurchasedResponse,
   MyPurchasesResponse,
+  AllPurchasesResponse,
   RefundResponse,
 } from '@/types/purchase';
 
@@ -58,9 +59,9 @@ export const purchaseService = {
     return data;
   },
 
-  getAllPurchases: async (): Promise<MyPurchasesResponse> => {
+  getAllPurchases: async (): Promise<AllPurchasesResponse> => {
     // Gateway maps GET /purchases to GetAllPurchases
-    const { data } = await apiClient.get<MyPurchasesResponse>('/purchases/purchases');
+    const { data } = await apiClient.get<AllPurchasesResponse>('/purchases/purchases');
     return data;
   },
 
