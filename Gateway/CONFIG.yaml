@@ -15,12 +15,14 @@ services:
 
   - name: "stakeholders"
     rest_url: "http://stakeholders:8082/"
+    grpc_url: "stakeholders:50051"
 
   - name: "auth"
     rest_url: "http://auth:8081/"
 
   - name: "tours"
     rest_url: "http://tours:8083/"
+    grpc_url: "tours:9093"
 
   - name: "follower"
     rest_url: "http://follower:8084/"

@@ -36,8 +36,7 @@ message ProfileResponse {
   string biography = 5;
   string quote = 6;
   int32 user_id = 7;
-  float balance = 8;
-  Role role = 9;
+  Role role = 8;
 }
 
 message ProfileCreate {
@@ -48,23 +47,4 @@ message ProfileCreate {
   optional string quote = 5;
   int32 user_id = 6;
   Role role = 7;
-}
-
-message ProfileUpdate {
-  optional string name = 1;
-  optional string lastname = 2;
-  optional string imageUrl = 3;
-  optional string biography = 4;
-  optional string quote = 5;
-  int32 user_id = 6;
-  optional float balance = 7;
-}
-
-message ImageUploadRequest {
-  bytes file_data = 1;
-  string filename = 2;
-}
-
-message ImageUploadResponse {
-  string imageUrl = 1;
 }

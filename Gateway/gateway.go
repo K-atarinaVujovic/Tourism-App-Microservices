@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"net/http/httputil"
@@ -17,12 +19,16 @@ import (
 
 	purchasepb "gateway/proto/purchase"
 	servicepb "gateway/proto/service"
+	tourspb "gateway/proto/tours"
+	stakeholderspb "gateway/proto/stakeholders"
 	"jwtreader"
 )
 
 // MicroserviceRegistry Should contain all generated API handlers
 var MicroserviceRegistry = map[string]func(context.Context, *runtime.ServeMux, string, []grpc.DialOption) error{
-	"service":   servicepb.RegisterAlbumServiceHandlerFromEndpoint,
+	"service":      servicepb.RegisterAlbumServiceHandlerFromEndpoint,
+	"tours":   tourspb.RegisterTourGrpcServiceHandlerFromEndpoint,
+	"stakeholders": stakeholderspb.RegisterProfileServiceHandlerFromEndpoint,
 	"purchases": purchasepb.RegisterPurchaseServiceHandlerFromEndpoint,
 	// add more services here
 }
@@ -154,20 +160,28 @@ func ProxyRequestHandler(proxies []ProxyRegistry) func(http.ResponseWriter, *htt
 
 		r.URL.Path = strings.TrimPrefix(r.URL.Path, "/"+proxy.name)
 
+		// Buffer the body so it can be re-read if gRPC fails
+		bodyBytes, err := io.ReadAll(r.Body)
+		if err != nil {
+			http.Error(w, "failed to read body", http.StatusInternalServerError)
+			return
+		}
+		r.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
+
 		// Try gRPC first
 		if proxy.grpcHandler != nil {
 			rec := &responseRecorder{ResponseWriter: w, statusCode: http.StatusOK}
 			proxy.grpcHandler.ServeHTTP(rec, r)
 
-			if rec.statusCode != http.StatusNotFound {
-				// gRPC handled it, write the recorded response
+			if rec.statusCode >= 200 && rec.statusCode < 400 {
 				log.Printf("[%s][gRPC] %s %s -> %d", proxy.name, r.Method, r.URL.String(), rec.statusCode)
 				w.WriteHeader(rec.statusCode)
 				w.Write(rec.body)
 				return
 			}
 
-			// If gRPC returned 404, fall through to REST
+			// Restore body for REST fallback
+			r.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
 			log.Printf("[%s][gRPC->REST fallback] %s %s", proxy.name, r.Method, r.URL.String())
 		}
 
@@ -177,8 +191,6 @@ func ProxyRequestHandler(proxies []ProxyRegistry) func(http.ResponseWriter, *htt
 			proxy.restHandler.ServeHTTP(w, r)
 			return
 		}
-
-		http.NotFound(w, r)
 	}
 }
 
