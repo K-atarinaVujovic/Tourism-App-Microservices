@@ -292,6 +292,7 @@ services:
       PORT: 8085
       AUTH_SERVICE_URL: http://auth:8081
       STAKEHOLDER_SERVICE_URL: http://stakeholders:8082
+      PURCHASE_SERVICE_ADDR: purchases:9095
       # Must match INTERNAL_SECRET in the auth service
       INTERNAL_SECRET: super-internal-secret-change-me
     depends_on:

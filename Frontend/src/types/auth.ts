@@ -27,6 +27,8 @@ export interface LoginRequest {
 
 export interface RegisterRequest {
   username: string;
+  name: string;
+  lastname?: string;
   email: string;
   password: string;
   role: "tourist" | "author"
@@ -42,6 +44,7 @@ export interface RegisterResponse {
   email: string;
   role: string;
   token: string;
+  profile_id: string;
 }
 
 // Form data

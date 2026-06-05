@@ -56,6 +56,7 @@ func main() {
 	cfg := Config{
 		AuthServiceURL:        mustEnv("AUTH_SERVICE_URL"),
 		StakeholderServiceURL: mustEnv("STAKEHOLDER_SERVICE_URL"),
+		PurchaseServiceAddr:   mustEnv("PURCHASE_SERVICE_ADDR"),
 		InternalSecret:        mustEnv("INTERNAL_SECRET"),
 		Port:                  getEnv("PORT", "8082"),
 	}

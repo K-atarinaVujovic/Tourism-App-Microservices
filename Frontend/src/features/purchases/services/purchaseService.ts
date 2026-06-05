@@ -40,7 +40,7 @@ export const purchaseService = {
   },
 
   checkout: async (touristId: string): Promise<CheckoutResponse> => {
-    const { data } = await apiClient.post<CheckoutResponse>('/purchases/checkout', {
+    const { data } = await apiClient.post<CheckoutResponse>('/saga-orchestrator/checkout', {
       tourist_id: touristId,
     });
     return data;
