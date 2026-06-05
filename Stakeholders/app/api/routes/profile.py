@@ -1,4 +1,4 @@
-﻿from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager
 from typing import Annotated, Any, Optional
 
 from fastapi import APIRouter, Body, Depends, FastAPI, File, HTTPException, Path, Request, UploadFile
@@ -9,7 +9,7 @@ from fastapi.staticfiles import StaticFiles
 
 from app.core.database import init_db
 from app.core.exceptions import AlreadyExistsException, NotFoundException
-from app.core.security import get_current_user, decode_token
+from app.core.security import get_current_user, decode_token, get_current_user_optional
 from app.schemas.profile import ProfileCreate, ProfileResponse, ProfileUpdate, BalanceResponse
 from app.services.profile import ProfileService
 from app.services.upload import Uploader
@@ -22,8 +22,7 @@ from opentelemetry._logs import set_logger_provider
 from opentelemetry.sdk._logs import LoggerProvider, LoggingHandler
 from opentelemetry.sdk._logs.export import BatchLogRecordProcessor
 from opentelemetry.exporter.otlp.proto.http._log_exporter import OTLPLogExporter
-import logging
-
+import os
 import logging
 
 
@@ -42,6 +41,8 @@ async def lifespan(app: FastAPI):
 
 setup_otel()
 logger = logging.getLogger(__name__)
+
+INTERNAL_SECRET = os.getenv("INTERNAL_SECRET")
 
 app = FastAPI(lifespan=lifespan)
 
@@ -96,23 +97,28 @@ async def update_balance(
   except NotFoundException as e:
     raise HTTPException(status_code=404, detail=str(e))
 
-# Admin update balance for other user
-@protected_router.put("/profiles/balance/{user_id}", response_model=BalanceResponse)
+# Admin update balance for other user - moved out of protected_router to allow orchestrator bypass
+@app.put("/profiles/balance/{user_id}", response_model=BalanceResponse)
 async def update_balance_for_user(
         user_id: Annotated[int, Path()],
         balance: Annotated[BalanceResponse, Body()],
         request: Request,
-        current_user = Depends(get_current_user),
+        current_user: Annotated[Optional[dict], Depends(get_current_user_optional)] = None,
 ) -> Any:
   try:
     # hacky solution to allow direct access from orchestrator
     if request.headers.get("X-Internal-Secret") == INTERNAL_SECRET:
       return await service.update_balance(user_id, balance)
+
+    if not current_user:
+      raise HTTPException(status_code=401, detail="Missing or invalid token")
+
     if current_user["role"] != "admin":
       raise HTTPException(status_code=403, detail="Unauthorized")
     return await service.update_balance(user_id, balance)
   except NotFoundException as e:
     raise HTTPException(status_code=404, detail=str(e))
+
 
 @protected_router.get("/profiles/{user_id}", response_model=ProfileResponse)
 async def get_profile(

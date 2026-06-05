@@ -28,3 +28,14 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
     return decode_token(token)
   except ValueError as e:
     raise HTTPException(status_code=401, detail=str(e))
+
+security_optional = HTTPBearer(auto_error=False)
+
+def get_current_user_optional(credentials: HTTPAuthorizationCredentials = Depends(security_optional)) -> dict:
+  if credentials is None:
+    return None
+  token = credentials.credentials
+  try:
+    return decode_token(token)
+  except ValueError:
+    return None
