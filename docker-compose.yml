@@ -134,7 +134,7 @@ services:
       - service-network
     environment:
       JWT_SECRET: super-secret-change-me
-      OTEL_EXPORTER_OTLP_ENDPOINT: jaeger:4318
+      OTEL_EXPORTER_OTLP_ENDPOINT: otel-collector:4318
 
   auth-db:
     image: postgres:16-alpine
