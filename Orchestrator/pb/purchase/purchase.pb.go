@@ -4,14 +4,15 @@
 // 	protoc        v7.34.2
 // source: purchase.proto
 
-package pb
+package purchase
 
 import (
-	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
-	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
+
+	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
+	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 )
 
 const (
@@ -307,42 +308,6 @@ func (x *CartResponse) GetTotalPrice() float64 {
 	return 0
 }
 
-type GetMyCartItemsRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *GetMyCartItemsRequest) Reset() {
-	*x = GetMyCartItemsRequest{}
-	mi := &file_purchase_proto_msgTypes[5]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *GetMyCartItemsRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*GetMyCartItemsRequest) ProtoMessage() {}
-
-func (x *GetMyCartItemsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_purchase_proto_msgTypes[5]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use GetMyCartItemsRequest.ProtoReflect.Descriptor instead.
-func (*GetMyCartItemsRequest) Descriptor() ([]byte, []int) {
-	return file_purchase_proto_rawDescGZIP(), []int{5}
-}
-
 // --- checkout / tokens ---
 type CheckoutRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -353,7 +318,7 @@ type CheckoutRequest struct {
 
 func (x *CheckoutRequest) Reset() {
 	*x = CheckoutRequest{}
-	mi := &file_purchase_proto_msgTypes[6]
+	mi := &file_purchase_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -365,7 +330,7 @@ func (x *CheckoutRequest) String() string {
 func (*CheckoutRequest) ProtoMessage() {}
 
 func (x *CheckoutRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_purchase_proto_msgTypes[6]
+	mi := &file_purchase_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -378,7 +343,7 @@ func (x *CheckoutRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CheckoutRequest.ProtoReflect.Descriptor instead.
 func (*CheckoutRequest) Descriptor() ([]byte, []int) {
-	return file_purchase_proto_rawDescGZIP(), []int{6}
+	return file_purchase_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *CheckoutRequest) GetTouristId() string {
@@ -401,7 +366,7 @@ type TokenResponse struct {
 
 func (x *TokenResponse) Reset() {
 	*x = TokenResponse{}
-	mi := &file_purchase_proto_msgTypes[7]
+	mi := &file_purchase_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -413,7 +378,7 @@ func (x *TokenResponse) String() string {
 func (*TokenResponse) ProtoMessage() {}
 
 func (x *TokenResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_purchase_proto_msgTypes[7]
+	mi := &file_purchase_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -426,7 +391,7 @@ func (x *TokenResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TokenResponse.ProtoReflect.Descriptor instead.
 func (*TokenResponse) Descriptor() ([]byte, []int) {
-	return file_purchase_proto_rawDescGZIP(), []int{7}
+	return file_purchase_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *TokenResponse) GetId() string {
@@ -473,7 +438,7 @@ type CheckoutResponse struct {
 
 func (x *CheckoutResponse) Reset() {
 	*x = CheckoutResponse{}
-	mi := &file_purchase_proto_msgTypes[8]
+	mi := &file_purchase_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -485,7 +450,7 @@ func (x *CheckoutResponse) String() string {
 func (*CheckoutResponse) ProtoMessage() {}
 
 func (x *CheckoutResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_purchase_proto_msgTypes[8]
+	mi := &file_purchase_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -498,7 +463,7 @@ func (x *CheckoutResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CheckoutResponse.ProtoReflect.Descriptor instead.
 func (*CheckoutResponse) Descriptor() ([]byte, []int) {
-	return file_purchase_proto_rawDescGZIP(), []int{8}
+	return file_purchase_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *CheckoutResponse) GetTokens() []*TokenResponse {
@@ -519,7 +484,7 @@ type HasPurchasedRequest struct {
 
 func (x *HasPurchasedRequest) Reset() {
 	*x = HasPurchasedRequest{}
-	mi := &file_purchase_proto_msgTypes[9]
+	mi := &file_purchase_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -531,7 +496,7 @@ func (x *HasPurchasedRequest) String() string {
 func (*HasPurchasedRequest) ProtoMessage() {}
 
 func (x *HasPurchasedRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_purchase_proto_msgTypes[9]
+	mi := &file_purchase_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -544,7 +509,7 @@ func (x *HasPurchasedRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use HasPurchasedRequest.ProtoReflect.Descriptor instead.
 func (*HasPurchasedRequest) Descriptor() ([]byte, []int) {
-	return file_purchase_proto_rawDescGZIP(), []int{9}
+	return file_purchase_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *HasPurchasedRequest) GetTouristId() string {
@@ -570,7 +535,7 @@ type HasPurchasedResponse struct {
 
 func (x *HasPurchasedResponse) Reset() {
 	*x = HasPurchasedResponse{}
-	mi := &file_purchase_proto_msgTypes[10]
+	mi := &file_purchase_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -582,7 +547,7 @@ func (x *HasPurchasedResponse) String() string {
 func (*HasPurchasedResponse) ProtoMessage() {}
 
 func (x *HasPurchasedResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_purchase_proto_msgTypes[10]
+	mi := &file_purchase_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -595,7 +560,7 @@ func (x *HasPurchasedResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use HasPurchasedResponse.ProtoReflect.Descriptor instead.
 func (*HasPurchasedResponse) Descriptor() ([]byte, []int) {
-	return file_purchase_proto_rawDescGZIP(), []int{10}
+	return file_purchase_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *HasPurchasedResponse) GetPurchased() bool {
@@ -614,7 +579,7 @@ type GetMyPurchasesRequest struct {
 
 func (x *GetMyPurchasesRequest) Reset() {
 	*x = GetMyPurchasesRequest{}
-	mi := &file_purchase_proto_msgTypes[11]
+	mi := &file_purchase_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -626,7 +591,7 @@ func (x *GetMyPurchasesRequest) String() string {
 func (*GetMyPurchasesRequest) ProtoMessage() {}
 
 func (x *GetMyPurchasesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_purchase_proto_msgTypes[11]
+	mi := &file_purchase_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -639,7 +604,7 @@ func (x *GetMyPurchasesRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetMyPurchasesRequest.ProtoReflect.Descriptor instead.
 func (*GetMyPurchasesRequest) Descriptor() ([]byte, []int) {
-	return file_purchase_proto_rawDescGZIP(), []int{11}
+	return file_purchase_proto_rawDescGZIP(), []int{10}
 }
 
 type GetMyPurchasesResponse struct {
@@ -651,7 +616,7 @@ type GetMyPurchasesResponse struct {
 
 func (x *GetMyPurchasesResponse) Reset() {
 	*x = GetMyPurchasesResponse{}
-	mi := &file_purchase_proto_msgTypes[12]
+	mi := &file_purchase_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -663,7 +628,7 @@ func (x *GetMyPurchasesResponse) String() string {
 func (*GetMyPurchasesResponse) ProtoMessage() {}
 
 func (x *GetMyPurchasesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_purchase_proto_msgTypes[12]
+	mi := &file_purchase_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -676,7 +641,7 @@ func (x *GetMyPurchasesResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetMyPurchasesResponse.ProtoReflect.Descriptor instead.
 func (*GetMyPurchasesResponse) Descriptor() ([]byte, []int) {
-	return file_purchase_proto_rawDescGZIP(), []int{12}
+	return file_purchase_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *GetMyPurchasesResponse) GetTokens() []*TokenResponse {
@@ -696,7 +661,7 @@ type PurchasesByTourist struct {
 
 func (x *PurchasesByTourist) Reset() {
 	*x = PurchasesByTourist{}
-	mi := &file_purchase_proto_msgTypes[13]
+	mi := &file_purchase_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -708,7 +673,7 @@ func (x *PurchasesByTourist) String() string {
 func (*PurchasesByTourist) ProtoMessage() {}
 
 func (x *PurchasesByTourist) ProtoReflect() protoreflect.Message {
-	mi := &file_purchase_proto_msgTypes[13]
+	mi := &file_purchase_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -721,7 +686,7 @@ func (x *PurchasesByTourist) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PurchasesByTourist.ProtoReflect.Descriptor instead.
 func (*PurchasesByTourist) Descriptor() ([]byte, []int) {
-	return file_purchase_proto_rawDescGZIP(), []int{13}
+	return file_purchase_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *PurchasesByTourist) GetTouristId() string {
@@ -746,7 +711,7 @@ type GetAllPurchasesRequest struct {
 
 func (x *GetAllPurchasesRequest) Reset() {
 	*x = GetAllPurchasesRequest{}
-	mi := &file_purchase_proto_msgTypes[14]
+	mi := &file_purchase_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -758,7 +723,7 @@ func (x *GetAllPurchasesRequest) String() string {
 func (*GetAllPurchasesRequest) ProtoMessage() {}
 
 func (x *GetAllPurchasesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_purchase_proto_msgTypes[14]
+	mi := &file_purchase_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -771,7 +736,7 @@ func (x *GetAllPurchasesRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetAllPurchasesRequest.ProtoReflect.Descriptor instead.
 func (*GetAllPurchasesRequest) Descriptor() ([]byte, []int) {
-	return file_purchase_proto_rawDescGZIP(), []int{14}
+	return file_purchase_proto_rawDescGZIP(), []int{13}
 }
 
 type GetAllPurchasesResponse struct {
@@ -783,7 +748,7 @@ type GetAllPurchasesResponse struct {
 
 func (x *GetAllPurchasesResponse) Reset() {
 	*x = GetAllPurchasesResponse{}
-	mi := &file_purchase_proto_msgTypes[15]
+	mi := &file_purchase_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -795,7 +760,7 @@ func (x *GetAllPurchasesResponse) String() string {
 func (*GetAllPurchasesResponse) ProtoMessage() {}
 
 func (x *GetAllPurchasesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_purchase_proto_msgTypes[15]
+	mi := &file_purchase_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -808,7 +773,7 @@ func (x *GetAllPurchasesResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetAllPurchasesResponse.ProtoReflect.Descriptor instead.
 func (*GetAllPurchasesResponse) Descriptor() ([]byte, []int) {
-	return file_purchase_proto_rawDescGZIP(), []int{15}
+	return file_purchase_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *GetAllPurchasesResponse) GetPurchases() []*PurchasesByTourist {
@@ -828,7 +793,7 @@ type RefundPurchaseRequest struct {
 
 func (x *RefundPurchaseRequest) Reset() {
 	*x = RefundPurchaseRequest{}
-	mi := &file_purchase_proto_msgTypes[16]
+	mi := &file_purchase_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -840,7 +805,7 @@ func (x *RefundPurchaseRequest) String() string {
 func (*RefundPurchaseRequest) ProtoMessage() {}
 
 func (x *RefundPurchaseRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_purchase_proto_msgTypes[16]
+	mi := &file_purchase_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -853,7 +818,7 @@ func (x *RefundPurchaseRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RefundPurchaseRequest.ProtoReflect.Descriptor instead.
 func (*RefundPurchaseRequest) Descriptor() ([]byte, []int) {
-	return file_purchase_proto_rawDescGZIP(), []int{16}
+	return file_purchase_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *RefundPurchaseRequest) GetTokenId() string {
@@ -872,7 +837,7 @@ type RefundPurchaseResponse struct {
 
 func (x *RefundPurchaseResponse) Reset() {
 	*x = RefundPurchaseResponse{}
-	mi := &file_purchase_proto_msgTypes[17]
+	mi := &file_purchase_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -884,7 +849,7 @@ func (x *RefundPurchaseResponse) String() string {
 func (*RefundPurchaseResponse) ProtoMessage() {}
 
 func (x *RefundPurchaseResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_purchase_proto_msgTypes[17]
+	mi := &file_purchase_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -897,7 +862,7 @@ func (x *RefundPurchaseResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RefundPurchaseResponse.ProtoReflect.Descriptor instead.
 func (*RefundPurchaseResponse) Descriptor() ([]byte, []int) {
-	return file_purchase_proto_rawDescGZIP(), []int{17}
+	return file_purchase_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *RefundPurchaseResponse) GetSuccess() bool {
@@ -917,7 +882,7 @@ type GetCartPriceRequest struct {
 
 func (x *GetCartPriceRequest) Reset() {
 	*x = GetCartPriceRequest{}
-	mi := &file_purchase_proto_msgTypes[18]
+	mi := &file_purchase_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -929,7 +894,7 @@ func (x *GetCartPriceRequest) String() string {
 func (*GetCartPriceRequest) ProtoMessage() {}
 
 func (x *GetCartPriceRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_purchase_proto_msgTypes[18]
+	mi := &file_purchase_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -942,7 +907,7 @@ func (x *GetCartPriceRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetCartPriceRequest.ProtoReflect.Descriptor instead.
 func (*GetCartPriceRequest) Descriptor() ([]byte, []int) {
-	return file_purchase_proto_rawDescGZIP(), []int{18}
+	return file_purchase_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *GetCartPriceRequest) GetTouristId() string {
@@ -962,7 +927,7 @@ type GetCartPriceResponse struct {
 
 func (x *GetCartPriceResponse) Reset() {
 	*x = GetCartPriceResponse{}
-	mi := &file_purchase_proto_msgTypes[19]
+	mi := &file_purchase_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -974,7 +939,7 @@ func (x *GetCartPriceResponse) String() string {
 func (*GetCartPriceResponse) ProtoMessage() {}
 
 func (x *GetCartPriceResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_purchase_proto_msgTypes[19]
+	mi := &file_purchase_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -987,7 +952,7 @@ func (x *GetCartPriceResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetCartPriceResponse.ProtoReflect.Descriptor instead.
 func (*GetCartPriceResponse) Descriptor() ([]byte, []int) {
-	return file_purchase_proto_rawDescGZIP(), []int{19}
+	return file_purchase_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *GetCartPriceResponse) GetTotalPrice() float64 {
@@ -1013,7 +978,7 @@ type FinalizeCheckoutRequest struct {
 
 func (x *FinalizeCheckoutRequest) Reset() {
 	*x = FinalizeCheckoutRequest{}
-	mi := &file_purchase_proto_msgTypes[20]
+	mi := &file_purchase_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1025,7 +990,7 @@ func (x *FinalizeCheckoutRequest) String() string {
 func (*FinalizeCheckoutRequest) ProtoMessage() {}
 
 func (x *FinalizeCheckoutRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_purchase_proto_msgTypes[20]
+	mi := &file_purchase_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1038,7 +1003,7 @@ func (x *FinalizeCheckoutRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FinalizeCheckoutRequest.ProtoReflect.Descriptor instead.
 func (*FinalizeCheckoutRequest) Descriptor() ([]byte, []int) {
-	return file_purchase_proto_rawDescGZIP(), []int{20}
+	return file_purchase_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *FinalizeCheckoutRequest) GetTouristId() string {
@@ -1057,7 +1022,7 @@ type FinalizeCheckoutResponse struct {
 
 func (x *FinalizeCheckoutResponse) Reset() {
 	*x = FinalizeCheckoutResponse{}
-	mi := &file_purchase_proto_msgTypes[21]
+	mi := &file_purchase_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1069,7 +1034,7 @@ func (x *FinalizeCheckoutResponse) String() string {
 func (*FinalizeCheckoutResponse) ProtoMessage() {}
 
 func (x *FinalizeCheckoutResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_purchase_proto_msgTypes[21]
+	mi := &file_purchase_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1082,7 +1047,7 @@ func (x *FinalizeCheckoutResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FinalizeCheckoutResponse.ProtoReflect.Descriptor instead.
 func (*FinalizeCheckoutResponse) Descriptor() ([]byte, []int) {
-	return file_purchase_proto_rawDescGZIP(), []int{21}
+	return file_purchase_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *FinalizeCheckoutResponse) GetTokens() []*TokenResponse {
@@ -1101,7 +1066,7 @@ type DeleteCheckoutTokensRequest struct {
 
 func (x *DeleteCheckoutTokensRequest) Reset() {
 	*x = DeleteCheckoutTokensRequest{}
-	mi := &file_purchase_proto_msgTypes[22]
+	mi := &file_purchase_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1113,7 +1078,7 @@ func (x *DeleteCheckoutTokensRequest) String() string {
 func (*DeleteCheckoutTokensRequest) ProtoMessage() {}
 
 func (x *DeleteCheckoutTokensRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_purchase_proto_msgTypes[22]
+	mi := &file_purchase_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1126,7 +1091,7 @@ func (x *DeleteCheckoutTokensRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteCheckoutTokensRequest.ProtoReflect.Descriptor instead.
 func (*DeleteCheckoutTokensRequest) Descriptor() ([]byte, []int) {
-	return file_purchase_proto_rawDescGZIP(), []int{22}
+	return file_purchase_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *DeleteCheckoutTokensRequest) GetTokenIds() []string {
@@ -1145,7 +1110,7 @@ type DeleteCheckoutTokensResponse struct {
 
 func (x *DeleteCheckoutTokensResponse) Reset() {
 	*x = DeleteCheckoutTokensResponse{}
-	mi := &file_purchase_proto_msgTypes[23]
+	mi := &file_purchase_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1157,7 +1122,7 @@ func (x *DeleteCheckoutTokensResponse) String() string {
 func (*DeleteCheckoutTokensResponse) ProtoMessage() {}
 
 func (x *DeleteCheckoutTokensResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_purchase_proto_msgTypes[23]
+	mi := &file_purchase_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1170,7 +1135,7 @@ func (x *DeleteCheckoutTokensResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteCheckoutTokensResponse.ProtoReflect.Descriptor instead.
 func (*DeleteCheckoutTokensResponse) Descriptor() ([]byte, []int) {
-	return file_purchase_proto_rawDescGZIP(), []int{23}
+	return file_purchase_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *DeleteCheckoutTokensResponse) GetSuccess() bool {
@@ -1206,8 +1171,7 @@ const file_purchase_proto_rawDesc = "" +
 	"tourist_id\x18\x01 \x01(\tR\ttouristId\x121\n" +
 	"\x05items\x18\x02 \x03(\v2\x1b.purchase.OrderItemResponseR\x05items\x12\x1f\n" +
 	"\vtotal_price\x18\x03 \x01(\x01R\n" +
-	"totalPrice\"\x17\n" +
-	"\x15GetMyCartItemsRequest\"0\n" +
+	"totalPrice\"0\n" +
 	"\x0fCheckoutRequest\x12\x1d\n" +
 	"\n" +
 	"tourist_id\x18\x01 \x01(\tR\ttouristId\"\x8a\x01\n" +
@@ -1255,7 +1219,7 @@ const file_purchase_proto_rawDesc = "" +
 	"\x1bDeleteCheckoutTokensRequest\x12\x1a\n" +
 	"\btokenIds\x18\x01 \x03(\tR\btokenIds\"8\n" +
 	"\x1cDeleteCheckoutTokensResponse\x12\x18\n" +
-	"\asuccess\x18\x01 \x01(\bR\asuccess2\x8d\a\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess2\xc2\x06\n" +
 	"\x0fPurchaseService\x12?\n" +
 	"\tAddToCart\x12\x1a.purchase.AddToCartRequest\x1a\x16.purchase.CartResponse\x12I\n" +
 	"\x0eRemoveFromCart\x12\x1f.purchase.RemoveFromCartRequest\x1a\x16.purchase.CartResponse\x12A\n" +
@@ -1263,8 +1227,7 @@ const file_purchase_proto_rawDesc = "" +
 	"\fHasPurchased\x12\x1d.purchase.HasPurchasedRequest\x1a\x1e.purchase.HasPurchasedResponse\x12S\n" +
 	"\x0eGetMyPurchases\x12\x1f.purchase.GetMyPurchasesRequest\x1a .purchase.GetMyPurchasesResponse\x12V\n" +
 	"\x0fGetAllPurchases\x12 .purchase.GetAllPurchasesRequest\x1a!.purchase.GetAllPurchasesResponse\x12S\n" +
-	"\x0eRefundPurchase\x12\x1f.purchase.RefundPurchaseRequest\x1a .purchase.RefundPurchaseResponse\x12I\n" +
-	"\x0eGetMyCartItems\x12\x1f.purchase.GetMyCartItemsRequest\x1a\x16.purchase.CartResponse\x12M\n" +
+	"\x0eRefundPurchase\x12\x1f.purchase.RefundPurchaseRequest\x1a .purchase.RefundPurchaseResponse\x12M\n" +
 	"\fGetCartPrice\x12\x1d.purchase.GetCartPriceRequest\x1a\x1e.purchase.GetCartPriceResponse\x12Y\n" +
 	"\x10FinalizeCheckout\x12!.purchase.FinalizeCheckoutRequest\x1a\".purchase.FinalizeCheckoutResponse\x12e\n" +
 	"\x14DeleteCheckoutTokens\x12%.purchase.DeleteCheckoutTokensRequest\x1a&.purchase.DeleteCheckoutTokensResponseB\aZ\x05../pbb\x06proto3"
@@ -1281,64 +1244,61 @@ func file_purchase_proto_rawDescGZIP() []byte {
 	return file_purchase_proto_rawDescData
 }
 
-var file_purchase_proto_msgTypes = make([]protoimpl.MessageInfo, 24)
+var file_purchase_proto_msgTypes = make([]protoimpl.MessageInfo, 23)
 var file_purchase_proto_goTypes = []any{
 	(*OrderItemRequest)(nil),             // 0: purchase.OrderItemRequest
 	(*OrderItemResponse)(nil),            // 1: purchase.OrderItemResponse
 	(*AddToCartRequest)(nil),             // 2: purchase.AddToCartRequest
 	(*RemoveFromCartRequest)(nil),        // 3: purchase.RemoveFromCartRequest
 	(*CartResponse)(nil),                 // 4: purchase.CartResponse
-	(*GetMyCartItemsRequest)(nil),        // 5: purchase.GetMyCartItemsRequest
-	(*CheckoutRequest)(nil),              // 6: purchase.CheckoutRequest
-	(*TokenResponse)(nil),                // 7: purchase.TokenResponse
-	(*CheckoutResponse)(nil),             // 8: purchase.CheckoutResponse
-	(*HasPurchasedRequest)(nil),          // 9: purchase.HasPurchasedRequest
-	(*HasPurchasedResponse)(nil),         // 10: purchase.HasPurchasedResponse
-	(*GetMyPurchasesRequest)(nil),        // 11: purchase.GetMyPurchasesRequest
-	(*GetMyPurchasesResponse)(nil),       // 12: purchase.GetMyPurchasesResponse
-	(*PurchasesByTourist)(nil),           // 13: purchase.PurchasesByTourist
-	(*GetAllPurchasesRequest)(nil),       // 14: purchase.GetAllPurchasesRequest
-	(*GetAllPurchasesResponse)(nil),      // 15: purchase.GetAllPurchasesResponse
-	(*RefundPurchaseRequest)(nil),        // 16: purchase.RefundPurchaseRequest
-	(*RefundPurchaseResponse)(nil),       // 17: purchase.RefundPurchaseResponse
-	(*GetCartPriceRequest)(nil),          // 18: purchase.GetCartPriceRequest
-	(*GetCartPriceResponse)(nil),         // 19: purchase.GetCartPriceResponse
-	(*FinalizeCheckoutRequest)(nil),      // 20: purchase.FinalizeCheckoutRequest
-	(*FinalizeCheckoutResponse)(nil),     // 21: purchase.FinalizeCheckoutResponse
-	(*DeleteCheckoutTokensRequest)(nil),  // 22: purchase.DeleteCheckoutTokensRequest
-	(*DeleteCheckoutTokensResponse)(nil), // 23: purchase.DeleteCheckoutTokensResponse
+	(*CheckoutRequest)(nil),              // 5: purchase.CheckoutRequest
+	(*TokenResponse)(nil),                // 6: purchase.TokenResponse
+	(*CheckoutResponse)(nil),             // 7: purchase.CheckoutResponse
+	(*HasPurchasedRequest)(nil),          // 8: purchase.HasPurchasedRequest
+	(*HasPurchasedResponse)(nil),         // 9: purchase.HasPurchasedResponse
+	(*GetMyPurchasesRequest)(nil),        // 10: purchase.GetMyPurchasesRequest
+	(*GetMyPurchasesResponse)(nil),       // 11: purchase.GetMyPurchasesResponse
+	(*PurchasesByTourist)(nil),           // 12: purchase.PurchasesByTourist
+	(*GetAllPurchasesRequest)(nil),       // 13: purchase.GetAllPurchasesRequest
+	(*GetAllPurchasesResponse)(nil),      // 14: purchase.GetAllPurchasesResponse
+	(*RefundPurchaseRequest)(nil),        // 15: purchase.RefundPurchaseRequest
+	(*RefundPurchaseResponse)(nil),       // 16: purchase.RefundPurchaseResponse
+	(*GetCartPriceRequest)(nil),          // 17: purchase.GetCartPriceRequest
+	(*GetCartPriceResponse)(nil),         // 18: purchase.GetCartPriceResponse
+	(*FinalizeCheckoutRequest)(nil),      // 19: purchase.FinalizeCheckoutRequest
+	(*FinalizeCheckoutResponse)(nil),     // 20: purchase.FinalizeCheckoutResponse
+	(*DeleteCheckoutTokensRequest)(nil),  // 21: purchase.DeleteCheckoutTokensRequest
+	(*DeleteCheckoutTokensResponse)(nil), // 22: purchase.DeleteCheckoutTokensResponse
 }
 var file_purchase_proto_depIdxs = []int32{
 	1,  // 0: purchase.CartResponse.items:type_name -> purchase.OrderItemResponse
-	7,  // 1: purchase.CheckoutResponse.tokens:type_name -> purchase.TokenResponse
-	7,  // 2: purchase.GetMyPurchasesResponse.tokens:type_name -> purchase.TokenResponse
-	7,  // 3: purchase.PurchasesByTourist.tokens:type_name -> purchase.TokenResponse
-	13, // 4: purchase.GetAllPurchasesResponse.purchases:type_name -> purchase.PurchasesByTourist
-	7,  // 5: purchase.FinalizeCheckoutResponse.tokens:type_name -> purchase.TokenResponse
+	6,  // 1: purchase.CheckoutResponse.tokens:type_name -> purchase.TokenResponse
+	6,  // 2: purchase.GetMyPurchasesResponse.tokens:type_name -> purchase.TokenResponse
+	6,  // 3: purchase.PurchasesByTourist.tokens:type_name -> purchase.TokenResponse
+	12, // 4: purchase.GetAllPurchasesResponse.purchases:type_name -> purchase.PurchasesByTourist
+	6,  // 5: purchase.FinalizeCheckoutResponse.tokens:type_name -> purchase.TokenResponse
 	2,  // 6: purchase.PurchaseService.AddToCart:input_type -> purchase.AddToCartRequest
 	3,  // 7: purchase.PurchaseService.RemoveFromCart:input_type -> purchase.RemoveFromCartRequest
-	6,  // 8: purchase.PurchaseService.Checkout:input_type -> purchase.CheckoutRequest
-	9,  // 9: purchase.PurchaseService.HasPurchased:input_type -> purchase.HasPurchasedRequest
-	11, // 10: purchase.PurchaseService.GetMyPurchases:input_type -> purchase.GetMyPurchasesRequest
-	14, // 11: purchase.PurchaseService.GetAllPurchases:input_type -> purchase.GetAllPurchasesRequest
-	16, // 12: purchase.PurchaseService.RefundPurchase:input_type -> purchase.RefundPurchaseRequest
-	5,  // 13: purchase.PurchaseService.GetMyCartItems:input_type -> purchase.GetMyCartItemsRequest
-	18, // 14: purchase.PurchaseService.GetCartPrice:input_type -> purchase.GetCartPriceRequest
-	20, // 15: purchase.PurchaseService.FinalizeCheckout:input_type -> purchase.FinalizeCheckoutRequest
-	22, // 16: purchase.PurchaseService.DeleteCheckoutTokens:input_type -> purchase.DeleteCheckoutTokensRequest
-	4,  // 17: purchase.PurchaseService.AddToCart:output_type -> purchase.CartResponse
-	4,  // 18: purchase.PurchaseService.RemoveFromCart:output_type -> purchase.CartResponse
-	8,  // 19: purchase.PurchaseService.Checkout:output_type -> purchase.CheckoutResponse
-	10, // 20: purchase.PurchaseService.HasPurchased:output_type -> purchase.HasPurchasedResponse
-	12, // 21: purchase.PurchaseService.GetMyPurchases:output_type -> purchase.GetMyPurchasesResponse
-	15, // 22: purchase.PurchaseService.GetAllPurchases:output_type -> purchase.GetAllPurchasesResponse
-	17, // 23: purchase.PurchaseService.RefundPurchase:output_type -> purchase.RefundPurchaseResponse
-	4,  // 24: purchase.PurchaseService.GetMyCartItems:output_type -> purchase.CartResponse
-	19, // 25: purchase.PurchaseService.GetCartPrice:output_type -> purchase.GetCartPriceResponse
-	21, // 26: purchase.PurchaseService.FinalizeCheckout:output_type -> purchase.FinalizeCheckoutResponse
-	23, // 27: purchase.PurchaseService.DeleteCheckoutTokens:output_type -> purchase.DeleteCheckoutTokensResponse
-	17, // [17:28] is the sub-list for method output_type
-	6,  // [6:17] is the sub-list for method input_type
+	5,  // 8: purchase.PurchaseService.Checkout:input_type -> purchase.CheckoutRequest
+	8,  // 9: purchase.PurchaseService.HasPurchased:input_type -> purchase.HasPurchasedRequest
+	10, // 10: purchase.PurchaseService.GetMyPurchases:input_type -> purchase.GetMyPurchasesRequest
+	13, // 11: purchase.PurchaseService.GetAllPurchases:input_type -> purchase.GetAllPurchasesRequest
+	15, // 12: purchase.PurchaseService.RefundPurchase:input_type -> purchase.RefundPurchaseRequest
+	17, // 13: purchase.PurchaseService.GetCartPrice:input_type -> purchase.GetCartPriceRequest
+	19, // 14: purchase.PurchaseService.FinalizeCheckout:input_type -> purchase.FinalizeCheckoutRequest
+	21, // 15: purchase.PurchaseService.DeleteCheckoutTokens:input_type -> purchase.DeleteCheckoutTokensRequest
+	4,  // 16: purchase.PurchaseService.AddToCart:output_type -> purchase.CartResponse
+	4,  // 17: purchase.PurchaseService.RemoveFromCart:output_type -> purchase.CartResponse
+	7,  // 18: purchase.PurchaseService.Checkout:output_type -> purchase.CheckoutResponse
+	9,  // 19: purchase.PurchaseService.HasPurchased:output_type -> purchase.HasPurchasedResponse
+	11, // 20: purchase.PurchaseService.GetMyPurchases:output_type -> purchase.GetMyPurchasesResponse
+	14, // 21: purchase.PurchaseService.GetAllPurchases:output_type -> purchase.GetAllPurchasesResponse
+	16, // 22: purchase.PurchaseService.RefundPurchase:output_type -> purchase.RefundPurchaseResponse
+	18, // 23: purchase.PurchaseService.GetCartPrice:output_type -> purchase.GetCartPriceResponse
+	20, // 24: purchase.PurchaseService.FinalizeCheckout:output_type -> purchase.FinalizeCheckoutResponse
+	22, // 25: purchase.PurchaseService.DeleteCheckoutTokens:output_type -> purchase.DeleteCheckoutTokensResponse
+	16, // [16:26] is the sub-list for method output_type
+	6,  // [6:16] is the sub-list for method input_type
 	6,  // [6:6] is the sub-list for extension type_name
 	6,  // [6:6] is the sub-list for extension extendee
 	0,  // [0:6] is the sub-list for field type_name
@@ -1355,7 +1315,7 @@ func file_purchase_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_purchase_proto_rawDesc), len(file_purchase_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   24,
+			NumMessages:   23,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

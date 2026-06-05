@@ -101,13 +101,16 @@ async def update_balance(
 async def update_balance_for_user(
         user_id: Annotated[int, Path()],
         balance: Annotated[BalanceResponse, Body()],
+        request: Request,
         current_user = Depends(get_current_user),
 ) -> Any:
   try:
-    if current_user.get("role") != "admin":
+    # hacky solution to allow direct access from orchestrator
+    if request.headers.get("X-Internal-Secret") == INTERNAL_SECRET:
+      return await service.update_balance(user_id, balance)
+    if current_user["role"] != "admin":
       raise HTTPException(status_code=403, detail="Unauthorized")
-    response = await service.update_balance(user_id, balance)
-    return response
+    return await service.update_balance(user_id, balance)
   except NotFoundException as e:
     raise HTTPException(status_code=404, detail=str(e))
 

@@ -27,6 +27,8 @@ const registrationSchema = z
                 /^[a-zA-Z0-9_]+$/,
                 "Username can only contain letters, numbers, and underscores"
             ),
+        name: z.string().min(1, "Name is required"),
+        lastname: z.string().optional(),
         email: z.string().email("Invalid email address"),
         password: z.string().min(8, "Password must be at least 8 characters"),
         confirmPassword: z.string(),
@@ -54,6 +56,8 @@ export function RegistrationForm({ onSubmit, isLoading }: RegistrationFormProps)
         resolver: zodResolver(registrationSchema),
         defaultValues: {
             username: "",
+            name: "",
+            lastname: "",
             email: "",
             password: "",
             confirmPassword: "",
@@ -81,6 +85,49 @@ export function RegistrationForm({ onSubmit, isLoading }: RegistrationFormProps)
                         </FormItem>
                     )}
                 />
+
+                <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                        control={form.control}
+                        name="name"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Name</FormLabel>
+                                <FormControl>
+                                    <Input
+                                        placeholder="John"
+                                        autoComplete="given-name"
+                                        {...field}
+                                    />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+
+                    <FormField
+                        control={form.control}
+                        name="lastname"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>
+                                    Last name{" "}
+                                    <span className="text-muted-foreground font-normal">
+                        (optional)
+                    </span>
+                                </FormLabel>
+                                <FormControl>
+                                    <Input
+                                        placeholder="Doe"
+                                        autoComplete="family-name"
+                                        {...field}
+                                    />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                </div>
 
                 <FormField
                     control={form.control}

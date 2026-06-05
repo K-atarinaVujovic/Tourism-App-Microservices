@@ -4,10 +4,11 @@
 // - protoc             v7.34.2
 // source: purchase.proto
 
-package pb
+package purchase
 
 import (
 	context "context"
+
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -26,7 +27,6 @@ const (
 	PurchaseService_GetMyPurchases_FullMethodName       = "/purchase.PurchaseService/GetMyPurchases"
 	PurchaseService_GetAllPurchases_FullMethodName      = "/purchase.PurchaseService/GetAllPurchases"
 	PurchaseService_RefundPurchase_FullMethodName       = "/purchase.PurchaseService/RefundPurchase"
-	PurchaseService_GetMyCartItems_FullMethodName       = "/purchase.PurchaseService/GetMyCartItems"
 	PurchaseService_GetCartPrice_FullMethodName         = "/purchase.PurchaseService/GetCartPrice"
 	PurchaseService_FinalizeCheckout_FullMethodName     = "/purchase.PurchaseService/FinalizeCheckout"
 	PurchaseService_DeleteCheckoutTokens_FullMethodName = "/purchase.PurchaseService/DeleteCheckoutTokens"
@@ -45,7 +45,6 @@ type PurchaseServiceClient interface {
 	GetMyPurchases(ctx context.Context, in *GetMyPurchasesRequest, opts ...grpc.CallOption) (*GetMyPurchasesResponse, error)
 	GetAllPurchases(ctx context.Context, in *GetAllPurchasesRequest, opts ...grpc.CallOption) (*GetAllPurchasesResponse, error)
 	RefundPurchase(ctx context.Context, in *RefundPurchaseRequest, opts ...grpc.CallOption) (*RefundPurchaseResponse, error)
-	GetMyCartItems(ctx context.Context, in *GetMyCartItemsRequest, opts ...grpc.CallOption) (*CartResponse, error)
 	GetCartPrice(ctx context.Context, in *GetCartPriceRequest, opts ...grpc.CallOption) (*GetCartPriceResponse, error)
 	FinalizeCheckout(ctx context.Context, in *FinalizeCheckoutRequest, opts ...grpc.CallOption) (*FinalizeCheckoutResponse, error)
 	DeleteCheckoutTokens(ctx context.Context, in *DeleteCheckoutTokensRequest, opts ...grpc.CallOption) (*DeleteCheckoutTokensResponse, error)
@@ -129,16 +128,6 @@ func (c *purchaseServiceClient) RefundPurchase(ctx context.Context, in *RefundPu
 	return out, nil
 }
 
-func (c *purchaseServiceClient) GetMyCartItems(ctx context.Context, in *GetMyCartItemsRequest, opts ...grpc.CallOption) (*CartResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(CartResponse)
-	err := c.cc.Invoke(ctx, PurchaseService_GetMyCartItems_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *purchaseServiceClient) GetCartPrice(ctx context.Context, in *GetCartPriceRequest, opts ...grpc.CallOption) (*GetCartPriceResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(GetCartPriceResponse)
@@ -182,7 +171,6 @@ type PurchaseServiceServer interface {
 	GetMyPurchases(context.Context, *GetMyPurchasesRequest) (*GetMyPurchasesResponse, error)
 	GetAllPurchases(context.Context, *GetAllPurchasesRequest) (*GetAllPurchasesResponse, error)
 	RefundPurchase(context.Context, *RefundPurchaseRequest) (*RefundPurchaseResponse, error)
-	GetMyCartItems(context.Context, *GetMyCartItemsRequest) (*CartResponse, error)
 	GetCartPrice(context.Context, *GetCartPriceRequest) (*GetCartPriceResponse, error)
 	FinalizeCheckout(context.Context, *FinalizeCheckoutRequest) (*FinalizeCheckoutResponse, error)
 	DeleteCheckoutTokens(context.Context, *DeleteCheckoutTokensRequest) (*DeleteCheckoutTokensResponse, error)
@@ -216,9 +204,6 @@ func (UnimplementedPurchaseServiceServer) GetAllPurchases(context.Context, *GetA
 }
 func (UnimplementedPurchaseServiceServer) RefundPurchase(context.Context, *RefundPurchaseRequest) (*RefundPurchaseResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method RefundPurchase not implemented")
-}
-func (UnimplementedPurchaseServiceServer) GetMyCartItems(context.Context, *GetMyCartItemsRequest) (*CartResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method GetMyCartItems not implemented")
 }
 func (UnimplementedPurchaseServiceServer) GetCartPrice(context.Context, *GetCartPriceRequest) (*GetCartPriceResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetCartPrice not implemented")
@@ -376,24 +361,6 @@ func _PurchaseService_RefundPurchase_Handler(srv interface{}, ctx context.Contex
 	return interceptor(ctx, in, info, handler)
 }
 
-func _PurchaseService_GetMyCartItems_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetMyCartItemsRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(PurchaseServiceServer).GetMyCartItems(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: PurchaseService_GetMyCartItems_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(PurchaseServiceServer).GetMyCartItems(ctx, req.(*GetMyCartItemsRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _PurchaseService_GetCartPrice_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetCartPriceRequest)
 	if err := dec(in); err != nil {
@@ -482,10 +449,6 @@ var PurchaseService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "RefundPurchase",
 			Handler:    _PurchaseService_RefundPurchase_Handler,
-		},
-		{
-			MethodName: "GetMyCartItems",
-			Handler:    _PurchaseService_GetMyCartItems_Handler,
 		},
 		{
 			MethodName: "GetCartPrice",

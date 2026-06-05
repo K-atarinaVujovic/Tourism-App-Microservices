@@ -220,3 +220,65 @@ func (s *PurchaseService) GetMyCartItems(ctx context.Context) (*domain.ShoppingC
 	}
 	return cart, nil
 }
+
+// SAGA stuff
+
+// GetCartPrice reads the cart total
+func (s *PurchaseService) GetCartPrice(ctx context.Context, touristID string) (float64, bool, error) {
+	cart, err := s.carts.FindCartByTouristID(touristID)
+	if err != nil {
+		// No cart yet is not an error — just empty
+		return 0, true, nil
+	}
+	return cart.TotalPrice, len(cart.Items) == 0, nil
+}
+
+// FinalizeCheckout creates purchase tokens and clears the cart
+func (s *PurchaseService) FinalizeCheckout(ctx context.Context, touristID string) ([]domain.TourPurchaseToken, error) {
+
+	cart, err := s.carts.FindCartByTouristID(touristID)
+	if err != nil {
+		return nil, errors.New("cart not found")
+	}
+	if len(cart.Items) == 0 {
+		return nil, errors.New("cart is empty")
+	}
+
+	var tokens []domain.TourPurchaseToken
+	for _, item := range cart.Items {
+		token := domain.TourPurchaseToken{
+			ID:        uuid.New().String(),
+			TouristID: touristID,
+			TourID:    item.TourID,
+			Price:     item.Price,
+			IssuedAt:  time.Now(),
+		}
+		if err := s.tokens.SaveToken(&token); err != nil {
+			return nil, err
+		}
+		tokens = append(tokens, token)
+	}
+
+	cart.Items = []domain.OrderItem{}
+	cart.TotalPrice = 0
+	s.carts.SaveCart(cart)
+
+	return tokens, nil
+}
+
+// DeleteCheckoutTokens removes all tokens from a list
+// Compensation step — only callable with the internal secret
+func (s *PurchaseService) DeleteCheckoutTokens(ctx context.Context, tokenIds []string) error {
+	if !grpcauth.IsInternalFromContext(ctx) {
+		return errors.New("unauthorized: internal only")
+	}
+
+	for _, t := range tokenIds {
+		err := s.tokens.DeleteToken(t)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}

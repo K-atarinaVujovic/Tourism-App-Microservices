@@ -63,7 +63,7 @@ class ProfileServicer(ProfileServiceServicer):
     user_id = request.user_id
     result = await self.profile_service.get_by_user_id(user_id)
     return self.__get_profile_response_from_result(result)
-    
+
   async def UpdateProfile(self, request, context):
     user_id = request.user_id
     profile_update = self.__get_profile_update_from_request(request)

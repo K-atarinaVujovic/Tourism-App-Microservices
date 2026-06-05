@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { purchaseService } from '../services/purchaseService';
 import type { CartResponse } from '@/types/purchase';
+import {useAuthStore} from "@/store/authStore.ts";
 
 export const purchaseKeys = {
   cart: ['cart'] as const,
@@ -44,9 +45,13 @@ export function useRemoveFromCart() {
 
 export function useCheckout() {
   const queryClient = useQueryClient();
+  const touristId = useAuthStore((state) => state.user?.id);
 
   return useMutation({
-    mutationFn: () => purchaseService.checkout(),
+    mutationFn: () => {
+      if (!touristId) throw new Error('Not authenticated');
+      return purchaseService.checkout(String(touristId));
+    },
     onSuccess: () => {
       const emptyCart: CartResponse = { touristId: '', items: [], totalPrice: 0 };
       queryClient.setQueryData(purchaseKeys.cart, emptyCart);

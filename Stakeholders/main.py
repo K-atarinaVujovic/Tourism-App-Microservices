@@ -27,6 +27,7 @@ grpc_server = None
 GRPC_PORT = int(os.getenv("STAKEHOLDERS_GRPC_PORT", 50051))
 FASTAPI_PORT = int(os.getenv("STAKEHOLDERS_FASTAPI_PORT", 8000))
 LISTEN_ADDR = "[::]:" + str(GRPC_PORT)
+INTERNAL_SECRET = os.getenv("INTERNAL_SECRET")
 
 async def serve_fastapi():
     print(f"Swagger UI: http://127.0.0.1:{FASTAPI_PORT}/docs")

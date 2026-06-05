@@ -168,6 +168,7 @@ services:
       PORT: 8081
       DATABASE_URL: postgres://tourism-app:admin123@auth-db:5432/tourism-auth?sslmode=disable
       JWT_SECRET: super-secret-change-me
+      INTERNAL_SECRET: super-internal-secret-change-me
     ports:
       - "8081:8081"
     networks:
@@ -182,6 +183,7 @@ services:
     environment:
       OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:4318"
       OTEL_SERVICE_NAME: "stakeholders"
+      INTERNAL_SECRET: super-internal-secret-change-me
     depends_on:
       stakeholders_db:
         condition: service_healthy
@@ -301,6 +303,7 @@ services:
       TOURS_SERVICE_URL: http://tours:8083
       STAKEHOLDERS_SERVICE_URL: http://stakeholders:8082
       JWT_SECRET: super-secret-change-me
+      INTERNAL_SECRET: super-internal-secret-change-me
       DB_DSN: purchase:purchase@tcp(purchases-db:3306)/purchase?charset=utf8mb4&parseTime=True&loc=Local
     depends_on:
       purchases-db:
@@ -330,6 +333,28 @@ services:
       retries: 10
     networks:
       - purchases-network
+
+  saga-orchestrator:
+    build:
+      context: ./Orchestrator
+      dockerfile: Dockerfile
+    container_name: saga-orchestrator
+    restart: on-failure
+    ports:
+      - "8085:8085"
+    environment:
+      USE_CONFIG_FILE: "false"
+      PORT: 8085
+      AUTH_SERVICE_URL: http://auth:8081
+      STAKEHOLDER_SERVICE_URL: http://stakeholders:8082
+      PURCHASE_SERVICE_ADDR: purchases:9095
+      # Must match INTERNAL_SECRET in the auth service
+      INTERNAL_SECRET: super-internal-secret-change-me
+    depends_on:
+      - auth
+      - stakeholders
+    networks:
+      - service-network
 
   jaeger:
     image: jaegertracing/all-in-one:1.57

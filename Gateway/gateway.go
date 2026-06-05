@@ -19,27 +19,27 @@ import (
 
 	purchasepb "gateway/proto/purchase"
 	servicepb "gateway/proto/service"
-	tourspb "gateway/proto/tours"
 	stakeholderspb "gateway/proto/stakeholders"
+	tourspb "gateway/proto/tours"
 	"jwtreader"
 
-    "time"
+	"time"
 
-    "go.opentelemetry.io/otel"
-    "go.opentelemetry.io/otel/attribute"
-    "go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
-    "go.opentelemetry.io/otel/sdk/resource"
-    sdktrace "go.opentelemetry.io/otel/sdk/trace"
-    semconv "go.opentelemetry.io/otel/semconv/v1.24.0"
-    "go.opentelemetry.io/otel/trace"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
+	"go.opentelemetry.io/otel/sdk/resource"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	semconv "go.opentelemetry.io/otel/semconv/v1.24.0"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // MicroserviceRegistry Should contain all generated API handlers
 var MicroserviceRegistry = map[string]func(context.Context, *runtime.ServeMux, string, []grpc.DialOption) error{
 	"service":      servicepb.RegisterAlbumServiceHandlerFromEndpoint,
-	"tours":   tourspb.RegisterTourGrpcServiceHandlerFromEndpoint,
+	"tours":        tourspb.RegisterTourGrpcServiceHandlerFromEndpoint,
 	"stakeholders": stakeholderspb.RegisterProfileServiceHandlerFromEndpoint,
-	"purchases": purchasepb.RegisterPurchaseServiceHandlerFromEndpoint,
+	"purchases":    purchasepb.RegisterPurchaseServiceHandlerFromEndpoint,
 	// add more services here
 }
 
@@ -337,7 +337,7 @@ func TracingMiddleware(next http.Handler) http.Handler {
 			attribute.String("http.target", r.URL.RequestURI()),
 		)
 
-		next.ServeHTTP(w, r.WithContext(ctx))   //withContext -> ako budemo propagirali tracing ka mikroservisima
+		next.ServeHTTP(w, r.WithContext(ctx)) //withContext -> ako budemo propagirali tracing ka mikroservisima
 
 		span.SetAttributes(
 			attribute.String("duration", time.Since(start).String()),
@@ -346,14 +346,14 @@ func TracingMiddleware(next http.Handler) http.Handler {
 }
 
 func main() {
-    ctx := context.Background()
-    tp, err := InitTracer(ctx)
-    if err != nil {
-        log.Fatal("failed to initialize tracer: ", err)
-    }
-    defer func() {
-        _ = tp.Shutdown(ctx)
-    }()
+	ctx := context.Background()
+	tp, err := InitTracer(ctx)
+	if err != nil {
+		log.Fatal("failed to initialize tracer: ", err)
+	}
+	defer func() {
+		_ = tp.Shutdown(ctx)
+	}()
 
 	// Load config
 	config, err := LoadConfig("CONFIG.yaml")
@@ -374,10 +374,10 @@ func main() {
 	authHandler := JWTAuthMiddleware(config.ExcludedPaths, proxyHandler)
 
 	// Handle tracing
-    tracingHandler := TracingMiddleware(authHandler)
+	tracingHandler := TracingMiddleware(authHandler)
 
 	// Handle cors
-    corsHandler := CORSMiddleware(tracingHandler)
+	corsHandler := CORSMiddleware(tracingHandler)
 
 	// Handle all requests to the server using the authenticated proxy
 	http.Handle("/", corsHandler)
