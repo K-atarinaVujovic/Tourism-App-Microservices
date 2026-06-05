@@ -46,8 +46,11 @@ export interface Tour {
     description: string;
     difficulty: TourDifficulty;
     tags: string[];
-    status: 'DRAFT' | 'PUBLISHED';
+    status: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
     price: number;
+    lengthInKm?: number;
+    publishedAt?: string;
+    archivedAt?: string;
     keypoints?: Keypoint[];
 }
 
@@ -71,3 +74,69 @@ export interface CreateReviewPayload {
     visitedAt: string;    // "YYYY-MM-DD"
     imageUrls?: string[];
 }
+
+// ── Tour Transport ───────────────────────────────────────────────────────────────
+
+export type TransportType = 'WALKING' | 'BIKE' | 'CAR';
+
+export type TourTransportTime = {
+    id: number;
+    tourId: number;
+    transportType: TransportType;
+    durationInMinutes: number;
+};
+
+export type CreateTourTransportTimePayload = {
+    transportType: TransportType;
+    durationInMinutes: number;
+};
+
+// ── Tour Preview for Tourist ───────────────────────────────────────────────────────────────
+
+export type PublishedTourPreview = {
+    id: number;
+    name: string;
+    description: string;
+    difficulty: TourDifficulty;
+    tags: string[];
+    price: number;
+    lengthInKm?: number;
+    firstKeyPoint?: Keypoint | null;
+    transportTimes: TourTransportTime[];
+};
+
+// ── Tour Execution ───────────────────────────────────────────────────────────────
+export type TourExecutionStatus = 'STARTED' | 'COMPLETED' | 'ABANDONED';
+
+export type KeyPointCoordinates = {
+    latitude: number;
+    longitude: number;
+};
+
+export type CheckLocationResult = {
+    reachedKeyPointIds: number[];
+    notYetKeyPointsReached: KeyPointCoordinates[];
+    tourCompleted: boolean;
+};
+
+export type KeyPointProgress = {
+    id: number;
+    keyPointId: number;
+    timeReached: string | null; // null = not yet reached
+};
+
+export type TourExecutionTourInfo = {
+    tourId: number;
+    tourName: string;
+    keyPoints: Keypoint[];
+};
+
+export type TourExecution = {
+    id: number;
+    tourId: number;
+    touristId: number;
+    status: TourExecutionStatus;
+    lastActivity: string; // ISO datetime string (Java LocalDateTime)
+    keyPointProgresses: KeyPointProgress[];
+    tour: TourExecutionTourInfo;
+};

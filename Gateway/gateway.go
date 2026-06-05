@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"net/http/httputil"
@@ -15,13 +17,29 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	"gopkg.in/yaml.v3"
 
+	purchasepb "gateway/proto/purchase"
 	servicepb "gateway/proto/service"
+	stakeholderspb "gateway/proto/stakeholders"
+	tourspb "gateway/proto/tours"
 	"jwtreader"
+
+	"time"
+
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
+	"go.opentelemetry.io/otel/sdk/resource"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	semconv "go.opentelemetry.io/otel/semconv/v1.24.0"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // MicroserviceRegistry Should contain all generated API handlers
 var MicroserviceRegistry = map[string]func(context.Context, *runtime.ServeMux, string, []grpc.DialOption) error{
-	"service": servicepb.RegisterAlbumServiceHandlerFromEndpoint,
+	"service":      servicepb.RegisterAlbumServiceHandlerFromEndpoint,
+	"tours":        tourspb.RegisterTourGrpcServiceHandlerFromEndpoint,
+	"stakeholders": stakeholderspb.RegisterProfileServiceHandlerFromEndpoint,
+	"purchases":    purchasepb.RegisterPurchaseServiceHandlerFromEndpoint,
 	// add more services here
 }
 
@@ -152,31 +170,50 @@ func ProxyRequestHandler(proxies []ProxyRegistry) func(http.ResponseWriter, *htt
 
 		r.URL.Path = strings.TrimPrefix(r.URL.Path, "/"+proxy.name)
 
+		// Buffer the body so it can be re-read if gRPC fails
+		bodyBytes, err := io.ReadAll(r.Body)
+		if err != nil {
+			http.Error(w, "failed to read body", http.StatusInternalServerError)
+			return
+		}
+		r.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
+
 		// Try gRPC first
 		if proxy.grpcHandler != nil {
 			rec := &responseRecorder{ResponseWriter: w, statusCode: http.StatusOK}
 			proxy.grpcHandler.ServeHTTP(rec, r)
 
-			if rec.statusCode != http.StatusNotFound {
-				// gRPC handled it, write the recorded response
+			if rec.statusCode >= 200 && rec.statusCode < 400 {
 				log.Printf("[%s][gRPC] %s %s -> %d", proxy.name, r.Method, r.URL.String(), rec.statusCode)
 				w.WriteHeader(rec.statusCode)
 				w.Write(rec.body)
 				return
 			}
 
-			// If gRPC returned 404, fall through to REST
-			log.Printf("[%s][gRPC->REST fallback] %s %s", proxy.name, r.Method, r.URL.String())
+			// gRPC failed — fall back to REST only when a REST proxy exists
+			if proxy.restHandler != nil {
+				r.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
+				log.Printf("[%s][gRPC->REST fallback] %s %s (gRPC %d)", proxy.name, r.Method, r.URL.String(), rec.statusCode)
+				proxy.restHandler.ServeHTTP(w, r)
+				return
+			}
+
+			// gRPC-only service (e.g. purchases): forward the error response instead of
+			// dropping it, which previously surfaced as HTTP 200 with an empty body.
+			log.Printf("[%s][gRPC error] %s %s -> %d", proxy.name, r.Method, r.URL.String(), rec.statusCode)
+			w.WriteHeader(rec.statusCode)
+			w.Write(rec.body)
+			return
 		}
 
-		// Fall back to REST
+		// Fall back to REST when no gRPC handler is configured
 		if proxy.restHandler != nil {
 			log.Printf("[%s][REST] %s %s", proxy.name, r.Method, r.URL.String())
 			proxy.restHandler.ServeHTTP(w, r)
 			return
 		}
 
-		http.NotFound(w, r)
+		http.Error(w, "service unavailable", http.StatusBadGateway)
 	}
 }
 
@@ -233,29 +270,91 @@ func FindProxy(proxies []ProxyRegistry, r *http.Request) ProxyRegistry {
 
 // CORSMiddleware Middleware to handle CORS
 func CORSMiddleware(next http.Handler) http.Handler {
-    allowed := map[string]bool{
-        "http://localhost:5173": true,
-        "http://localhost:8080": true,
-    }
+	allowed := map[string]bool{
+		"http://localhost:5173": true,
+		"http://localhost:8080": true,
+	}
 
-    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-        origin := r.Header.Get("Origin")
-        if allowed[origin] {
-            w.Header().Set("Access-Control-Allow-Origin", origin)
-        }
-        w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-        w.Header().Set("Access-Control-Allow-Headers", "Authorization, Content-Type")
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		origin := r.Header.Get("Origin")
+		if allowed[origin] {
+			w.Header().Set("Access-Control-Allow-Origin", origin)
+		}
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Authorization, Content-Type")
 
-        if r.Method == http.MethodOptions {
-            w.WriteHeader(http.StatusNoContent)
-            return
-        }
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
 
-        next.ServeHTTP(w, r)
-    })
+		next.ServeHTTP(w, r)
+	})
+}
+
+var tracer trace.Tracer
+
+// Initializing Tracer
+func InitTracer(ctx context.Context) (*sdktrace.TracerProvider, error) {
+	endpoint := os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT")
+	if endpoint == "" {
+		endpoint = "jaeger:4318"
+	}
+
+	exporter, err := otlptracehttp.New(
+		ctx,
+		otlptracehttp.WithEndpoint(endpoint),
+		otlptracehttp.WithInsecure(),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	tp := sdktrace.NewTracerProvider(
+		sdktrace.WithBatcher(exporter),
+		sdktrace.WithResource(resource.NewWithAttributes(
+			semconv.SchemaURL,
+			semconv.ServiceName("api-gateway"),
+		)),
+	)
+
+	otel.SetTracerProvider(tp)
+	tracer = otel.Tracer("api-gateway")
+
+	return tp, nil
+}
+
+func TracingMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx, span := tracer.Start(r.Context(), r.Method+" "+r.URL.Path)
+		defer span.End()
+
+		start := time.Now()
+
+		span.SetAttributes(
+			semconv.HTTPMethod(r.Method),
+			semconv.HTTPRoute(r.URL.Path),
+			attribute.String("http.target", r.URL.RequestURI()),
+		)
+
+		next.ServeHTTP(w, r.WithContext(ctx)) //withContext -> ako budemo propagirali tracing ka mikroservisima
+
+		span.SetAttributes(
+			attribute.String("duration", time.Since(start).String()),
+		)
+	})
 }
 
 func main() {
+	ctx := context.Background()
+	tp, err := InitTracer(ctx)
+	if err != nil {
+		log.Fatal("failed to initialize tracer: ", err)
+	}
+	defer func() {
+		_ = tp.Shutdown(ctx)
+	}()
+
 	// Load config
 	config, err := LoadConfig("CONFIG.yaml")
 	if err != nil {
@@ -274,8 +373,11 @@ func main() {
 	// Wrap with JWT authentication middleware
 	authHandler := JWTAuthMiddleware(config.ExcludedPaths, proxyHandler)
 
+	// Handle tracing
+	tracingHandler := TracingMiddleware(authHandler)
+
 	// Handle cors
-    corsHandler := CORSMiddleware(authHandler)
+	corsHandler := CORSMiddleware(tracingHandler)
 
 	// Handle all requests to the server using the authenticated proxy
 	http.Handle("/", corsHandler)

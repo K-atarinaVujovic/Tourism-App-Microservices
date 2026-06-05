@@ -1,13 +1,97 @@
 version: "3.8"
 
 services:
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib
+    volumes:
+      - ./Monitoring/otel-collector-config.yaml:/etc/otelcol-contrib/config.yaml
+    ports:
+      - "4317:4317" # gRPC
+      - "4318:4318" # http
+      - "9464:9464" # prometheus metrics
+    networks:
+      - service-network
+
+  prometheus:
+    image: prom/prometheus
+    volumes:
+      - ./Monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    ports:
+      - "9090:9090"
+    networks:
+      - service-network
+
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: node-exporter
+    restart: unless-stopped
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.rootfs=/rootfs'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    networks:
+      - service-network
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: cadvisor
+    restart: unless-stopped
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    networks:
+      - service-network
+
+  # NVIDIA GPU Exporter
+  # gpu-exporter:
+  #   image: utkuozdemir/nvidia_gpu_exporter
+  #   container_name: gpu-exporter
+  #   restart: unless-stopped
+  #   deploy:
+  #     resources:
+  #       reservations:
+  #         devices:
+  #           - driver: nvidia
+  #             count: all
+  #             capabilities: [gpu]
+  #   networks:
+  #     - service-network
+
+  grafana:
+    image: grafana/grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-storage:/var/lib/grafana
+      - ./Monitoring/grafana/:/etc/grafana/provisioning/
+    networks:
+      - service-network
+
+  loki:
+    image: grafana/loki
+    ports:
+      - "3100:3100"
+    volumes:
+      - loki-data:/loki
+      - ./Monitoring/loki-config.yaml:/etc/loki.yaml
+    networks:
+      - service-network
+
   blog:
     build:
       context: ./Blog
       dockerfile: Dockerfile
     image: blog:latest
     container_name: blog
-    restart: on-failure
     ports:
       - "8080:8080"
     environment:
@@ -50,6 +134,7 @@ services:
       - service-network
     environment:
       JWT_SECRET: super-secret-change-me
+      OTEL_EXPORTER_OTLP_ENDPOINT: jaeger:4318
 
   auth-db:
     image: postgres:16-alpine
@@ -63,7 +148,6 @@ services:
       - ./Authorization/db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
       - ./seed/auth_seed.sql:/docker-entrypoint-initdb.d/02-seed.sql:ro
     healthcheck:
-#      test: [ "CMD-SHELL", "pg_isready -U tourism-app -d tourism-auth" ]
       test: ["CMD-SHELL", "psql -U tourism-app -d tourism-auth -c 'SELECT 1'"]
       interval: 5s
       timeout: 5s
@@ -77,25 +161,29 @@ services:
       dockerfile: Dockerfile
     container_name: auth
     depends_on:
-       auth-db:
-          condition: service_healthy
+      auth-db:
+        condition: service_healthy
     environment:
       USE_CONFIG_FILE: "false"
       PORT: 8081
       DATABASE_URL: postgres://tourism-app:admin123@auth-db:5432/tourism-auth?sslmode=disable
       JWT_SECRET: super-secret-change-me
+      INTERNAL_SECRET: super-internal-secret-change-me
     ports:
       - "8081:8081"
     networks:
       - auth-network
       - service-network
 
-
   stakeholders:
     build:
       context: ./Stakeholders
     env_file:
       - ./Stakeholders/.env.docker
+    environment:
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:4318"
+      OTEL_SERVICE_NAME: "stakeholders"
+      INTERNAL_SECRET: super-internal-secret-change-me
     depends_on:
       stakeholders_db:
         condition: service_healthy
@@ -103,6 +191,7 @@ services:
       - stakeholders_images_data:/app/images
     ports:
       - "8082:8082"
+      - "50051:50051"
     networks:
       - stakeholders-network
       - service-network
@@ -110,8 +199,8 @@ services:
   stakeholders_db:
     image: mongo:7
     volumes:
-       - stakeholders_db_data:/data/db
-       - ./seed/stakeholders_seed.js:/docker-entrypoint-initdb.d/seed.js:ro
+      - stakeholders_db_data:/data/db
+      - ./seed/stakeholders_seed.js:/docker-entrypoint-initdb.d/seed.js:ro
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: example
@@ -129,7 +218,6 @@ services:
       dockerfile: Dockerfile
     image: tours:latest
     container_name: tours
-    restart: on-failure
     ports:
       - "8083:8083"
     environment:
@@ -138,6 +226,9 @@ services:
       SPRING_DATASOURCE_PASSWORD: root
       JWT_SECRET: super-secret-change-me
       STAKEHOLDERS_URL: http://stakeholders:8082
+      GRPC_SERVER_PORT: 9093
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:4318"
+      OTEL_SERVICE_NAME: "tours"
     depends_on:
       tours-db:
         condition: service_healthy
@@ -148,7 +239,6 @@ services:
   tours-db:
     image: postgres:16
     container_name: tours-db
-    restart: on-failure
     environment:
       POSTGRES_DB: toursdb
       POSTGRES_USER: postgres
@@ -170,7 +260,6 @@ services:
       context: ./Follower
       dockerfile: Dockerfile
     container_name: follower
-    restart: on-failure
     ports:
       - "8084:8084"
     environment:
@@ -202,6 +291,82 @@ services:
     networks:
       - follower-network
 
+  purchases:
+    build:
+      context: .
+      dockerfile: ./Purchases/Dockerfile
+    container_name: purchases
+    restart: on-failure
+    ports:
+      - "9095:9095"
+    environment:
+      TOURS_SERVICE_URL: http://tours:8083
+      STAKEHOLDERS_SERVICE_URL: http://stakeholders:8082
+      JWT_SECRET: super-secret-change-me
+      INTERNAL_SECRET: super-internal-secret-change-me
+      DB_DSN: purchase:purchase@tcp(purchases-db:3306)/purchase?charset=utf8mb4&parseTime=True&loc=Local
+    depends_on:
+      purchases-db:
+        condition: service_healthy
+      tours:
+        condition: service_started
+      stakeholders:
+        condition: service_started
+    networks:
+      - purchases-network
+      - service-network
+
+  purchases-db:
+    image: mariadb:11
+    container_name: purchases-db
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: purchase
+      MYSQL_USER: purchase
+      MYSQL_PASSWORD: purchase
+    volumes:
+      - purchases-db-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - purchases-network
+
+  saga-orchestrator:
+    build:
+      context: ./Orchestrator
+      dockerfile: Dockerfile
+    container_name: saga-orchestrator
+    restart: on-failure
+    ports:
+      - "8085:8085"
+    environment:
+      USE_CONFIG_FILE: "false"
+      PORT: 8085
+      AUTH_SERVICE_URL: http://auth:8081
+      STAKEHOLDER_SERVICE_URL: http://stakeholders:8082
+      PURCHASE_SERVICE_ADDR: purchases:9095
+      # Must match INTERNAL_SECRET in the auth service
+      INTERNAL_SECRET: super-internal-secret-change-me
+    depends_on:
+      - auth
+      - stakeholders
+    networks:
+      - service-network
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.57
+    container_name: jaeger
+    ports:
+      - "16686:16686"
+      - "4319:4318" # remapped host port from 4318 -> was clashing with otel ports setup
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+    networks:
+      - service-network
+
 volumes:
   blog-db-data:
   auth_db_data:
@@ -209,6 +374,10 @@ volumes:
   stakeholders_images_data:
   tours-db-data:
   neo4j_data:
+  grafana-storage:
+  loki-data: 
+  prometheus-data: 
+  purchases-db-data:
 
 networks:
   blog-network:
@@ -222,4 +391,6 @@ networks:
   tours-network:
     driver: bridge
   follower-network:
+    driver: bridge
+  purchases-network:
     driver: bridge

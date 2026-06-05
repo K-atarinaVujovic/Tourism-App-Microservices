@@ -7,6 +7,7 @@ export interface Profile {
   quote: string;
   user_id: number;
   role: "author" | "tourist";
+  balance: number;
 }
 
 export interface CreateProfile{

@@ -25,8 +25,13 @@ apiClient.interceptors.response.use(
         if (error.response?.status === 401) {
             useAuthStore.getState().clearAuth();
         }
+        const data = error.response?.data;
         const message: string =
-            error.response?.data?.error ?? "Something went wrong. Please try again.";
+            (typeof data === "string" ? data : null) ??
+            data?.message ??
+            data?.error ??
+            error.message ??
+            "Something went wrong. Please try again.";
         return Promise.reject(new Error(message));
     }
 );

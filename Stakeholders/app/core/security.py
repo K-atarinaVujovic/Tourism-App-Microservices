@@ -1,4 +1,4 @@
-from fastapi import Depends, HTTPException
+﻿from fastapi import Depends, HTTPException
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 import jwt
 
@@ -13,7 +13,8 @@ def decode_token(token: str) -> dict:
   try:
     payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
     return {
-      "user_id": payload.get(USER_ID_CLAIM)
+      "user_id": payload.get(USER_ID_CLAIM),
+      "role": payload.get("role")
     }
   except jwt.ExpiredSignatureError:
     raise ValueError("Token expired!")

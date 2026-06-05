@@ -9,10 +9,12 @@ import com.tourism.tours.repository.KeyPointRepository;
 import com.tourism.tours.repository.TourRepository;
 import com.tourism.tours.security.CurrentUser;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class KeyPointService {
@@ -29,7 +31,7 @@ public class KeyPointService {
         }
 
         KeyPoint keyPoint = new KeyPoint();
-        keyPoint.setTourId(tourId);
+        keyPoint.setTour(tour);
         keyPoint.setName(request.getName());
         keyPoint.setDescription(request.getDescription());
         keyPoint.setImageUrl(request.getImageUrl());
@@ -37,6 +39,7 @@ public class KeyPointService {
         keyPoint.setLongitude(request.getLongitude());
 
         KeyPoint saved = keyPointRepository.save(keyPoint);
+        log.info("Keypoint {} created", saved.getId());
         return mapToResponse(saved);
     }
 
@@ -58,7 +61,7 @@ public class KeyPointService {
         KeyPoint keyPoint = keyPointRepository.findById(keyPointId)
                 .orElseThrow(() -> new RuntimeException("Key point not found with id: " + keyPointId));
 
-        if (!keyPoint.getTourId().equals(tourId)) {
+        if (!keyPoint.getTour().getId().equals(tourId)) {
             throw new RuntimeException("Key point does not belong to this tour");
         }
 
@@ -70,6 +73,7 @@ public class KeyPointService {
         keyPoint.setLongitude(request.getLongitude());
 
         KeyPoint saved = keyPointRepository.save(keyPoint);
+        log.info("Keypoint {} updated", saved.getId());
         return mapToResponse(saved);
     }
 
@@ -84,17 +88,20 @@ public class KeyPointService {
         KeyPoint keyPoint = keyPointRepository.findById(keyPointId)
                 .orElseThrow(() -> new RuntimeException("Key point not found with id: " + keyPointId));
 
-        if (!keyPoint.getTourId().equals(tourId)) {
+        if (!keyPoint.getTour().getId().equals(tourId)) {
             throw new RuntimeException("Key point does not belong to this tour");
         }
 
         keyPointRepository.delete(keyPoint);
+
+        log.info("Keypoint {} deleted", keyPointId);
+
     }
 
     private KeyPointResponse mapToResponse(KeyPoint keyPoint) {
         return new KeyPointResponse(
                 keyPoint.getId(),
-                keyPoint.getTourId(),
+                keyPoint.getTour().getId(),
                 keyPoint.getName(),
                 keyPoint.getDescription(),
                 keyPoint.getType(),

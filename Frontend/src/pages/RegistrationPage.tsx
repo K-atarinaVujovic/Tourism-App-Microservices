@@ -11,8 +11,8 @@ export default function RegistrationPage() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const { mutate, isPending } = useMutation({
-    mutationFn: ({ username, email, password, role }: RegisterFormData) =>
-        registerUser({ username, email, password, role }),
+    mutationFn: ({ username, name, lastname, email, password, role }: RegisterFormData) =>
+        registerUser({ username, email, name, lastname, password, role }),
     onSuccess: () => navigate("/home"),
     onError: (error: Error) => setErrorMsg(error.message),
   });

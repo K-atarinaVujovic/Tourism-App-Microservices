@@ -1,4 +1,4 @@
-import { createBrowserRouter, Navigate } from 'react-router';
+﻿import { createBrowserRouter, Navigate } from 'react-router';
 import HomePage from '../pages/HomePage.tsx';
 import MapPage from '../pages/MapPage.tsx';
 import TourCreatePage from '../pages/TourCreatePage.tsx';
@@ -8,12 +8,18 @@ import RegistrationPage from '../pages/RegistrationPage';
 import LoginPage from '../pages/LoginPage';
 import ProfilePage from '@/pages/ProfilePage.tsx';
 import AdminPage from '@/pages/AdminPage.tsx';
+import AdminPurchasesPage from '@/pages/AdminPurchasesPage.tsx';
+import AdminRefundsPage from '@/pages/AdminRefundsPage.tsx';
 import ToursPage from "@/pages/ToursPage.tsx";
 import TourDetailPage from "@/pages/ToursDetailPage.tsx";
+import TouristToursPage from '@/pages/TouristToursPage.tsx';
 import BlogListPage from '@/pages/BlogListPage.tsx';
 import CreateBlogPage from '@/pages/CreateBlogPage.tsx';
 import BlogPage from '@/pages/BlogPage.tsx';
 import FollowersPage from '@/pages/FollowersPage.tsx';
+import PurchasedToursPage from '@/pages/PurchasedToursPage.tsx';
+import ActiveTourPage from '@/pages/ActiveTourPage.tsx';
+import CartPage from '@/pages/CartPage.tsx';
 
 export const router = createBrowserRouter([
   {
@@ -57,8 +63,20 @@ export const router = createBrowserRouter([
         element: <AdminPage />,
       },
       {
+        path: 'admin/purchases',
+        element: <AdminPurchasesPage />,
+      },
+      {
+        path: 'admin/refunds',
+        element: <AdminRefundsPage />,
+      },
+      {
         path: 'tours/',
         element: <ToursPage />,
+      },
+      {
+        path: 'tourist/tours',
+        element: <TouristToursPage />,
       },
       {
         path: 'tours/:id',
@@ -74,7 +92,16 @@ export const router = createBrowserRouter([
         element: <BlogPage /> 
       },
       { path: "followers", 
-        element: <FollowersPage /> }
+        element: <FollowersPage /> },
+      { path: "tours/purchased", 
+        element: <PurchasedToursPage /> 
+      },
+      { path: "tours/active", 
+        element: <ActiveTourPage /> 
+      },
+      { path: "cart", 
+        element: <CartPage /> 
+      },
     ],
   },
 ]);
