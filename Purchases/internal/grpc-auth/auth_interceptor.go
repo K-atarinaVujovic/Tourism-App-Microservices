@@ -52,6 +52,18 @@ func IsInternalFromContext(ctx context.Context) bool {
 	return v
 }
 
+// NewAuthContext builds a context carrying the given Authorization header.
+// Used by non-gRPC callers (e.g. MQ consumer) to set up a service-layer context.
+func NewAuthContext(ctx context.Context, authHeader string) context.Context {
+	return context.WithValue(ctx, authHeaderKey, authHeader)
+}
+
+// NewInternalContext marks a context as an internal (compensation) call,
+// bypassing JWT auth the same way the gRPC interceptor does for internal secrets.
+func NewInternalContext(ctx context.Context) context.Context {
+	return context.WithValue(ctx, isInternalKey, true)
+}
+
 // UnaryAuthInterceptor validates the JWT carried in the gRPC "authorization"
 // metadata key and forwards the raw header value via context so downstream
 // callers can attach it to outbound HTTP requests.
