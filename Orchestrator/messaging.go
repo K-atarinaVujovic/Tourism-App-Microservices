@@ -13,6 +13,7 @@ import (
 )
 
 const (
+	QueueAuthCommands        = "saga.auth.commands"
 	QueuePurchaseCommands    = "saga.purchase.commands"
 	QueueStakeholderCommands = "saga.stakeholder.commands"
 )
@@ -51,7 +52,7 @@ func NewMessagingClient(amqpURL string) (*MessagingClient, error) {
 	}
 
 	// Declare command queues (durable, idempotent)
-	for _, q := range []string{QueuePurchaseCommands, QueueStakeholderCommands} {
+	for _, q := range []string{QueueAuthCommands, QueuePurchaseCommands, QueueStakeholderCommands} {
 		if _, err := ch.QueueDeclare(q, true, false, false, false, nil); err != nil {
 			return nil, fmt.Errorf("failed to declare queue %s: %w", q, err)
 		}

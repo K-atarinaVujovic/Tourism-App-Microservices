@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"log"
 	"net/http"
 	"time"
@@ -199,30 +198,23 @@ func (s *OrchestratorServer) callAuthRegister(
 	ctx context.Context,
 	payload RegistrationRequest,
 ) (*authRegisterResponse, error) {
-
 	body, _ := json.Marshal(authRegisterRequest{
 		Username: payload.Username,
 		Email:    payload.Email,
 		Password: payload.Password,
 	})
-
-	resp, err := s.doPost(ctx, s.config.AuthServiceURL+"/auth/register", body, false)
+	reply, err := s.messaging.PublishAndWait(ctx, QueueAuthCommands, SagaCommand{
+		Command: "REGISTER_USER",
+		Payload: body,
+	}, 10*time.Second)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode == http.StatusConflict {
-		return nil, errors.New("conflict")
+	if !reply.Success {
+		return nil, errors.New(reply.Error) // "conflict" preserved as-is from auth consumer
 	}
-	if resp.StatusCode != http.StatusCreated {
-		return nil, fmt.Errorf("auth service returned %d", resp.StatusCode)
-	}
-
 	var result authRegisterResponse
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		return nil, fmt.Errorf("failed to decode auth response: %w", err)
-	}
+	json.Unmarshal(reply.Payload, &result)
 	return &result, nil
 }
 
@@ -231,7 +223,6 @@ func (s *OrchestratorServer) callStakeholderCreate(
 	authResp *authRegisterResponse,
 	payload RegistrationRequest,
 ) (*stakeholderCreateResponse, error) {
-
 	body, _ := json.Marshal(stakeholderCreateRequest{
 		UserID:   authResp.UserID,
 		Name:     payload.Name,
@@ -239,49 +230,33 @@ func (s *OrchestratorServer) callStakeholderCreate(
 		ImageURL: payload.ImageURL,
 		Role:     payload.Role,
 	})
-
-	resp, err := s.doPost(ctx, s.config.StakeholderServiceURL+"/profiles/create", body, false)
+	reply, err := s.messaging.PublishAndWait(ctx, QueueStakeholderCommands, SagaCommand{
+		Command: "CREATE_PROFILE",
+		Payload: body,
+	}, 10*time.Second)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
-		return nil, fmt.Errorf("stakeholder service returned %d", resp.StatusCode)
+	if !reply.Success {
+		return nil, fmt.Errorf("%s", reply.Error)
 	}
-
 	var result stakeholderCreateResponse
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		return nil, fmt.Errorf("failed to decode stakeholder response: %w", err)
-	}
+	json.Unmarshal(reply.Payload, &result)
 	return &result, nil
 }
 
-// compensateAuthRegister calls the compensation endpoint on the auth service
-// to delete the auth account that was created in step 1.
-// The endpoint is protected by a shared internal secret header.
 func (s *OrchestratorServer) compensateAuthRegister(ctx context.Context, userID int64) error {
-	url := fmt.Sprintf("%s/internal/users/%d", s.config.AuthServiceURL, userID)
-
-	req, err := http.NewRequestWithContext(ctx, http.MethodDelete, url, nil)
+	payload, _ := json.Marshal(map[string]int64{"user_id": userID})
+	reply, err := s.messaging.PublishAndWait(ctx, QueueAuthCommands, SagaCommand{
+		Command:    "DELETE_USER",
+		IsInternal: true,
+		Payload:    payload,
+	}, 10*time.Second)
 	if err != nil {
-		return fmt.Errorf("failed to build compensation request: %w", err)
+		return err
 	}
-	req.Header.Set("X-Internal-Secret", s.config.InternalSecret)
-
-	resp, err := s.httpClient.Do(req)
-	if err != nil {
-		return fmt.Errorf("compensation request failed: %w", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode == http.StatusNotFound {
-		// Already gone — idempotent success
-		return nil
-	}
-	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNoContent {
-		body, _ := io.ReadAll(resp.Body)
-		return fmt.Errorf("compensation returned %d: %s", resp.StatusCode, string(body))
+	if !reply.Success {
+		return fmt.Errorf("%s", reply.Error)
 	}
 	return nil
 }

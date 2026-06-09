@@ -42,6 +42,8 @@ class StakeholderConsumer:
                         reply = await self._handle_deduct_balance(payload)
                     case "REFUND_BALANCE":
                         reply = await self._handle_refund_balance(payload, is_internal)
+                    case "CREATE_PROFILE":
+                        reply = await self._handle_create_profile(payload)
                     case _:
                         reply = {"success": False, "error": f"unknown command: {command}"}
 
@@ -75,6 +77,30 @@ class StakeholderConsumer:
             return {"success": True, "payload": {"new_balance": result.balance}}
         except Exception as e:
             return {"success": False, "error": str(e)}
+
+    async def _handle_create_profile(self, payload: dict) -> dict:
+        try:
+            from app.schemas.profile import ProfileCreate
+            profile_create = ProfileCreate(
+                user_id=payload["user_id"],
+                name=payload["name"],
+                lastname=payload.get("lastname"),
+                imageUrl=payload.get("image_url"),
+                role=payload.get("role", "tourist"),
+            )
+            result = await self.profile_service.create(profile_create)
+            return {
+                "success": True,
+                "payload": {
+                    "id": result.id,
+                    "user_id": result.user_id,
+                    "name": result.name,
+                    "role": result.role,
+                },
+            }
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
 
     async def close(self):
         if self.connection:
