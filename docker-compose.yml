@@ -167,6 +167,7 @@ services:
       USE_CONFIG_FILE: "false"
       PORT: 8081
       DATABASE_URL: postgres://tourism-app:admin123@auth-db:5432/tourism-auth?sslmode=disable
+      AMQP_URL: amqp://guest:guest@rabbitmq:5672/
       JWT_SECRET: super-secret-change-me
       INTERNAL_SECRET: super-internal-secret-change-me
     ports:
@@ -184,6 +185,7 @@ services:
       OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:4318"
       OTEL_SERVICE_NAME: "stakeholders"
       INTERNAL_SECRET: super-internal-secret-change-me
+      AMQP_URL: amqp://guest:guest@rabbitmq:5672/
     depends_on:
       stakeholders_db:
         condition: service_healthy
@@ -305,6 +307,7 @@ services:
       JWT_SECRET: super-secret-change-me
       INTERNAL_SECRET: super-internal-secret-change-me
       DB_DSN: purchase:purchase@tcp(purchases-db:3306)/purchase?charset=utf8mb4&parseTime=True&loc=Local
+      AMQP_URL: amqp://guest:guest@rabbitmq:5672/
     depends_on:
       purchases-db:
         condition: service_healthy
@@ -348,14 +351,23 @@ services:
       AUTH_SERVICE_URL: http://auth:8081
       STAKEHOLDER_SERVICE_URL: http://stakeholders:8082
       PURCHASE_SERVICE_ADDR: purchases:9095
+      AMQP_URL: amqp://guest:guest@rabbitmq:5672/
       # Must match INTERNAL_SECRET in the auth service
       INTERNAL_SECRET: super-internal-secret-change-me
     depends_on:
       - auth
       - stakeholders
+      - rabbitmq
     networks:
       - service-network
 
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    ports:
+      - "5672:5672"
+      - "15672:15672"   # management UI
+    networks:
+      - service-network
   jaeger:
     image: jaegertracing/all-in-one:1.57
     container_name: jaeger

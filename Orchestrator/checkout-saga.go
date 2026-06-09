@@ -1,17 +1,14 @@
 package main
 
 import (
-	pb "Orchestrator/pb/purchase"
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"log"
 	"net/http"
 	"time"
 
 	"github.com/google/uuid"
-	"google.golang.org/grpc/metadata"
 )
 
 // ── DTOs ──────────────────────────────────────────────────────────────────────
@@ -97,7 +94,7 @@ func (s *OrchestratorServer) RunCheckoutSaga(
 	log.Printf("[SAGA %s] Step 1 succeeded — total_price=%.2f", saga.ID, totalPrice)
 
 	// ── Step 2: Deduct balance (REST, bearer token) ───────────────────────────
-	if deductErr := s.callDeductBalance(ctx, totalPrice, authHeader); deductErr != nil {
+	if deductErr := s.callDeductBalance(ctx, touristID, totalPrice, authHeader); deductErr != nil {
 		saga.markStepFailed("DEDUCT_BALANCE")
 		saga.setStatus(SagaStatusFailed)
 		s.sagas.Save(saga)
@@ -161,82 +158,96 @@ func (s *OrchestratorServer) RunCheckoutSaga(
 	return &CheckoutResponse{Tokens: tokens, SagaID: saga.ID}, nil
 }
 
-// ── gRPC calls (purchase service) ────────────────────────────────────────────
+// ── MQ calls (purchase service) ────────────────────────────────────────────
 
 func (s *OrchestratorServer) callGetCartPrice(ctx context.Context, touristID, authHeader string) (float64, bool, error) {
-	outCtx := metadata.NewOutgoingContext(ctx, metadata.Pairs("authorization", authHeader))
-	resp, err := s.purchaseClient.GetCartPrice(outCtx, &pb.GetCartPriceRequest{TouristId: touristID})
+	payload, _ := json.Marshal(map[string]string{"tourist_id": touristID})
+	reply, err := s.messaging.PublishAndWait(ctx, QueuePurchaseCommands, SagaCommand{
+		Command:    "GET_CART_PRICE",
+		AuthHeader: authHeader,
+		Payload:    payload,
+	}, 10*time.Second)
 	if err != nil {
-		return 0, false, fmt.Errorf("GetCartPrice failed: %w", err)
+		return 0, false, err
 	}
-	return resp.TotalPrice, resp.IsEmpty, nil
+	if !reply.Success {
+		return 0, false, fmt.Errorf("%s", reply.Error)
+	}
+	var result struct {
+		TotalPrice float64 `json:"total_price"`
+		IsEmpty    bool    `json:"is_empty"`
+	}
+	json.Unmarshal(reply.Payload, &result)
+	return result.TotalPrice, result.IsEmpty, nil
 }
 
 func (s *OrchestratorServer) callFinalizeCheckout(ctx context.Context, touristID, authHeader string) ([]checkoutTokenDTO, error) {
-	outCtx := metadata.NewOutgoingContext(ctx, metadata.Pairs("authorization", authHeader))
-	resp, err := s.purchaseClient.FinalizeCheckout(outCtx, &pb.FinalizeCheckoutRequest{TouristId: touristID})
+	payload, _ := json.Marshal(map[string]string{"tourist_id": touristID})
+	reply, err := s.messaging.PublishAndWait(ctx, QueuePurchaseCommands, SagaCommand{
+		Command:    "FINALIZE_CHECKOUT",
+		AuthHeader: authHeader,
+		Payload:    payload,
+	}, 15*time.Second)
 	if err != nil {
-		return nil, fmt.Errorf("FinalizeCheckout failed: %w", err)
+		return nil, err
 	}
-	var tokens []checkoutTokenDTO
-	for _, t := range resp.Tokens {
-		tokens = append(tokens, checkoutTokenDTO{
-			ID:        t.Id,
-			TouristID: t.TouristId,
-			TourID:    t.TourId,
-			Price:     t.Price,
-			IssuedAt:  t.IssuedAt,
-		})
+	if !reply.Success {
+		return nil, fmt.Errorf("%s", reply.Error)
 	}
-	return tokens, nil
+	var result struct {
+		Tokens []checkoutTokenDTO `json:"tokens"`
+	}
+	json.Unmarshal(reply.Payload, &result)
+	return result.Tokens, nil
 }
 
 func (s *OrchestratorServer) callDeleteCheckoutTokens(ctx context.Context, tokenIDs []string) error {
-	outCtx := metadata.NewOutgoingContext(ctx, metadata.Pairs("x-internal-secret", s.config.InternalSecret))
-	_, err := s.purchaseClient.DeleteCheckoutTokens(outCtx, &pb.DeleteCheckoutTokensRequest{TokenIds: tokenIDs})
-	if err != nil {
-		return fmt.Errorf("DeleteCheckoutTokens failed: %w", err)
-	}
-	return nil
-}
-
-// ── REST calls (stakeholder service) ─────────────────────────────────────────
-
-func (s *OrchestratorServer) callDeductBalance(ctx context.Context, amount float64, authHeader string) error {
-	body, _ := json.Marshal(balanceUpdateRequest{Balance: -amount})
-	resp, err := s.doPut(ctx, s.config.StakeholderServiceURL+"/profiles/balance", body, authHeader, false)
+	payload, _ := json.Marshal(map[string]any{"token_ids": tokenIDs})
+	reply, err := s.messaging.PublishAndWait(ctx, QueuePurchaseCommands, SagaCommand{
+		Command:    "DELETE_CHECKOUT_TOKENS",
+		IsInternal: true,
+		Payload:    payload,
+	}, 10*time.Second)
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode == http.StatusBadRequest {
-		return fmt.Errorf("insufficient balance")
-	}
-	if resp.StatusCode != http.StatusOK {
-		b, _ := io.ReadAll(resp.Body)
-		return fmt.Errorf("stakeholder service returned %d: %s", resp.StatusCode, string(b))
+	if !reply.Success {
+		return fmt.Errorf("%s", reply.Error)
 	}
 	return nil
 }
 
-// compensateDeductBalance refunds the tourist's balance using the internal secret.
-// stakeholders side of internal secret is not implemented as of time of writing
+// ── MQ calls (stakeholder service) ─────────────────────────────────────────
+
+// Note: touristID is now required since MQ can't extract it from the JWT implicitly.
+func (s *OrchestratorServer) callDeductBalance(ctx context.Context, touristID string, amount float64, authHeader string) error {
+	payload, _ := json.Marshal(map[string]any{"tourist_id": touristID, "amount": amount})
+	reply, err := s.messaging.PublishAndWait(ctx, QueueStakeholderCommands, SagaCommand{
+		Command:    "DEDUCT_BALANCE",
+		AuthHeader: authHeader,
+		Payload:    payload,
+	}, 10*time.Second)
+	if err != nil {
+		return err
+	}
+	if !reply.Success {
+		return fmt.Errorf("%s", reply.Error)
+	}
+	return nil
+}
+
 func (s *OrchestratorServer) compensateDeductBalance(ctx context.Context, touristID string, amount float64) error {
-	body, _ := json.Marshal(balanceUpdateRequest{Balance: amount})
-	url := fmt.Sprintf("%s/profiles/balance/%s", s.config.StakeholderServiceURL, touristID)
-	resp, err := s.doPut(ctx, url, body, "", true)
+	payload, _ := json.Marshal(map[string]any{"tourist_id": touristID, "amount": amount})
+	reply, err := s.messaging.PublishAndWait(ctx, QueueStakeholderCommands, SagaCommand{
+		Command:    "REFUND_BALANCE",
+		IsInternal: true,
+		Payload:    payload,
+	}, 10*time.Second)
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode == http.StatusNotFound {
-		return nil // profile gone — idempotent success
-	}
-	if resp.StatusCode != http.StatusOK {
-		b, _ := io.ReadAll(resp.Body)
-		return fmt.Errorf("compensation returned %d: %s", resp.StatusCode, string(b))
+	if !reply.Success {
+		return fmt.Errorf("%s", reply.Error)
 	}
 	return nil
 }

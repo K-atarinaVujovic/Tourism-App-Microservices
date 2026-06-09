@@ -16,6 +16,7 @@ import app.core.database as database
 from app.schemas.profile import ProfileCreate, ProfileUpdate
 from app.services.profile import ProfileService
 from app.services.upload import Uploader
+from app.services.consumer import StakeholderConsumer
 
 import threading
 import signal
@@ -49,8 +50,16 @@ async def serve_grpc():
     return grpc_server
 
 async def main():
+    amqp_url = os.getenv("AMQP_URL", "amqp://guest:guest@rabbitmq:5672/")
+    profile_service = ProfileService()
+
+    consumer = StakeholderConsumer(profile_service)
+    await consumer.connect(amqp_url)   # registers the consumer, non-blocking
+
     grpc_task = asyncio.create_task(serve_grpc())
     await serve_fastapi()
+
+    await consumer.close()
     await grpc_server.stop(grace=5) #type: ignore
 
 if __name__ == "__main__":

@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -128,6 +129,18 @@ func main() {
 		tokenTTL:       24 * time.Hour,
 		internalSecret: internalSecret,
 	}
+
+	amqpURL := os.Getenv("AMQP_URL")
+	if amqpURL == "" {
+		log.Fatal("AMQP_URL is required")
+	}
+
+	authConsumer, err := NewAuthConsumer(amqpURL, srv)
+	if err != nil {
+		log.Fatalf("failed to create auth consumer: %v", err)
+	}
+	defer authConsumer.Close()
+	go authConsumer.Start()
 
 	router := chi.NewRouter()
 
@@ -255,6 +268,58 @@ func (s *Server) registerHandler(w http.ResponseWriter, r *http.Request) {
 		Role:     role,
 		Token:    token,
 	})
+}
+
+// registerUser contains the core registration logic shared by the HTTP handler
+// and the MQ consumer. Returns "conflict" as the error string for duplicate
+// username/email so callers can detect it without inspecting HTTP status codes.
+func (s *Server) registerUser(ctx context.Context, req RegisterRequest) (*RegisterResponse, error) {
+	req.Username = strings.TrimSpace(req.Username)
+	req.Email = strings.TrimSpace(strings.ToLower(req.Email))
+
+	if req.Username == "" || req.Email == "" || req.Password == "" {
+		return nil, fmt.Errorf("username, email and password are required")
+	}
+	if len(req.Username) < 3 || len(req.Username) > 30 || !isValidUsername(req.Username) {
+		return nil, fmt.Errorf("invalid username")
+	}
+	if !strings.Contains(req.Email, "@") {
+		return nil, fmt.Errorf("invalid email format")
+	}
+	if len(req.Password) < 8 {
+		return nil, fmt.Errorf("password must be at least 8 characters")
+	}
+
+	passwordHash, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+	if err != nil {
+		return nil, fmt.Errorf("failed to process password")
+	}
+
+	var userID int64
+	var role string
+	err = s.db.QueryRow(ctx,
+		`INSERT INTO users (username, email, password_hash, role) VALUES ($1, $2, $3, 'user') RETURNING id, role`,
+		req.Username, req.Email, string(passwordHash),
+	).Scan(&userID, &role)
+	if err != nil {
+		if strings.Contains(err.Error(), "duplicate key") || strings.Contains(err.Error(), "unique constraint") {
+			return nil, fmt.Errorf("conflict")
+		}
+		return nil, fmt.Errorf("failed to create user")
+	}
+
+	token, err := s.createJWT(userID, req.Username, req.Email, role)
+	if err != nil {
+		return nil, fmt.Errorf("user created but could not generate token")
+	}
+
+	return &RegisterResponse{
+		UserID:   userID,
+		Username: req.Username,
+		Email:    req.Email,
+		Role:     role,
+		Token:    token,
+	}, nil
 }
 
 func (s *Server) loginHandler(w http.ResponseWriter, r *http.Request) {
@@ -593,6 +658,21 @@ func (s *Server) deleteUserHandler(w http.ResponseWriter, r *http.Request) {
 		"message": "user deleted",
 		"user_id": userID,
 	})
+}
+
+// deleteUser is the compensation action for REGISTER_USER.
+// Idempotent — deleting a user that doesn't exist is treated as success.
+func (s *Server) deleteUser(ctx context.Context, userID int64) error {
+	result, err := s.db.Exec(ctx, `DELETE FROM users WHERE id = $1`, userID)
+	if err != nil {
+		return fmt.Errorf("failed to delete user: %w", err)
+	}
+	if result.RowsAffected() == 0 {
+		log.Printf("[COMPENSATION] User %d already absent — idempotent success", userID)
+	} else {
+		log.Printf("[COMPENSATION] Deleted auth account for user_id=%d", userID)
+	}
+	return nil
 }
 
 func writeJSON(w http.ResponseWriter, status int, payload any) {

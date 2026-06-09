@@ -25,6 +25,7 @@ type Config struct {
 	PurchaseServiceAddr    string // e.g. purchase-service:50051
 	InternalSecret         string // Shared secret for internal compensation calls
 	Port                   string
+	AmqpURL                string // e.g. amqp://guest:guest@rabbitmq:5672/
 }
 
 type OrchestratorServer struct {
@@ -32,6 +33,7 @@ type OrchestratorServer struct {
 	httpClient     *http.Client
 	sagas          *SagaStore
 	purchaseClient pb.PurchaseServiceClient
+	messaging      *MessagingClient
 }
 
 type StakeholderRole string
@@ -58,6 +60,7 @@ func main() {
 		StakeholderServiceURL: mustEnv("STAKEHOLDER_SERVICE_URL"),
 		PurchaseServiceAddr:   mustEnv("PURCHASE_SERVICE_ADDR"),
 		InternalSecret:        mustEnv("INTERNAL_SECRET"),
+		AmqpURL:               mustEnv("AMQP_URL"),
 		Port:                  getEnv("PORT", "8082"),
 	}
 
@@ -69,11 +72,18 @@ func main() {
 
 	defer purchaseConn.Close()
 
+	messaging, err := NewMessagingClient(cfg.AmqpURL)
+	if err != nil {
+		log.Fatalf("failed to connect to RabbitMQ: %v", err)
+	}
+	defer messaging.Close()
+
 	srv := &OrchestratorServer{
 		config:         cfg,
 		httpClient:     &http.Client{Timeout: 10 * time.Second},
 		sagas:          NewSagaStore(),
 		purchaseClient: pb.NewPurchaseServiceClient(purchaseConn),
+		messaging:      messaging,
 	}
 
 	router := chi.NewRouter()

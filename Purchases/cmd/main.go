@@ -4,6 +4,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"purchase-service/internal/consumer"
 
 	"purchase-service/internal/clients"
 	"purchase-service/internal/grpc-auth"
@@ -41,6 +42,14 @@ func main() {
 	repo := repository.NewPurchaseRepository(db)
 	svc := service.NewPurchaseService(repo, repo, toursClient, stakeholdersClient)
 	h := handler.NewPurchaseHandler(svc)
+
+	// RabbitMQ command consumer
+	purchaseConsumer, err := consumer.New(os.Getenv("AMQP_URL"), svc)
+	if err != nil {
+		log.Fatalf("failed to create purchase consumer: %v", err)
+	}
+	defer purchaseConsumer.Close()
+	go purchaseConsumer.Start()
 
 	// --- gRPC server ---
 	lis, err := net.Listen("tcp", ":9095")
