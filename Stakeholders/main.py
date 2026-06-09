@@ -16,6 +16,7 @@ import app.core.database as database
 from app.schemas.profile import ProfileCreate, ProfileUpdate
 from app.services.profile import ProfileService
 from app.services.upload import Uploader
+from app.services.consumer import StakeholderConsumer
 
 import threading
 import signal

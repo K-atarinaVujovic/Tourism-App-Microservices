@@ -80,3 +80,12 @@ class ProfileService:
       raise HTTPException(status_code=400, detail="Balance cannot be negative")
     await profile.save()              # save directly via Beanie
     return BalanceResponse(balance=profile.balance)
+
+
+  async def deduct_balance(self, user_id: int, amount: float) -> BalanceResponse:
+      """Forward step: subtract amount. Raises if balance would go negative."""
+      return await self.update_balance(user_id, BalanceResponse(balance=-amount))
+
+  async def refund_balance(self, user_id: int, amount: float) -> BalanceResponse:
+      """Compensation step: add amount back unconditionally."""
+      return await self.update_balance(user_id, BalanceResponse(balance=amount))

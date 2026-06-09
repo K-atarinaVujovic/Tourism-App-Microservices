@@ -60,6 +60,7 @@ func main() {
 		StakeholderServiceURL: mustEnv("STAKEHOLDER_SERVICE_URL"),
 		PurchaseServiceAddr:   mustEnv("PURCHASE_SERVICE_ADDR"),
 		InternalSecret:        mustEnv("INTERNAL_SECRET"),
+		AmqpURL:               mustEnv("AMQP_URL"),
 		Port:                  getEnv("PORT", "8082"),
 	}
 
